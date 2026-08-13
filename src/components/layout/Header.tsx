@@ -31,9 +31,9 @@ export function Header() {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'bg-surface/90 backdrop-blur-xl shadow-md border-b border-border/50'
-            : 'bg-transparent'
+          scrolled || activeDropdown
+            ? 'bg-surface shadow-md border-b border-border'
+            : 'bg-surface/95 backdrop-blur-md border-b border-border/50'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,8 +62,8 @@ export function Header() {
                 >
                   <Link
                     href={item.href}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground-muted
-                               hover:text-foreground transition-colors rounded-lg hover:bg-surface-muted"
+                    className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground
+                               hover:text-primary transition-colors rounded-lg hover:bg-surface-muted"
                   >
                     {item.label}
                     {item.children && (
@@ -75,16 +75,15 @@ export function Header() {
 
                   {/* Dropdown */}
                   {item.children && activeDropdown === item.label && (
-                    <div className="absolute top-full left-0 pt-2 animate-slide-down">
-                      <div className="glass rounded-xl shadow-xl p-2 min-w-[220px]
-                                      bg-surface border border-border">
+                    <div className="absolute top-full left-0 pt-2 animate-slide-down z-50">
+                      <div className="rounded-2xl shadow-2xl p-2 min-w-[240px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                         {item.children.map((child) => (
                           <Link
                             key={child.href}
                             href={child.href}
-                            className="block px-4 py-2.5 text-sm text-foreground-muted
-                                       hover:text-foreground hover:bg-surface-muted
-                                       rounded-lg transition-colors"
+                            className="block px-4 py-2.5 text-sm font-medium text-slate-800 dark:text-slate-100
+                                       hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800
+                                       rounded-xl transition-colors"
                           >
                             {child.label}
                           </Link>

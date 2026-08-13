@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/hva-skjer",
+        destination: "/eventer",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

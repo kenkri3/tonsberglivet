@@ -81,7 +81,7 @@ export default function HverdagslivetPage() {
       <section className="bg-emerald-50 dark:bg-emerald-900/20 py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Opplev hva som skjer i byen</h2>
-          <Link href="/hva-skjer" className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 transition-all">
+          <Link href="/eventer" className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 transition-all">
             Se arrangementer <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </div>

@@ -67,42 +67,42 @@ export default function KontaktPage() {
 
           {/* Kontaktinfo */}
           <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 h-full">
-              <h2 className="text-2xl font-bold mb-8">Kontaktinformasjon</h2>
+            <div className="bg-surface p-8 rounded-3xl shadow-sm border border-border h-full">
+              <h2 className="text-2xl font-bold mb-8 text-foreground">Kontaktinformasjon</h2>
               
               <div className="space-y-8">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
-                    <MapPin className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center shrink-0">
+                    <MapPin className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Besøksadresse</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">Rådhusgaten 1<br/>3126 Tønsberg</p>
+                    <h3 className="font-semibold text-lg text-foreground">Besøksadresse</h3>
+                    <p className="text-foreground-muted font-medium mt-1">Rådhusgaten 1<br/>3126 Tønsberg</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
-                    <Phone className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center shrink-0">
+                    <Phone className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Telefon</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">+47 971 69 755</p>
+                    <h3 className="font-semibold text-lg text-foreground">Telefon</h3>
+                    <a href="tel:+4797169755" className="text-foreground-muted font-medium hover:text-primary transition-colors mt-1 block">+47 971 69 755</a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
-                    <Mail className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center shrink-0">
+                    <Mail className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">E-post</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">hei@tonsberglivet.no</p>
+                    <h3 className="font-semibold text-lg text-foreground">E-post</h3>
+                    <a href="mailto:hei@tonsberglivet.no" className="text-foreground-muted font-medium hover:text-primary transition-colors mt-1 block">hei@tonsberglivet.no</a>
                   </div>
                 </div>
               </div>
 
-              <hr className="my-8 border-gray-100 dark:border-gray-700" />
+              <hr className="my-8 border-border" />
               
               <div>
                 <h3 className="font-semibold text-lg mb-4">Følg oss</h3>

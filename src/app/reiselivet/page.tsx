@@ -112,7 +112,7 @@ export default function ReiselivetPage() {
       <section className="bg-amber-50 dark:bg-amber-900/20 py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Planlegg ditt besøk</h2>
-          <Link href="/hva-skjer" className="inline-flex items-center justify-center rounded-full bg-amber-500 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 transition-all">
+          <Link href="/eventer" className="inline-flex items-center justify-center rounded-full bg-amber-500 px-8 py-3.5 text-sm font-semibold text-white shadow-sm hover:bg-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 transition-all">
             Utforsk arrangementer <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </div>
