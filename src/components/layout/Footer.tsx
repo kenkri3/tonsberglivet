@@ -211,6 +211,12 @@ export function Footer() {
               >
                 Informasjonskapsler
               </Link>
+              <Link
+                href="/admin"
+                className="text-xs font-semibold text-primary hover:underline transition-colors"
+              >
+                Admin Hub / Backend
+              </Link>
               <a
                 href="#top"
                 className="flex items-center gap-1 text-xs text-foreground-subtle hover:text-foreground-muted transition-colors"

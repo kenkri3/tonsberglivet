@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search, ChevronDown } from 'lucide-react';
+import { Menu, X, Search, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { navigation, secondaryNavigation, type NavItem } from '@/lib/navigation';
 
@@ -109,6 +109,16 @@ export function Header() {
 
               <ThemeToggle />
 
+              {/* Admin Hub — Direkteknapp til backend */}
+              <Link
+                href="/admin"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary bg-primary-light hover:bg-primary hover:text-primary-foreground rounded-full transition-all shadow-sm"
+                title="Gå direkte til Admin Hub / Backend"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                Admin Hub
+              </Link>
+
               {/* Mobilmeny-knapp */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
@@ -171,6 +181,16 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <div className="pt-4 mt-2 border-t border-border">
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold text-primary bg-primary-light rounded-xl"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Gå til Admin Hub / Backend
+                </Link>
+              </div>
             </div>
           </nav>
         </div>
