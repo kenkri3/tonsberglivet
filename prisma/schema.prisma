@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════
+// BRUKERE OG AUTENTISERING
+// ═══════════════════════════════
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  role          Role      @default(EDITOR)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  articles Article[]
+  sessions Session[]
+  accounts Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+// ═══════════════════════════════
+// INNHOLD — ARTIKLER
+// ═══════════════════════════════
+
+model Article {
+  id          String         @id @default(cuid())
+  title       String
+  slug        String         @unique
+  excerpt     String?        @db.Text
+  content     String         @db.Text
+  published   Boolean        @default(false)
+  featured    Boolean        @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  category    ArticleCategory @default(BYLIVET)
+  authorId    String?
+  author      User?           @relation(fields: [authorId], references: [id])
+  imageId     String?
+  image       Image?          @relation(fields: [imageId], references: [id])
+
+  @@index([category])
+  @@index([published, publishedAt])
+}
+
+enum ArticleCategory {
+  BYLIVET
+  HVERDAGSLIVET
+  NAERINGSLIVET
+  REISELIVET
+  STUDENTLIVET
+}
+
+// ═══════════════════════════════
+// INNHOLD — ARRANGEMENTER
+// ═══════════════════════════════
+
+model Event {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?       @db.Text
+  location    String?
+  address     String?
+  startDate   DateTime
+  endDate     DateTime?
+  startTime   String?
+  endTime     String?
+  published   Boolean       @default(false)
+  featured    Boolean       @default(false)
+  externalUrl String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  category    EventCategory @default(ARRANGEMENT)
+  imageId     String?
+  image       Image?        @relation(fields: [imageId], references: [id])
+
+  @@index([startDate])
+  @@index([published])
+}
+
+enum EventCategory {
+  ARRANGEMENT
+  KONSERT
+  MARKED
+  KURS
+  BARN
+  SPORT
+  KULTUR
+  FESTIVAL
+}
+
+// ═══════════════════════════════
+// INNHOLD — BEDRIFTER
+// ═══════════════════════════════
+
+model Business {
+  id           String             @id @default(cuid())
+  name         String
+  slug         String             @unique
+  description  String?            @db.Text
+  address      String?
+  phone        String?
+  email        String?
+  website      String?
+  openingHours String?            @db.Text
+  published    Boolean            @default(false)
+  featured     Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  category     BusinessCategory   @default(ANNET)
+  area         BusinessArea       @default(TONSBERG_SENTRUM)
+  logoId       String?
+  logo         Image?             @relation("BusinessLogo", fields: [logoId], references: [id])
+  imageId      String?
+  image        Image?             @relation("BusinessImage", fields: [imageId], references: [id])
+
+  @@index([category])
+  @@index([area])
+  @@index([published])
+}
+
+enum BusinessCategory {
+  SHOPPING
+  MAT_DRIKKE
+  AKTIVITET
+  OVERNATTING
+  FRISOR_VELVERE
+  KULTUR
+  BARN
+  ANNET
+}
+
+enum BusinessArea {
+  TONSBERG_SENTRUM
+  TONSBERG_KOMMUNE
+  FAERDER_KOMMUNE
+}
+
+// ═══════════════════════════════
+// INNHOLD — PARTNERE
+// ═══════════════════════════════
+
+model Partner {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  website     String?
+  description String?      @db.Text
+  level       PartnerLevel @default(STANDARD)
+  published   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  logoId      String?
+  logo        Image?       @relation(fields: [logoId], references: [id])
+
+  @@index([level])
+  @@index([published])
+}
+
+enum PartnerLevel {
+  PREMIUM
+  STANDARD
+  BASIC
+}
+
+// ═══════════════════════════════
+// INNHOLD — PROSJEKTER
+// ═══════════════════════════════
+
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?       @db.Text
+  content     String?       @db.Text
+  status      ProjectStatus @default(ACTIVE)
+  published   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  imageId     String?
+  image       Image?        @relation(fields: [imageId], references: [id])
+
+  @@index([status])
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  UPCOMING
+}
+
+// ═══════════════════════════════
+// BILDEBANK (DAM)
+// ═══════════════════════════════
+
+model Image {
+  id             String      @id @default(cuid())
+  url            String
+  publicId       String?     // Cloudinary public ID
+  filename       String
+  alt            String?
+  width          Int?
+  height         Int?
+  format         String?
+  sizeBytes      Int?
+
+  // Manuell styring
+  photographer   String?     // Fotograf-kreditering
+  gdprStatus     GdprStatus  @default(PENDING)
+  gdprNotes      String?     @db.Text
+
+  // Tagging
+  tags           String[]    // Array av tagger
+  aiTags         String[]    // AI-genererte tagger
+  location       String?     // F.eks. "Torvet", "Brygga"
+  season         String?     // F.eks. "Sommer", "Jul"
+
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Mapper
+  folderId       String?
+  folder         ImageFolder? @relation(fields: [folderId], references: [id])
+
+  // Relasjoner
+  articles       Article[]
+  events         Event[]
+  businessLogos  Business[]  @relation("BusinessLogo")
+  businessImages Business[]  @relation("BusinessImage")
+  partners       Partner[]
+  projects       Project[]
+
+  @@index([tags])
+  @@index([folderId])
+}
+
+model ImageFolder {
+  id        String        @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    ImageFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children  ImageFolder[] @relation("FolderHierarchy")
+  images    Image[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([name, parentId])
+}
+
+enum GdprStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+// ═══════════════════════════════
+// SKJEMAER OG FORESPØRSLER
+// ═══════════════════════════════
+
+model BookingRequest {
+  id          String        @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  type        BookingType
+  startDate   DateTime?
+  endDate     DateTime?
+  message     String?       @db.Text
+  status      RequestStatus @default(NEW)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+enum BookingType {
+  DAGPLASS
+  SESONG
+  HELAAR
+}
+
+enum RequestStatus {
+  NEW
+  PROCESSING
+  APPROVED
+  REJECTED
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model PartnerApplication {
+  id           String        @id @default(cuid())
+  contactName  String
+  businessName String
+  email        String
+  phone        String?
+  message      String?       @db.Text
+  status       RequestStatus @default(NEW)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// ═══════════════════════════════
+// CMS — STATISKE SIDER
+// ═══════════════════════════════
+
+model Page {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String   @db.Text
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

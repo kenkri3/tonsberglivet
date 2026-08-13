@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════
+   TØNSBERGLIVET — DESIGNSYSTEM
+   Kyst- og byinspirert, moderne, ren profil
+   ═══════════════════════════════════════════ */
+
+/* --- Lys modus (standard) --- */
+:root {
+  --background: #FAFAF8;
+  --surface: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-muted: #F1F5F9;
+  --border: #E2E8F0;
+  --border-muted: #F1F5F9;
+
+  --foreground: #1E293B;
+  --foreground-muted: #64748B;
+  --foreground-subtle: #94A3B8;
+
+  --primary: #1D4ED8;
+  --primary-hover: #1E40AF;
+  --primary-light: #DBEAFE;
+  --primary-foreground: #FFFFFF;
+
+  --accent: #D97706;
+  --accent-hover: #B45309;
+  --accent-light: #FEF3C7;
+  --accent-foreground: #FFFFFF;
+
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --error: #DC2626;
+  --error-light: #FEE2E2;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  --header-height: 4.5rem;
+}
+
+/* --- Mørk modus --- */
+.dark {
+  --background: #0F172A;
+  --surface: #1E293B;
+  --surface-elevated: #334155;
+  --surface-muted: #1E293B;
+  --border: #334155;
+  --border-muted: #1E293B;
+
+  --foreground: #F1F5F9;
+  --foreground-muted: #94A3B8;
+  --foreground-subtle: #64748B;
+
+  --primary: #60A5FA;
+  --primary-hover: #93C5FD;
+  --primary-light: #1E3A5F;
+  --primary-foreground: #0F172A;
+
+  --accent: #FBBF24;
+  --accent-hover: #F59E0B;
+  --accent-light: #422006;
+  --accent-foreground: #0F172A;
+
+  --success: #34D399;
+  --success-light: #064E3B;
+  --error: #F87171;
+  --error-light: #450A0A;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+}
+
+/* --- Tailwind v4 theme tokens --- */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-border-muted: var(--border-muted);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-light: var(--accent-light);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-error: var(--error);
+  --color-error-light: var(--error-light);
+  --font-sans: var(--font-inter);
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-slide-down: slide-down 0.3s ease-out;
+}
+
+/* --- Animasjoner --- */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(1.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-1rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Grunnstiler --- */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* --- Scrollbar-stil --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-muted);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--foreground-subtle);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground-muted);
+}
+
+/* --- Fokus-stiler for tilgjengelighet --- */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* --- Tekstmarkering --- */
+::selection {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* --- Glassmorfisme-hjelper --- */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
