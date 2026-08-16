@@ -4,6 +4,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ConsentBanner } from "@/components/ui/ConsentBanner";
+import { OrganizationJsonLd } from "@/components/seo/JsonLd";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -71,9 +73,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
         <ThemeProvider>
+          <OrganizationJsonLd />
           <Header />
           <main className="flex-1 pt-[var(--header-height)]">{children}</main>
           <Footer />
+          <ConsentBanner />
         </ThemeProvider>
       </body>
     </html>

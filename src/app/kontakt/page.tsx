@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { MapPin, Phone, Mail, ExternalLink } from 'lucide-react';
+import { ContactForm } from '@/components/forms/ContactForm';
 
 export const metadata: Metadata = {
   title: 'Kontakt oss - Tønsberglivet',
@@ -21,48 +22,9 @@ export default function KontaktPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
           
           {/* Kontaktskjema */}
-          <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-6">Send oss en melding</h2>
-            <form className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Navn</label>
-                <input 
-                  type="text" 
-                  className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
-                  placeholder="Ditt fulle navn" 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">E-post</label>
-                <input 
-                  type="email" 
-                  className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
-                  placeholder="din@epost.no" 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Emne</label>
-                <input 
-                  type="text" 
-                  className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
-                  placeholder="Hva gjelder det?" 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Melding</label>
-                <textarea 
-                  rows={5} 
-                  className="w-full p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none" 
-                  placeholder="Skriv din melding her..."
-                ></textarea>
-              </div>
-              <button 
-                type="button" 
-                className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors mt-4"
-              >
-                Send melding
-              </button>
-            </form>
+          <div className="bg-surface p-8 rounded-3xl shadow-sm border border-border">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Send oss en melding</h2>
+            <ContactForm />
           </div>
 
           {/* Kontaktinfo */}

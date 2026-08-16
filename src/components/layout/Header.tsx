@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu, X, Search, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { WeatherWidget } from '@/components/ui/WeatherWidget';
 import { navigation, secondaryNavigation, type NavItem } from '@/lib/navigation';
 
 export function Header() {
@@ -97,6 +98,8 @@ export function Header() {
 
             {/* Høyre side — verktøy */}
             <div className="flex items-center gap-2">
+              <WeatherWidget />
+
               {/* Søk */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}

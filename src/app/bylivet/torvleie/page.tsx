@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Mail, Phone, MapPin, Info, Calendar, Clock, Sun } from 'lucide-react';
+import { TorvleieForm } from '@/components/forms/TorvleieForm';
 
 export const metadata: Metadata = {
   title: 'Torvleie | Tønsberglivet',
@@ -91,53 +92,7 @@ export default function TorvleiePage() {
                 Fyll ut skjemaet under, så tar vi kontakt med deg for å finne en løsning. Du kan også nå oss på <a href="mailto:torvet@tonsberglivet.no" className="text-primary hover:underline">torvet@tonsberglivet.no</a>.
               </p>
 
-              <form className="space-y-4" action="#">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">Fornavn *</label>
-                    <input type="text" className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 outline-none" required />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-foreground">Etternavn *</label>
-                    <input type="text" className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 outline-none" required />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">E-post *</label>
-                  <input type="email" className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 outline-none" required />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Telefon</label>
-                  <input type="tel" className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 outline-none" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Type leie *</label>
-                  <select className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 outline-none" required>
-                    <option value="">Velg type...</option>
-                    <option value="dag">Dagplass</option>
-                    <option value="sesong">Sesongplass</option>
-                    <option value="helår">Helårsplass</option>
-                    <option value="lag">Lag/forening (Gratis)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Ønsket dato/periode</label>
-                  <input type="text" placeholder="F.eks. 15. august" className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 outline-none" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-foreground">Hva skal du selge/stille ut?</label>
-                  <textarea rows={3} className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 outline-none resize-none"></textarea>
-                </div>
-
-                <button type="submit" className="w-full py-3 mt-2 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors">
-                  Send forespørsel
-                </button>
-              </form>
+              <TorvleieForm />
             </div>
           </div>
 

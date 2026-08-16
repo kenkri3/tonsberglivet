@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Search, MoreHorizontal, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Sparkles } from 'lucide-react';
+import { SoMeModal } from '@/components/admin/SoMeModal';
 
 const demoArticles = [
   { id: '1', title: 'Ny kafé åpner i Nedre Langgate', category: 'Bylivet', status: 'Publisert', date: '2026-08-12' },
@@ -15,6 +16,7 @@ const demoArticles = [
 
 export default function ArtiklerPage() {
   const [search, setSearch] = useState('');
+  const [activeArticle, setActiveArticle] = useState<typeof demoArticles[0] | null>(null);
 
   const filtered = demoArticles.filter((a) =>
     a.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -23,6 +25,14 @@ export default function ArtiklerPage() {
 
   return (
     <div className="space-y-6">
+      {activeArticle && (
+        <SoMeModal
+          title={activeArticle.title}
+          category={activeArticle.category}
+          onClose={() => setActiveArticle(null)}
+        />
+      )}
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Artikler</h2>
@@ -59,7 +69,7 @@ export default function ArtiklerPage() {
               <th className="text-left px-6 py-3 font-medium text-foreground-muted hidden sm:table-cell">Kategori</th>
               <th className="text-left px-6 py-3 font-medium text-foreground-muted hidden md:table-cell">Dato</th>
               <th className="text-left px-6 py-3 font-medium text-foreground-muted">Status</th>
-              <th className="w-10"></th>
+              <th className="w-24">Handlinger</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -83,12 +93,16 @@ export default function ArtiklerPage() {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1">
-                    <button className="p-1.5 text-foreground-subtle hover:text-foreground rounded-lg hover:bg-surface-muted">
+                    <button
+                      onClick={() => setActiveArticle(article)}
+                      className="p-1.5 text-primary hover:bg-primary-light rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
+                      title="Generer SoMe-innlegg med AI"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> SoMe
+                    </button>
+                    <Link href={`/nyheter/${article.id}`} className="p-1.5 text-foreground-subtle hover:text-foreground rounded-lg hover:bg-surface-muted">
                       <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="p-1.5 text-foreground-subtle hover:text-foreground rounded-lg hover:bg-surface-muted">
-                      <Pencil className="w-4 h-4" />
-                    </button>
+                    </Link>
                   </div>
                 </td>
               </tr>
