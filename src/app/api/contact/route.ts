@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { contactSchema } from '@/lib/validations';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 const memoryMessages: Array<{
   id: string;
   name: string;

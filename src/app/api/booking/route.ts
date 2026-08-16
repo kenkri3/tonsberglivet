@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { bookingSchema } from '@/lib/validations';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // Memory fallback store if database is not migrated yet in local dev environment
 const memoryBookings: Array<{
   id: string;
