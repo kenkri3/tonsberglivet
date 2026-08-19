@@ -11,19 +11,21 @@ export const navigation: NavItem[] = [
     label: 'Bylivet',
     href: '/bylivet',
     children: [
+      { label: 'Oversikt', href: '/bylivet' },
       { label: 'Nyheter', href: '/nyheter?kategori=bylivet' },
       { label: 'Hva skjer?', href: '/eventer' },
       { label: 'Gavekort', href: '/bylivet/gavekort' },
       { label: 'Torvleie', href: '/bylivet/torvleie' },
-      { label: 'Shopping', href: '/bylivet?filter=shopping' },
-      { label: 'Mat & drikke', href: '/bylivet?filter=mat-drikke' },
-      { label: 'Aktivitet', href: '/bylivet?filter=aktivitet' },
+      { label: 'Shopping', href: '/bylivet/shopping' },
+      { label: 'Mat & drikke', href: '/bylivet/mat-og-drikke' },
+      { label: 'Aktivitet', href: '/bylivet/aktiviteter' },
     ],
   },
   {
     label: 'Hverdagslivet',
     href: '/hverdagslivet',
     children: [
+      { label: 'Bo i Tønsberg', href: '/hverdagslivet' },
       { label: 'Nyheter', href: '/nyheter?kategori=hverdagslivet' },
       { label: '10 gode grunner', href: '/hverdagslivet#grunner' },
     ],
@@ -32,12 +34,10 @@ export const navigation: NavItem[] = [
     label: 'Næringslivet',
     href: '/naeringslivet',
     children: [
+      { label: 'Næringsoversikt', href: '/naeringslivet' },
       { label: 'Nyheter', href: '/nyheter?kategori=naeringslivet' },
-      { label: 'Fakta om Tønsberg', href: '/naeringslivet#fakta' },
-      { label: 'Bedriftene i Tønsberg', href: '/naeringslivet#bedrifter' },
-      { label: 'Næringsarealer', href: '/naeringslivet#arealer' },
-      { label: 'Etablering', href: '/naeringslivet#etablering' },
-      { label: 'Menneskene & kompetansen', href: '/naeringslivet#kompetanse' },
+      { label: 'Bedriftene i Tønsberg', href: '/naeringslivet/bedrifter' },
+      { label: 'Etablering & Arealer', href: '/naeringslivet/etablering' },
       { label: 'Kontakt oss', href: '/kontakt' },
     ],
   },
@@ -45,22 +45,20 @@ export const navigation: NavItem[] = [
     label: 'Reiselivet',
     href: '/reiselivet',
     children: [
+      { label: 'Opplev Færder & Tønsberg', href: '/reiselivet' },
       { label: 'Nyheter', href: '/nyheter?kategori=reiselivet' },
-      { label: '10 grunner til å besøke', href: '/reiselivet#grunner' },
-      { label: 'Aktivitet', href: '/reiselivet#aktivitet' },
-      { label: 'Overnatting', href: '/reiselivet#overnatting' },
-      { label: 'Mat & drikke', href: '/reiselivet#mat-drikke' },
-      { label: 'Shopping', href: '/reiselivet#shopping' },
+      { label: 'Overnatting', href: '/reiselivet/overnatting' },
+      { label: 'Opplevelser & Natur', href: '/reiselivet/opplevelser' },
+      { label: 'Mat & drikke', href: '/bylivet/mat-og-drikke' },
+      { label: 'Shopping', href: '/bylivet/shopping' },
     ],
   },
   {
     label: 'Studentlivet',
     href: '/studentlivet',
     children: [
-      { label: 'Bolig og økonomi', href: '/studentlivet#bolig' },
-      { label: 'Helse og trivsel', href: '/studentlivet#helse' },
-      { label: 'Studenttilbud', href: '/studentlivet#tilbud' },
-      { label: 'Fritid og nettverk', href: '/studentlivet#fritid' },
+      { label: 'Student i Tønsberg', href: '/studentlivet' },
+      { label: 'Bolig & Rabatter', href: '/studentlivet/bolig-og-rabatter' },
     ],
   },
 ];
@@ -69,8 +67,8 @@ export const secondaryNavigation: NavItem[] = [
   { label: 'Om oss', href: '/om-oss' },
   { label: 'Prosjekter', href: '/prosjekter' },
   { label: 'Partnere', href: '/om-oss/partnere' },
-  { label: 'Kontakt', href: '/kontakt' },
   { label: 'Presserom', href: '/om-oss/presserom' },
+  { label: 'Kontakt', href: '/kontakt' },
 ];
 
 export const footerLinks = {
@@ -93,6 +91,6 @@ export const footerLinks = {
     { label: 'Nyheter', href: '/nyheter' },
     { label: 'Gavekort', href: '/bylivet/gavekort' },
     { label: 'Torvleie', href: '/bylivet/torvleie' },
-    { label: 'Bli partner', href: '/om-oss/partnere#bli-partner' },
+    { label: 'Bli partner', href: '/om-oss/partnere' },
   ],
 };
