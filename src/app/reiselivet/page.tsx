@@ -5,6 +5,7 @@ import {
   Ship, Sun, Music, Camera, ArrowRight, ChevronRight, Sparkles
 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/Cards';
+import { PhotoGallery } from '@/components/ui/PhotoGallery';
 
 export const metadata: Metadata = {
   title: 'Reiselivet i Tønsberg | Tønsberglivet',
@@ -140,6 +141,40 @@ export default function ReiselivetPage() {
           <SectionCard title="Engø Gård" description="En oase av ro på Tjøme, kjent for gastronomi i særklasse og unik atmosfære." href="/reiselivet/overnatting" gradient="linear-gradient(135deg, #D97706, #F59E0B)" />
           <SectionCard title="Havna Hotell" description="Idyllisk beliggende på Tjøme med fantastiske bademuligheter og marina." href="/reiselivet/overnatting" gradient="linear-gradient(135deg, #7C3AED, #8B5CF6)" />
         </div>
+      </section>
+
+      {/* ── Bildegalleri for Reiselivet ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <PhotoGallery
+          title="Opplev Færder & Tønsbergs Reiseliv"
+          subtitle="Bilder fra Slottsfjellet, Færder Nasjonalpark, Verdens Ende og bryggemiljøet."
+          photos={[
+            {
+              src: '/images/skjaergard.jpg',
+              alt: 'Verdens Ende og Vippefyret i Færder',
+              caption: 'Verdens Ende & Vippefyret',
+              location: 'Tjøme / Færder Nasjonalpark',
+              category: 'Skjærgård & Kyst',
+              photographer: 'Visit Færder',
+            },
+            {
+              src: '/images/slottsfjellet.jpg',
+              alt: 'Slottsfjellet ruinepark og Tårnet',
+              caption: 'Slottsfjellet Middelalderborg',
+              location: 'Slottsfjellet Tønsberg',
+              category: 'Historie & Kultur',
+              photographer: 'Tønsberglivet Arkiv',
+            },
+            {
+              src: '/images/brygge.jpg',
+              alt: 'Tønsberg Brygge om kvelden',
+              caption: 'Sommerstemning på Brygga',
+              location: 'Tønsberg Brygge',
+              category: 'Uteliv & Gastronomi',
+              photographer: 'Per Eide',
+            },
+          ]}
+        />
       </section>
 
       {/* ── Planlegg ditt besøk ── */}

@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Store, Gift, CalendarDays, PlusCircle, Filter, Sparkles, ChevronRight, ArrowRight, MapPin, Clock } from 'lucide-react';
 import { SectionCard, BusinessCard } from '@/components/ui/Cards';
+import { PhotoGallery } from '@/components/ui/PhotoGallery';
 
 export const metadata: Metadata = {
   title: 'Bylivet | Tønsberglivet',
@@ -198,6 +199,40 @@ export default function BylivetPage() {
             description="Moderne frisørsalong som tilbyr klipp, farge, og styling i avslappende og lekre omgivelser."
           />
         </div>
+      </section>
+
+      {/* ── Fotogalleri fra Bylivet ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <PhotoGallery
+          title="Bylivet i Tønsberg i Bilder"
+          subtitle="Bildeglimt fra bryggekanten, Torvet, nisjebutikker og folkelivet i sentrum."
+          photos={[
+            {
+              src: '/images/brygge.jpg',
+              alt: 'Tønsberg Brygge om sommeren',
+              caption: 'Bryggelivet om kvelden',
+              location: 'Tønsberg Brygge',
+              category: 'Uteservering',
+              photographer: 'Per Eide',
+            },
+            {
+              src: '/images/food.jpg',
+              alt: 'Mat og servering',
+              caption: 'God mat på Torvet',
+              location: 'Kafé Nansen / Torvet',
+              category: 'Gastronomi',
+              photographer: 'Julie Hansen',
+            },
+            {
+              src: '/images/shopping.jpg',
+              alt: 'Nisjebutikker i Storgaten',
+              caption: 'Sentrumshandel',
+              location: 'Storgaten Tønsberg',
+              category: 'Shopping',
+              photographer: 'Tønsberglivet',
+            },
+          ]}
+        />
       </section>
 
       {/* ── Bli synlig ── */}

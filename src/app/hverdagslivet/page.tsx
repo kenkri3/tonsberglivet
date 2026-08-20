@@ -5,6 +5,7 @@ import {
   GraduationCap, Stethoscope, Dumbbell, Users, Landmark,
   ArrowRight, ChevronRight, Sparkles
 } from 'lucide-react';
+import { PhotoGallery } from '@/components/ui/PhotoGallery';
 
 export const metadata: Metadata = {
   title: 'Hverdagslivet i Tønsberg | Tønsberglivet',
@@ -121,6 +122,40 @@ export default function HverdagslivetPage() {
             <p className="text-xs text-foreground-muted leading-relaxed">Møteplasser, omsorgsarbeid og matutdeling med et sterkt nærvær i byen.</p>
           </div>
         </div>
+      </section>
+
+      {/* ── Fotogalleri for Hverdagslivet ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <PhotoGallery
+          title="Hverdagslivet i Tønsberg i Bilder"
+          subtitle="Glimt fra nabolagene, skjærgården, parkene og kulturen i hverdagen."
+          photos={[
+            {
+              src: '/images/skjaergard.jpg',
+              alt: 'Natur og skjærgård i Tønsberg',
+              caption: 'Kyst & Nærmiljø',
+              location: 'Færder / Tønsberg',
+              category: 'Friluftsliv',
+              photographer: 'Visit Færder',
+            },
+            {
+              src: '/images/slottsfjellet.jpg',
+              alt: 'Middelalderparken på Slottsfjellet',
+              caption: 'Rekreasjon på Slottsfjellet',
+              location: 'Slottsfjellet',
+              category: 'Kultur & Park',
+              photographer: 'Tønsberglivet Arkiv',
+            },
+            {
+              src: '/images/regnbue.jpg',
+              alt: 'Regnbue over Tønsberg by',
+              caption: 'Mangfold & Fellesskap',
+              location: 'Tønsberg Sentrum',
+              category: 'Byliv',
+              photographer: 'Tønsberglivet',
+            },
+          ]}
+        />
       </section>
 
       {/* ── CTA ── */}

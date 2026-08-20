@@ -4,6 +4,7 @@ import {
   GraduationCap, Home, HeartPulse, Ticket, Briefcase, 
   BookOpen, Coffee, PartyPopper, ChevronRight, ArrowRight, Sparkles
 } from 'lucide-react';
+import { PhotoGallery } from '@/components/ui/PhotoGallery';
 
 export const metadata: Metadata = {
   title: 'Studentlivet i Tønsberg | Tønsberglivet',
@@ -167,6 +168,40 @@ export default function StudentlivetPage() {
             desc="Gode muligheter for deltidsjobb i handel-, servering- og servicebransjen i byen."
           />
         </div>
+      </section>
+
+      {/* ── Fotogalleri for Studentlivet ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <PhotoGallery
+          title="Studentlivet i Bilder"
+          subtitle="Bilder fra USN Campus Vestfold, student arrangementer og utelivet på Brygga."
+          photos={[
+            {
+              src: '/images/student.jpg',
+              alt: 'Studenter på Campus Vestfold',
+              caption: 'USN Campus Vestfold',
+              location: 'Campus Vestfold / Bakkenteigen',
+              category: 'Utdanning & Campus',
+              photographer: 'USN',
+            },
+            {
+              src: '/images/brygge.jpg',
+              alt: 'Studentliv og samling på Brygga',
+              caption: 'Studentkvelder på Brygga',
+              location: 'Tønsberg Brygge',
+              category: 'Sosialt & Uteliv',
+              photographer: 'Per Eide',
+            },
+            {
+              src: '/images/kultur.jpg',
+              alt: 'Konserter og studentkultur',
+              caption: 'Fadderuka & Konserter',
+              location: 'Foynhagen',
+              category: 'Kultur & Musikk',
+              photographer: 'Tønsberglivet',
+            },
+          ]}
+        />
       </section>
     </main>
   );
