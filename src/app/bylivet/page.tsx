@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
-import { HeroSection } from '@/components/ui/HeroSection';
-import { SectionCard, BusinessCard } from '@/components/ui/Cards';
 import Link from 'next/link';
-import { Store, Gift, CalendarDays, PlusCircle, Filter } from 'lucide-react';
+import { Store, Gift, CalendarDays, PlusCircle, Filter, Sparkles, ChevronRight, ArrowRight, MapPin, Clock } from 'lucide-react';
+import { SectionCard, BusinessCard } from '@/components/ui/Cards';
 
 export const metadata: Metadata = {
   title: 'Bylivet | Tønsberglivet',
@@ -11,17 +10,42 @@ export const metadata: Metadata = {
 
 export default function BylivetPage() {
   return (
-    <main className="min-h-screen">
-      <HeroSection
-        compact={true}
-        title="Bylivet"
-        subtitle="Opplev Tønsberg"
-        description="I Tønsberg sentrum finner du et rikt utvalg av butikker, restauranter, kafeer, kultur og opplevelser. Oppdag alt det spennende byen har å by på."
-        backgroundGradient="linear-gradient(135deg, #1D4ED8, #0E7490)"
-      />
+    <main className="min-h-screen space-y-16 pb-20">
+      {/* ── Bilde-Hero Banner ── */}
+      <header className="relative min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/images/brygge.jpg"
+            alt="Bylivet i Tønsberg"
+            className="w-full h-full object-cover object-center scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/70 to-slate-950/40" />
+        </div>
 
-      {/* Snarveier */}
-      <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto -mt-10 md:-mt-16 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
+          <div className="max-w-3xl space-y-4">
+            
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
+              <Link href="/" className="hover:text-white transition-colors">Forside</Link>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-amber-300">Bylivet</span>
+            </div>
+
+            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">
+              Bylivet i Tønsberg
+            </h1>
+
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl">
+              I Tønsberg sentrum finner du et rikt utvalg av butikker, restauranter, kafeer, kultur og opplevelser. Oppdag alt det spennende byen har å by på.
+            </p>
+
+          </div>
+        </div>
+      </header>
+
+      {/* ── Snarveier & Verktøy (-mt-16) ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <SectionCard
             title="Torvleie"
@@ -47,24 +71,86 @@ export default function BylivetPage() {
         </div>
       </section>
 
-      {/* Utforsk byen */}
-      <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      {/* ── Redaksjonelle reportasjer for Bylivet ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pt-6">
+        <div className="flex items-center justify-between border-b border-border pb-4">
           <div>
-            <h2 className="text-3xl font-bold text-foreground">Utforsk sentrum</h2>
-            <p className="text-foreground-muted mt-1">Steder å besøke og ting å gjøre</p>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary block mb-1">
+              Aktuelt i bykjernen
+            </span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">
+              Stemningsrapporter & Guider
+            </h2>
+          </div>
+          <Link href="/nyheter?kategori=bylivet" className="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+            <span>Alle byliliv-saker</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
+            <div className="relative aspect-[16/10] overflow-hidden">
+              <img src="/images/grundergata.jpg" alt="Gründergata" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
+                Trehus & Kultur
+              </span>
+            </div>
+            <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                  Gründergata og Nordbyen: – Den levende kulturarven vår
+                </h3>
+                <p className="text-xs text-foreground-muted leading-relaxed">
+                  Trehusbebyggelsen blomstrer med nisjebutikker, gallerier og skjulte bakgårdscafeer med ferske kanelsnurrer.
+                </p>
+              </div>
+              <Link href="/bylivet/shopping" className="text-xs font-bold text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform pt-2">
+                Utforsk shopping i sentrum <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
+            <div className="relative aspect-[16/10] overflow-hidden">
+              <img src="/images/regnbue.jpg" alt="Festival og Mangfold" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-primary" /> Sommer
+              </span>
+            </div>
+            <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                  Folkefest på Brygga: Rekordmange samlet til feiring av fellesskapet
+                </h3>
+                <p className="text-xs text-foreground-muted leading-relaxed">
+                  Hele byen kledde seg i farger da årets sommerfestival fylte kaikanten med musikk, mat og glede.
+                </p>
+              </div>
+              <Link href="/eventer" className="text-xs font-bold text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform pt-2">
+                Se festivalprogrammet <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Utforsk sentrum (Bedrifter & Lokasjoner) ── */}
+      <section className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-border pb-4">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Utforsk sentrum</h2>
+            <p className="text-foreground-muted text-sm mt-0.5">Steder å besøke og ting å oppleve</p>
           </div>
           
-          {/* Kategorifilter */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 w-full md:w-auto no-scrollbar">
-            <Filter className="w-5 h-5 text-foreground-muted mr-2 shrink-0 hidden md:block" />
-            {['Alle', 'Shopping', 'Mat & drikke', 'Aktivitet', 'Overnatting', 'Frisør & velvære', 'Kultur', 'Barn'].map((category, i) => (
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 w-full md:w-auto">
+            {['Alle', 'Shopping', 'Mat & drikke', 'Aktivitet', 'Overnatting', 'Kultur'].map((category, i) => (
               <button 
                 key={category}
-                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
                   i === 0 
                     ? 'bg-primary text-white' 
-                    : 'bg-surface text-foreground hover:bg-surface-hover border border-border'
+                    : 'bg-surface text-foreground hover:bg-surface-muted border border-border'
                 }`}
               >
                 {category}
@@ -112,30 +198,27 @@ export default function BylivetPage() {
             description="Moderne frisørsalong som tilbyr klipp, farge, og styling i avslappende og lekre omgivelser."
           />
         </div>
-
-        <div className="mt-12 text-center">
-          <button className="px-6 py-3 bg-surface border border-border text-foreground font-medium rounded-xl hover:bg-surface-hover transition-colors">
-            Last inn flere
-          </button>
-        </div>
       </section>
 
-      {/* Bli synlig */}
-      <section className="py-20 bg-accent dark:bg-slate-900 mt-12 mb-20 border-y border-border/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">Er ikke din bedrift listet?</h2>
-          <p className="text-lg text-foreground-muted mb-8 max-w-2xl mx-auto">
-            Driv du næring i Tønsberg sentrum? Ta kontakt med oss for å bli en del av oversikten og nå ut til flere besøkende.
+      {/* ── Bli synlig ── */}
+      <section className="py-16 bg-surface border-y border-border">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Er ikke din bedrift listet?</h2>
+          <p className="text-sm md:text-base text-foreground-muted max-w-2xl mx-auto">
+            Driver du næring i Tønsberg sentrum? Ta kontakt med oss for å bli en del av oversikten og nå ut til flere besøkende.
           </p>
-          <Link 
-            href="/kontakt" 
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors"
-          >
-            <PlusCircle className="w-5 h-5" /> Registrer din bedrift
-          </Link>
+          <div className="pt-2">
+            <Link 
+              href="/kontakt" 
+              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-primary hover:bg-primary-hover text-white font-bold text-sm rounded-xl transition-all shadow-md"
+            >
+              <PlusCircle className="w-4 h-4" /> Registrer din bedrift
+            </Link>
+          </div>
         </div>
       </section>
     </main>
   );
 }
+
 

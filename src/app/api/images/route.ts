@@ -6,33 +6,103 @@ export const dynamic = 'force-dynamic';
 const memoryImages = [
   {
     id: 'img-1',
-    title: 'Torvet i sommer-sol',
-    url: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80',
+    title: 'Tønsberg Brygge og Havnepromenade',
+    url: '/images/hero.jpg',
     folder: 'Bylivet',
-    photographer: 'Per Eide',
+    photographer: 'Tønsberglivet Arkiv',
     gdprStatus: 'APPROVED',
-    aiTags: ['Torvet', 'Sommer', 'Folkeliv', 'Uteservering'],
+    aiTags: ['Brygga', 'Havn', 'Solnedgang', 'Bylivet', 'Båtliv'],
     uploadedAt: '2026-08-01',
   },
   {
     id: 'img-2',
     title: 'Slottsfjellet og Tårnet',
-    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    url: '/images/slottsfjellet.jpg',
     folder: 'Kultur & Historie',
     photographer: 'Tønsberglivet Arkiv',
     gdprStatus: 'APPROVED',
-    aiTags: ['Slottsfjellet', 'Tårnet', 'Historie', 'Utsikt'],
+    aiTags: ['Slottsfjellet', 'Tårnet', 'Historie', 'Utsikt', 'Middelalder'],
     uploadedAt: '2026-08-03',
   },
   {
     id: 'img-3',
-    title: 'Verdens Ende Vippefyr',
-    url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+    title: 'Matmarked og ferske bakervarer på Torvet',
+    url: '/images/food.jpg',
+    folder: 'Næringslivet',
+    photographer: 'Tønsberglivet Arkiv',
+    gdprStatus: 'APPROVED',
+    aiTags: ['Torvet', 'Matmarked', 'Surdeigsbrød', 'Lokalmat', 'Gründer'],
+    uploadedAt: '2026-08-05',
+  },
+  {
+    id: 'img-4',
+    title: 'Gründergata og Nordbyens trehus',
+    url: '/images/grundergata.jpg',
+    folder: 'Bylivet',
+    photographer: 'Tønsberglivet Arkiv',
+    gdprStatus: 'APPROVED',
+    aiTags: ['Gründergata', 'Nordbyen', 'Trehus', 'Kulturarv', 'Shopping'],
+    uploadedAt: '2026-08-06',
+  },
+  {
+    id: 'img-5',
+    title: 'Kanalen og Bryggestemning',
+    url: '/images/brygge.jpg',
+    folder: 'Bylivet',
+    photographer: 'Tønsberglivet Arkiv',
+    gdprStatus: 'APPROVED',
+    aiTags: ['Kanalen', 'Brygga', 'Uteservering', 'Sommer'],
+    uploadedAt: '2026-08-08',
+  },
+  {
+    id: 'img-6',
+    title: 'Kultur og konsertopplevelser',
+    url: '/images/kultur.jpg',
+    folder: 'Kultur & Historie',
+    photographer: 'Tønsberglivet Arkiv',
+    gdprStatus: 'APPROVED',
+    aiTags: ['Kultur', 'Konsert', 'Foynhagen', 'Musikk'],
+    uploadedAt: '2026-08-10',
+  },
+  {
+    id: 'img-7',
+    title: 'Færder Skjærgård og Kystnatur',
+    url: '/images/skjaergard.jpg',
     folder: 'Reiselivet',
     photographer: 'Visit Færder',
     gdprStatus: 'APPROVED',
-    aiTags: ['Verdens Ende', 'Vippefyr', 'Skjærgård', 'Kyst'],
-    uploadedAt: '2026-08-05',
+    aiTags: ['Færder', 'Skjærgård', 'Svaberg', 'Nasjonalpark', 'Kyst'],
+    uploadedAt: '2026-08-12',
+  },
+  {
+    id: 'img-8',
+    title: 'Studentlivet ved USN Campus Vestfold',
+    url: '/images/student.jpg',
+    folder: 'Studentlivet',
+    photographer: 'USN Kommunikasjon',
+    gdprStatus: 'APPROVED',
+    aiTags: ['Student', 'USN', 'Campus Vestfold', 'Bakkenteigen', 'Utdanning'],
+    uploadedAt: '2026-08-14',
+  },
+  {
+    id: 'img-9',
+    title: 'Shopping i gågater og nisjebutikker',
+    url: '/images/shopping.jpg',
+    folder: 'Bylivet',
+    photographer: 'Tønsberglivet Arkiv',
+    gdprStatus: 'APPROVED',
+    aiTags: ['Handel', 'Shopping', 'Gågater', 'Sentrumsgavekortet'],
+    uploadedAt: '2026-08-16',
+  },
+  {
+    id: 'img-10',
+    title: 'Sommerfestival og Mangfold på Kaikanten',
+    url: '/images/regnbue.jpg',
+    folder: 'Kultur & Historie',
+    photographer: 'Tønsberglivet Arkiv',
+    gdprStatus: 'APPROVED',
+    aiTags: ['Festival', 'Folkefest', 'Mangfold', 'Sommer', 'Fellesskap'],
+    uploadedAt: '2026-08-18',
   },
 ];
 
@@ -41,7 +111,10 @@ export async function GET() {
     const images = await prisma.image.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return NextResponse.json({ success: true, data: images });
+    if (images && images.length > 0) {
+      return NextResponse.json({ success: true, data: images });
+    }
+    return NextResponse.json({ success: true, data: memoryImages });
   } catch (e) {
     return NextResponse.json({ success: true, data: memoryImages });
   }
