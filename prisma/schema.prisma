@@ -325,21 +325,8 @@ model BookingRequest {
   updatedAt   DateTime      @updatedAt
 }
 
-// ═══════════════════════════════
-// SYSTEMINNSTILLINGER & BYOK
-// ═══════════════════════════════
-
-model SystemSetting {
-  key         String   @id
-  value       String   @db.Text
-  description String?
-  isSecret    Boolean  @default(false)
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
-}
-
-
 enum BookingType {
+
   DAGPLASS
   SESONG
   HELAAR
@@ -386,4 +373,19 @@ model Page {
   published Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ═══════════════════════════════
+// SYSTEMINNSTILLINGER & BYOK
+// ═══════════════════════════════
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  category  String   @default("GENERAL") // AI, NOTIFICATIONS, INTEGRATIONS
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([category])
 }

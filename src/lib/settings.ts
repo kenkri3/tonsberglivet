@@ -1,51 +1,36 @@
 import { prisma } from './prisma';
 
-export interface SystemSettingItem {
-  key: string;
-  value: string;
-  description?: string | null;
-  isSecret?: boolean;
-  updatedAt?: Date;
-}
-
-// In-memory fallback if database table is not migrated or unavailable
-const memorySettings = new Map<string, SystemSettingItem>([
-  ['resend_api_key', { key: 'resend_api_key', value: '', description: 'Resend API Key for e-postutsending', isSecret: true }],
-  ['smtp_url', { key: 'smtp_url', value: '', description: 'SMTP URL fallback (f.eks. smtp://user:pass@host:587)', isSecret: true }],
-  ['gemini_api_key', { key: 'gemini_api_key', value: '', description: 'Google Gemini API Key for AI-agent og Copilot', isSecret: true }],
-  ['ticketmaster_api_key', { key: 'ticketmaster_api_key', value: '', description: 'Ticketmaster Discovery API Key', isSecret: true }],
-  ['cron_secret', { key: 'cron_secret', value: 'tonsberg_cron_secret_2026', description: 'Hemmelig nøkkel for nattlig cron-synk', isSecret: true }],
-  ['agent_webhook_url', { key: 'agent_webhook_url', value: '', description: 'Slack / Teams / Discord Webhook URL for agentvarsling', isSecret: false }],
-  ['duett_webhook_url', { key: 'duett_webhook_url', value: '', description: 'Webhook til regnskapsfører / Duett ERP', isSecret: false }],
-]);
+// Minnebuffer dersom databasetabellen ennå ikke er migrert i produksjon
+const memorySettings: Record<string, string> = {
+  cron_secret: 'tonsberg_cron_secret_2026',
+  notification_email: 'post@tonsberglivet.no',
+};
 
 /**
- * Henter en systeminnstilling fra databasen (eller env/memory som fallback).
- * Følger BYOK-prinsippet: DB -> process.env -> fallback.
+ * Henter en systeminnstilling fra databasen (eller minne/env som fallback).
+ * Følger BYOK-prinsippet: DB -> process.env -> minne -> defaultValue.
  */
 export async function getSetting(key: string, defaultValue?: string): Promise<string | undefined> {
   try {
-    const record = await prisma.systemSetting.findUnique({
+    const setting = await (prisma as any).systemSetting?.findUnique({
       where: { key },
     });
-    if (record && record.value && record.value.trim() !== '') {
-      return record.value;
+    if (setting && setting.value && setting.value.trim() !== '') {
+      return setting.value;
     }
-  } catch {
-    // Database utilgjengelig i test/bygg – fortsett til fallback
+  } catch (error) {
+    // Hvis tabell ikke eksisterer ennå i DB, fall tilbake til minne/env
   }
 
-  // Sjekk environment variables
+  // Sjekk prosess-miljøvariabel (f.eks. GEMINI_API_KEY for gemini_api_key)
   const envKeyUpper = key.toUpperCase();
   const envVal = process.env[envKeyUpper] || process.env[key];
   if (envVal && envVal.trim() !== '') {
     return envVal;
   }
 
-  // Sjekk minne-fallback
-  const memoryVal = memorySettings.get(key)?.value;
-  if (memoryVal && memoryVal.trim() !== '') {
-    return memoryVal;
+  if (memorySettings[key] !== undefined && memorySettings[key].trim() !== '') {
+    return memorySettings[key];
   }
 
   return defaultValue;
@@ -57,74 +42,59 @@ export async function getSetting(key: string, defaultValue?: string): Promise<st
 export async function setSetting(
   key: string,
   value: string,
-  description?: string,
-  isSecret: boolean = false
+  category: string = 'GENERAL'
 ): Promise<void> {
-  memorySettings.set(key, { key, value, description, isSecret, updatedAt: new Date() });
-
+  memorySettings[key] = value;
   try {
-    await prisma.systemSetting.upsert({
+    await (prisma as any).systemSetting?.upsert({
       where: { key },
-      update: {
-        value,
-        description: description || undefined,
-        isSecret,
-      },
-      create: {
-        key,
-        value,
-        description: description || null,
-        isSecret,
-      },
+      update: { value, category },
+      create: { key, value, category },
     });
   } catch (error) {
-    console.warn(`[SystemSetting] Kunne ikke persistere innstilling '${key}' til databasen, lagret i minnet:`, error);
+    console.warn('[Settings] Lagret i minnebuffer:', error);
   }
 }
 
 /**
- * Henter alle innstillinger for admin-grensesnittet.
- * Skjuler hemmeligheter dersom maskSecrets er satt til true.
+ * Henter alle innstillinger som en nøkkel-verdi ordbok.
  */
-export async function getAllSettings(maskSecrets: boolean = true): Promise<SystemSettingItem[]> {
-  const result = new Map<string, SystemSettingItem>(memorySettings);
-
+export async function getAllSettings(): Promise<Record<string, string>> {
+  const result: Record<string, string> = { ...memorySettings };
   try {
-    const dbSettings = await prisma.systemSetting.findMany();
-    for (const item of dbSettings) {
-      result.set(item.key, {
-        key: item.key,
-        value: item.value,
-        description: item.description,
-        isSecret: item.isSecret,
-        updatedAt: item.updatedAt,
-      });
+    const list = await (prisma as any).systemSetting?.findMany();
+    if (list && Array.isArray(list)) {
+      for (const item of list) {
+        result[item.key] = item.value;
+      }
     }
-  } catch {
-    // Fallback til default verdier
+  } catch (error) {
+    // fallback til memorySettings
   }
 
-  // Overstyr med env dersom satt og DB er tom
-  for (const [key, item] of result.entries()) {
-    if (!item.value) {
-      const envVal = process.env[key.toUpperCase()] || process.env[key];
+  // Fyll inn fra env dersom ikke satt i DB/minne
+  const knownKeys = [
+    'gemini_api_key',
+    'resend_api_key',
+    'smtp_url',
+    'ticketmaster_api_key',
+    'cron_secret',
+    'slack_webhook_url',
+    'teams_webhook_url',
+    'discord_webhook_url',
+    'agent_webhook_url',
+    'duett_webhook_url',
+    'notification_email',
+  ];
+
+  for (const k of knownKeys) {
+    if (!result[k]) {
+      const envVal = process.env[k.toUpperCase()] || process.env[k];
       if (envVal) {
-        result.set(key, { ...item, value: envVal });
+        result[k] = envVal;
       }
     }
   }
 
-  return Array.from(result.values()).map((s) => {
-    if (maskSecrets && s.isSecret && s.value) {
-      const len = s.value.length;
-      if (len > 8) {
-        return {
-          ...s,
-          value: `${s.value.slice(0, 4)}••••••••${s.value.slice(-4)}`,
-        };
-      }
-      return { ...s, value: '••••••••' };
-    }
-    return s;
-  });
+  return result;
 }

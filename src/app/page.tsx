@@ -5,6 +5,7 @@ import {
   Handshake, Users, ArrowRight, Sparkles, Calendar, Clock, ChevronRight, Store, Home as HomeIcon, Palmtree
 } from 'lucide-react';
 import { fetchLiveTicketmasterEvents } from '@/lib/ticketmaster';
+import { PhotoGallery } from '@/components/ui/PhotoGallery';
 
 export const metadata: Metadata = {
   title: 'Tønsberglivet | Norges eldste by',
@@ -355,6 +356,64 @@ export default async function Home() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── 5b. Fotogalleri fra Tønsberg ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <PhotoGallery
+          title="Bilder fra Tønsberglivet"
+          subtitle="Opplev atmosfæren i Norges eldste kystby, på Brygga, Slottsfjellet og Færder-skjærgården."
+          photos={[
+            {
+              src: '/images/slottsfjellet.jpg',
+              alt: 'Slottsfjellstårnet i Tønsberg',
+              caption: 'Slottsfjellet & Tårnet',
+              location: 'Slottsfjellet, Tønsberg',
+              category: 'Middelalder & Kultur',
+              photographer: 'Tønsberglivet Arkiv',
+            },
+            {
+              src: '/images/brygge.jpg',
+              alt: 'Tønsberg Brygge om kvelden',
+              caption: 'Stemning på Tønsberg Brygge',
+              location: 'Bryggekanten',
+              category: 'Byliv & Mat',
+              photographer: 'Per Eide',
+            },
+            {
+              src: '/images/skjaergard.jpg',
+              alt: 'Verdens Ende og Vippefyret',
+              caption: 'Verdens Ende & Skjærgården',
+              location: 'Færder Nasjonalpark',
+              category: 'Reiseliv & Natur',
+              photographer: 'Visit Færder',
+            },
+            {
+              src: '/images/food.jpg',
+              alt: 'Uteservering og matkultur',
+              caption: 'Lokal mat & Uteservering',
+              location: 'Kafé Nansen / Torvet',
+              category: 'Gastronomi',
+              photographer: 'Julie Hansen',
+            },
+            {
+              src: '/images/shopping.jpg',
+              alt: 'Sentrumshandel og nisjebutikker',
+              caption: 'Sentrumshandel i Torvgaten',
+              location: 'Tønsberg Sentrum',
+              category: 'Shopping',
+              photographer: 'Tønsberglivet',
+            },
+            {
+              src: '/images/student.jpg',
+              alt: 'Studenter ved USN Campus Vestfold',
+              caption: 'Studentmiljøet i Tønsberg',
+              location: 'Campus Vestfold',
+              category: 'Studentlivet',
+              photographer: 'USN',
+            },
+          ]}
+        />
       </section>
 
       {/* ── 6. Bli partner CTA ── */}

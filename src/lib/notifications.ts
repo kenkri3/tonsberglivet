@@ -8,130 +8,172 @@ export interface ActionButton {
 }
 
 export interface AgentNotificationPayload {
+  type?: 'NEW_BOOKING' | 'NEW_MESSAGE' | 'NEW_PARTNER' | 'CRON_SYNC' | 'INFO';
   title: string;
-  message: string;
+  description?: string;
+  message?: string;
   level?: 'info' | 'success' | 'warning' | 'error';
-  fields?: Record<string, string | number | undefined>;
+  fields?: Array<{ label: string; value: string }> | Record<string, string | number | undefined>;
+  actionId?: string;
   actions?: ActionButton[];
-  channel?: string;
 }
 
 /**
- * Sender interaktive varsler og handlingskort til Slack / Microsoft Teams / Discord.
- * Logger til konsoll dersom ingen webhook URL er konfigurert.
+ * Sender interaktive varsler og kort direkte til Slack, Microsoft Teams eller Discord.
  */
 export async function sendAgentNotification(payload: AgentNotificationPayload): Promise<{ success: boolean; sentViaWebhook: boolean }> {
-  const webhookUrl =
-    (await getSetting('agent_webhook_url')) ||
-    (await getSetting('slack_webhook_url')) ||
-    process.env.AGENT_WEBHOOK_URL ||
-    process.env.SLACK_WEBHOOK_URL;
+  const slackUrl = (await getSetting('slack_webhook_url')) || (await getSetting('agent_webhook_url'));
+  const teamsUrl = await getSetting('teams_webhook_url');
+  const discordUrl = await getSetting('discord_webhook_url');
 
+  const textContent = payload.description || payload.message || '';
   const timestamp = new Date().toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
-  const icon =
-    payload.level === 'success' ? '✅' :
-    payload.level === 'warning' ? '⚠️' :
-    payload.level === 'error' ? '🚨' : '📢';
 
-  // Dersom ingen webhook er satt opp, logg defensivt og returner suksess
-  if (!webhookUrl || webhookUrl.trim() === '') {
-    console.log(`\n🔔 [AGENT VARSLING] [${timestamp}] ${icon} ${payload.title}`);
-    console.log(`💬 ${payload.message}`);
-    if (payload.fields && Object.keys(payload.fields).length > 0) {
-      console.log('📋 Detaljer:', payload.fields);
-    }
-    if (payload.actions && payload.actions.length > 0) {
-      console.log('🔘 Handlinger:', payload.actions.map(a => `[${a.label} -> ${a.actionId}]`).join(' | '));
-    }
-    return { success: true, sentViaWebhook: false };
+  // Normaliser felter til [{ label, value }]
+  let normalizedFields: Array<{ label: string; value: string }> = [];
+  if (Array.isArray(payload.fields)) {
+    normalizedFields = payload.fields;
+  } else if (payload.fields && typeof payload.fields === 'object') {
+    normalizedFields = Object.entries(payload.fields)
+      .filter(([_, v]) => v !== undefined)
+      .map(([k, v]) => ({ label: k, value: String(v) }));
   }
 
-  try {
-    // Bygg Slack Block Kit kompatibel payload
-    const blocks: any[] = [
-      {
-        type: 'header',
-        text: {
-          type: 'plain_text',
-          text: `${icon} ${payload.title}`,
-          emoji: true,
-        },
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: payload.message,
-        },
-      },
-    ];
+  let sent = false;
 
-    // Legg til felter dersom angitt
-    if (payload.fields && Object.keys(payload.fields).length > 0) {
-      const fieldBlocks = Object.entries(payload.fields)
-        .filter(([_, val]) => val !== undefined)
-        .map(([key, val]) => ({
-          type: 'mrkdwn',
-          text: `*${key}:*\n${val}`,
-        }));
+  // 1. Slack (støtter interaktive handlingsknapper og Block Kit)
+  if (slackUrl && slackUrl.startsWith('http')) {
+    try {
+      const blocks: any[] = [
+        {
+          type: 'header',
+          text: { type: 'plain_text', text: payload.title, emoji: true },
+        },
+        {
+          type: 'section',
+          text: { type: 'mrkdwn', text: textContent },
+        },
+      ];
 
-      if (fieldBlocks.length > 0) {
+      if (normalizedFields.length > 0) {
         blocks.push({
           type: 'section',
-          fields: fieldBlocks.slice(0, 10), // Slack limit per section
+          fields: normalizedFields.slice(0, 10).map((f) => ({
+            type: 'mrkdwn',
+            text: `*${f.label}:*\n${f.value}`,
+          })),
         });
       }
-    }
 
-    // Legg til interaktive knapper
-    if (payload.actions && payload.actions.length > 0) {
-      blocks.push({
-        type: 'actions',
-        elements: payload.actions.map((act) => ({
-          type: 'button',
-          text: {
-            type: 'plain_text',
-            text: act.label,
-            emoji: true,
-          },
-          action_id: act.actionId,
-          value: act.actionId,
-          style: act.style === 'primary' ? 'primary' : act.style === 'danger' ? 'danger' : undefined,
-          url: act.url,
-        })),
+      if (payload.actionId) {
+        blocks.push({
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: { type: 'plain_text', text: '✅ Godkjenn', emoji: true },
+              style: 'primary',
+              value: `approve_${payload.actionId}`,
+              action_id: `approve_${payload.actionId}`,
+            },
+            {
+              type: 'button',
+              text: { type: 'plain_text', text: '❌ Avslå', emoji: true },
+              style: 'danger',
+              value: `reject_${payload.actionId}`,
+              action_id: `reject_${payload.actionId}`,
+            },
+          ],
+        });
+      } else if (payload.actions && payload.actions.length > 0) {
+        blocks.push({
+          type: 'actions',
+          elements: payload.actions.map((a) => ({
+            type: 'button',
+            text: { type: 'plain_text', text: a.label, emoji: true },
+            style: a.style === 'primary' ? 'primary' : a.style === 'danger' ? 'danger' : undefined,
+            value: a.actionId,
+            action_id: a.actionId,
+            url: a.url,
+          })),
+        });
+      }
+
+      const res = await fetch(slackUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: `🔔 *${payload.title}*\n${textContent}`,
+          blocks,
+        }),
       });
+
+      if (res.ok) sent = true;
+    } catch (err) {
+      console.error('[Notification] Slack dispatch error:', err);
     }
-
-    // Legg til footer tidsstempel
-    blocks.push({
-      type: 'context',
-      elements: [
-        {
-          type: 'mrkdwn',
-          text: `Tønsberglivet Autonom Agent • ${timestamp}`,
-        },
-      ],
-    });
-
-    const bodyPayload = {
-      text: `${icon} *${payload.title}*: ${payload.message}`,
-      blocks,
-    };
-
-    const res = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bodyPayload),
-    });
-
-    if (!res.ok) {
-      console.warn(`[Agent Notification] Webhook returnerte status ${res.status}`);
-      return { success: false, sentViaWebhook: false };
-    }
-
-    return { success: true, sentViaWebhook: true };
-  } catch (error) {
-    console.error('[Agent Notification] Feil ved sending til webhook:', error);
-    return { success: false, sentViaWebhook: false };
   }
+
+  // 2. Microsoft Teams (Adaptive / MessageCard)
+  if (teamsUrl && teamsUrl.startsWith('http')) {
+    try {
+      const res = await fetch(teamsUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          '@type': 'MessageCard',
+          '@context': 'http://schema.org/extensions',
+          themeColor: '1E3A5F',
+          summary: payload.title,
+          sections: [
+            {
+              activityTitle: payload.title,
+              activitySubtitle: `Tønsberglivet Agent • ${timestamp}`,
+              text: textContent,
+              facts: normalizedFields.map((f) => ({ name: f.label, value: f.value })),
+            },
+          ],
+        }),
+      });
+      if (res.ok) sent = true;
+    } catch (err) {
+      console.error('[Notification] Teams dispatch error:', err);
+    }
+  }
+
+  // 3. Discord (Rich Embed)
+  if (discordUrl && discordUrl.startsWith('http')) {
+    try {
+      const res = await fetch(discordUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: `🔔 **${payload.title}**\n${textContent}`,
+          embeds: [
+            {
+              title: payload.title,
+              description: textContent,
+              color: 0x1e3a5f,
+              fields: normalizedFields.map((f) => ({ name: f.label, value: f.value, inline: true })),
+              footer: { text: `Tønsberglivet Agent • ${timestamp}` },
+            },
+          ],
+        }),
+      });
+      if (res.ok) sent = true;
+    } catch (err) {
+      console.error('[Notification] Discord dispatch error:', err);
+    }
+  }
+
+  // Fallback til konsoll dersom ingen webhook er satt opp
+  if (!sent) {
+    console.log(`\n🔔 [AGENT NOTIFICATION] [${timestamp}] ${payload.title}`);
+    console.log(`💬 ${textContent}`);
+    if (normalizedFields.length > 0) {
+      console.log('📋 Detaljer:', normalizedFields);
+    }
+  }
+
+  return { success: true, sentViaWebhook: sent };
 }

@@ -1,3 +1,5 @@
+import { getSetting } from './settings';
+
 export interface TicketmasterEvent {
   id: string;
   title: string;
@@ -42,7 +44,8 @@ export function normalizeTicketmasterEvent(item: any): TicketmasterEvent {
  * Fetch live events for Tønsberg from Ticketmaster Discovery API v2.
  */
 export async function fetchLiveTicketmasterEvents(): Promise<TicketmasterEvent[]> {
-  const apiKey = process.env.TICKETMASTER_API_KEY;
+  const dynamicKey = await getSetting('ticketmaster_api_key');
+  const apiKey = dynamicKey || process.env.TICKETMASTER_API_KEY;
 
   if (apiKey) {
     try {
