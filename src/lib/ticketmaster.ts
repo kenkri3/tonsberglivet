@@ -124,3 +124,80 @@ export async function fetchLiveTicketmasterEvents(): Promise<TicketmasterEvent[]
     },
   ];
 }
+
+
+// In-memory cache for ultra-fast (<50ms) serving
+let inMemoryCachedEvents: TicketmasterEvent[] | null = null;
+
+let lastSyncTimestamp: number = 0;
+
+export interface DoOHPlaylistItem {
+  screenId: string;
+  screenName: string;
+  location: string;
+  spotTitle: string;
+  headline: string;
+  durationSeconds: number;
+  imageUrl: string;
+  eventDate?: string;
+}
+
+let activeScreenPlaylist: DoOHPlaylistItem[] = [
+  {
+    screenId: 'torvet-1',
+    screenName: 'Torvet Storskjerm',
+    location: 'Tønsberg Torv (Sone C)',
+    spotTitle: 'Dagens Program på Torvet',
+    headline: 'Sommer & Kultur i Norges eldste by',
+    durationSeconds: 20,
+    imageUrl: '/images/hero.jpg',
+  },
+  {
+    screenId: 'kanalen-2',
+    screenName: 'Kanalen & Brygga Display',
+    location: 'Nedre Langgate / Brygga',
+    spotTitle: 'Konsert i Foynhagen',
+    headline: 'Livemusikk ved bryggekanten kl. 20:00',
+    durationSeconds: 15,
+    imageUrl: '/images/brygge.jpg',
+  },
+  {
+    screenId: 'kaldnes-3',
+    screenName: 'Kaldnes Gangbru Display',
+    location: 'Kaldnes Brygge',
+    spotTitle: 'Matmarked & Lokale Råvarer',
+    headline: 'Besøk bodene og spisestedene i sentrum',
+    durationSeconds: 15,
+    imageUrl: '/images/food.jpg',
+  },
+];
+
+/**
+ * Henter hurtigbufrede Ticketmaster-events dersom tilgjengelig.
+ */
+export function getCachedTicketmasterEvents(): { events: TicketmasterEvent[]; isCached: boolean; lastSync: number } {
+  if (inMemoryCachedEvents && inMemoryCachedEvents.length > 0) {
+    return { events: inMemoryCachedEvents, isCached: true, lastSync: lastSyncTimestamp };
+  }
+  return { events: [], isCached: false, lastSync: 0 };
+}
+
+/**
+ * Oppdaterer hurtigbufferen for arrangementer.
+ */
+export function setCachedTicketmasterEvents(events: TicketmasterEvent[]): void {
+  inMemoryCachedEvents = events;
+  lastSyncTimestamp = Date.now();
+}
+
+/**
+ * Henter og oppdaterer DoOH-byskjermenes spilleliste.
+ */
+export function getDoOHScreenPlaylist(): DoOHPlaylistItem[] {
+  return activeScreenPlaylist;
+}
+
+export function setDoOHScreenPlaylist(playlist: DoOHPlaylistItem[]): void {
+  activeScreenPlaylist = playlist;
+}
+
