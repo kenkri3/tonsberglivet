@@ -3,10 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { bookingSchema, contactSchema } from '@/lib/validations';
+import { sendAgentNotification } from '@/lib/notifications';
 
 /**
  * Server Action for Torvleie Booking submission.
- * Directly saves to Railway PostgreSQL via Prisma.
+ * Directly saves to Railway PostgreSQL via Prisma and notifies agent.
  */
 export async function submitTorvleieAction(formData: FormData) {
   try {
@@ -21,7 +22,7 @@ export async function submitTorvleieAction(formData: FormData) {
 
     const validated = bookingSchema.parse(rawData);
 
-    await prisma.bookingRequest.create({
+    const booking = await prisma.bookingRequest.create({
       data: {
         name: validated.name,
         email: validated.email,
@@ -33,7 +34,23 @@ export async function submitTorvleieAction(formData: FormData) {
       },
     });
 
+    // Varsle autonom agent i Slack/Teams/Discord
+    await sendAgentNotification({
+      type: 'NEW_BOOKING',
+      title: 'Ny forespørsel om torvleie',
+      description: `${validated.name} søker om stand/torvplass på Torvet.`,
+      fields: [
+        { label: 'Søker', value: validated.name },
+        { label: 'E-post', value: validated.email },
+        { label: 'Type leie', value: validated.type },
+        { label: 'Dato', value: validated.startDate || 'Fleksibel' },
+        { label: 'Melding', value: validated.message || 'Ingen' },
+      ],
+      actionId: booking.id,
+    });
+
     revalidatePath('/admin/torvleie');
+    revalidatePath('/admin/booking');
     return { success: true, message: 'Forespørsel om torvleie er mottatt!' };
   } catch (error: any) {
     return { success: false, error: error?.errors || 'Feil ved innsending' };
@@ -42,7 +59,7 @@ export async function submitTorvleieAction(formData: FormData) {
 
 /**
  * Server Action for Contact Form submission.
- * Directly saves to Railway PostgreSQL via Prisma.
+ * Directly saves to Railway PostgreSQL via Prisma and notifies agent.
  */
 export async function submitContactAction(formData: FormData) {
   try {
@@ -62,6 +79,18 @@ export async function submitContactAction(formData: FormData) {
         subject: validated.subject,
         message: validated.message,
       },
+    });
+
+    // Varsle autonom agent i Slack/Teams/Discord
+    await sendAgentNotification({
+      type: 'NEW_MESSAGE',
+      title: 'Ny publikumshenvendelse',
+      description: `${validated.name}: "${validated.subject || 'Generelt spørsmål'}"`,
+      fields: [
+        { label: 'Fra', value: `${validated.name} (${validated.email})` },
+        { label: 'Emne', value: validated.subject || 'Ingen emne' },
+        { label: 'Innhold', value: validated.message.slice(0, 200) },
+      ],
     });
 
     revalidatePath('/admin/meldinger');

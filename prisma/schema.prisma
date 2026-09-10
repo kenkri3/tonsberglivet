@@ -367,3 +367,18 @@ model Page {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ═══════════════════════════════
+// SYSTEMINNSTILLINGER & BYOK
+// ═══════════════════════════════
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  category  String   @default("GENERAL") // AI, NOTIFICATIONS, INTEGRATIONS
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([category])
+}

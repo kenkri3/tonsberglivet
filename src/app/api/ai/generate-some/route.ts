@@ -1,26 +1,21 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { getEffectiveGeminiApiKey } from '@/lib/ai-config';
 
 export async function POST(request: Request) {
   try {
     const { title, text, category } = await request.json();
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = await getEffectiveGeminiApiKey();
 
     if (!title) {
       return NextResponse.json({ success: false, error: 'Tittel er påkrevd' }, { status: 400 });
     }
 
     if (!apiKey) {
-      // Mock fallback response for local dev without key
       return NextResponse.json({
-        success: true,
-        data: {
-          facebook: `🎉 ${title}\n\n${text || 'Det skjer spennende ting i Tønsberg! Read mer på tonsberglivet.no'}\n\n#Tønsberglivet #Tønsberg #Vestfold`,
-          instagram: `✨ ${title}\n\n${text || 'Opplev stemningen i Norges eldste by!'}\n.\n.\n#tonsberglivet #tbglivet #tønsberg #bryggaitønsberg #færder #byliv`,
-          linkedin: `📈 Tønsberglivet Nyheter: ${title}\n\nVi gleder oss over positiv utvikling i Tønsbergregionen. ${text || ''}\n\nLes mer om nærings- og byutvikling på tonsberglivet.no.`,
-          newsletter: `Overskrift: ${title}\n\nKjære Tønsberg-venn,\n${text || ''}\n\nVelkommen til å oppleve mer av Tønsberglivet!`,
-        },
-      });
+        success: false,
+        error: 'Ingen aktiv Gemini API-nøkkel funnet. Legg inn egen nøkkel under Admin > Innstillinger (BYOK).',
+      }, { status: 400 });
     }
 
     const ai = new GoogleGenAI({ apiKey });
