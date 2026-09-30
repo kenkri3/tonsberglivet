@@ -5,8 +5,10 @@ import {
   GraduationCap, Stethoscope, Dumbbell, Users, Landmark,
   ArrowRight, ChevronRight, Sparkles
 } from 'lucide-react';
-import { PhotoGallery } from '@/components/ui/PhotoGallery';
 import { HverdagslivetLogo } from '@/components/brand/BrandLogos';
+import { AirQualityWidget } from '@/components/environment/AirQualityWidget';
+import { NavJobsWidget } from '@/components/jobs/NavJobsWidget';
+import { PhotoGallery } from '@/components/ui/PhotoGallery';
 
 export const metadata: Metadata = {
   title: 'Hverdagslivet i Tønsberg | Tønsberglivet',
@@ -102,6 +104,18 @@ export default function HverdagslivetPage() {
           <ReasonCard icon={<Stethoscope className="h-6 w-6 text-primary" />} title="7. Utmerket helsetilbud" desc="Sykehuset i Vestfold lokalisert sentralt i byen samt gode lokale helsetjenester." />
           <ReasonCard icon={<Dumbbell className="h-6 w-6 text-primary" />} title="8. Bredt idretts- og friluftstilbud" desc="Klubber, haller, seilforeninger og moderne anlegg for nesten enhver idrett." />
           <ReasonCard icon={<Users className="h-6 w-6 text-primary" />} title="9. Inkluderende fellesskap" desc="Aktive velforeninger, frivillighetsmiljøer og varme lokalsamfunn." />
+        </div>
+      </section>
+
+      {/* ── Miljø & Luftkvalitet samt Karrieremuligheter (NILU & NAV Live) ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <AirQualityWidget />
+          <NavJobsWidget
+            title="Finn jobb i Tønsbergregionen"
+            subtitle="Planlegger du å flytte hit? Se ferske ledige stillinger via NAV Arbeidsplassen."
+            limit={4}
+          />
         </div>
       </section>
 

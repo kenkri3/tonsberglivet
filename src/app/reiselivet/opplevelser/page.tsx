@@ -2,47 +2,64 @@ import { Metadata } from 'next';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Sun, Waves, Mountain, Camera, Compass } from 'lucide-react';
 import Link from 'next/link';
+import { HeritageSection } from '@/components/culture/HeritageSection';
+import { OceanConditionsWidget } from '@/components/weather/OceanConditionsWidget';
 
 export const metadata: Metadata = {
-  title: 'Opplevelser & Natur | Tønsberglivet',
-  description: 'Utforsk Verdens Ende, Færder Nasjonalpark, Bolærne øyene og Slottsfjellet.',
+  title: 'Opplevelser, Kulturarv & Natur | Tønsberglivet',
+  description: 'Utforsk Verdens Ende, Færder Nasjonalpark, Slottsfjellet og Norges eldste by.',
 };
 
 const attractions = [
-  { name: 'Verdens Ende & Vippefyret', area: 'Tjøme / Færder', desc: 'Ikonisk fyrtårn og svaberg på spissen av Tjøme med mektig utsikt mot Skagerrak.' },
-  { name: 'Færder Nasjonalpark', area: 'Skjærgården', desc: 'En av Norges mest fantastiske marint nasjonalparker for padling, dykking og kyststier.' },
+  { name: 'Verdens Ende & Vippefyret', area: 'Tjøme / Færder', desc: 'Ikonisk fyrtårn og svaberg på spissen av Tjøme med mektig utsikt mot Skagerrak og Færder fyr.' },
+  { name: 'Færder Nasjonalpark', area: 'Skjærgården', desc: 'En av Norges mest fantastiske marine nasjonalparker for padling, dykking, bading og kyststier.' },
   { name: 'Bolærne Øyene', area: 'Nøtterøy Skjærgård', desc: 'Historiske øyer med kystfort, turstier og fergebåt fra Tønsberg Brygge.' },
-  { name: 'Moutmarka', area: 'Sør-Tjøme', desc: 'Fredet kystområde med rullesteinstrender, unikt planteliv og kvelds-solnedgang.' },
+  { name: 'Moutmarka & Bekkevika', area: 'Sør-Tjøme', desc: 'Fredet kystområde med rullesteinstrender, unikt planteliv og kvelds-solnedgang.' },
 ];
 
 export default function OpplevelserPage() {
   return (
-    <main className="min-h-screen pb-20">
+    <main className="min-h-screen pb-20 space-y-12">
       <HeroSection
-        title="Opplevelser & Natur"
-        subtitle="Verdens Ende & Færder Nasjonalpark"
-        description="Opplev Norges vakreste skjærgård, ikoniske svaberg, historiske øyer og uforglemmelige naturopplevelser."
+        title="Opplevelser, Kulturarv & Natur"
+        subtitle="Fra Vikingtid til Færder Nasjonalpark"
+        description="Opplev Norges vakreste skjærgård, historiske middelalderborger, ikoniske svaberg og levende kystkultur."
         backgroundGradient="linear-gradient(135deg, #D97706, #0E7490)"
         compact={true}
       />
 
-      <div className="container mx-auto px-4 mt-12 space-y-12 max-w-6xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {attractions.map((a, idx) => (
-            <div key={idx} className="bg-surface rounded-2xl border border-border p-6 space-y-3 hover:shadow-md transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-cyan-700 bg-cyan-100 dark:bg-cyan-950 px-3 py-1 rounded-full uppercase tracking-wider">
-                  {a.area}
-                </span>
-                <Compass className="w-5 h-5 text-cyan-600" />
+      <div className="container mx-auto px-4 space-y-12 max-w-6xl">
+        {/* ── Badevann & Sjøforhold Live API ── */}
+        <section>
+          <OceanConditionsWidget />
+        </section>
+
+        {/* ── Kulturarv & Riksantikvaren Showcase ── */}
+        <section>
+          <HeritageSection />
+        </section>
+
+        {/* ── Naturattraksjoner ── */}
+        <div className="space-y-4">
+          <h3 className="text-xl font-bold text-foreground">Kystperler & Nasjonalpark</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {attractions.map((a, idx) => (
+              <div key={idx} className="bg-surface rounded-2xl border border-border p-6 space-y-3 hover:shadow-md transition-all">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-cyan-700 bg-cyan-100 dark:bg-cyan-950 px-3 py-1 rounded-full uppercase tracking-wider">
+                    {a.area}
+                  </span>
+                  <Compass className="w-5 h-5 text-cyan-600" />
+                </div>
+                <h4 className="font-bold text-xl text-foreground">{a.name}</h4>
+                <p className="text-sm text-foreground-muted leading-relaxed">{a.desc}</p>
               </div>
-              <h3 className="font-bold text-xl text-foreground">{a.name}</h3>
-              <p className="text-sm text-foreground-muted leading-relaxed">{a.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="bg-surface-muted border border-border rounded-3xl p-8 text-center space-y-4">
+        {/* ── CTA ── */}
+        <div className="bg-surface-muted border border-border rounded-3xl p-8 text-center space-y-4 shadow-sm">
           <h3 className="text-2xl font-bold text-foreground">Planlegger du en dagstur til Tønsberg & Færder?</h3>
           <p className="text-sm text-foreground-muted max-w-lg mx-auto">
             Sjekk også byens restauranter, kaffebarer og kulturtilbud.

@@ -4,8 +4,10 @@ import {
   GraduationCap, Home, HeartPulse, Ticket, Briefcase, 
   BookOpen, Coffee, PartyPopper, ChevronRight, ArrowRight, Sparkles
 } from 'lucide-react';
-import { PhotoGallery } from '@/components/ui/PhotoGallery';
 import { StudentlivetLogo } from '@/components/brand/BrandLogos';
+import { PublicTransportWidget } from '@/components/transit/PublicTransportWidget';
+import { NavJobsWidget } from '@/components/jobs/NavJobsWidget';
+import { PhotoGallery } from '@/components/ui/PhotoGallery';
 
 export const metadata: Metadata = {
   title: 'Studentlivet i Tønsberg | Tønsberglivet',
@@ -143,6 +145,19 @@ export default function StudentlivetPage() {
             </ul>
           </div>
 
+        </div>
+      </section>
+
+      {/* ── Studentbuss til Campus & Deltidsjobber (Entur & NAV Live) ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <PublicTransportWidget initialStop="bakkenteigen" />
+          <NavJobsWidget
+            initialOnlyStudent={true}
+            title="Deltidsjobber for Studenter"
+            subtitle="Finn deltids- og sommerjobber i Tønsberg via NAV Arbeidsplassen."
+            limit={4}
+          />
         </div>
       </section>
 

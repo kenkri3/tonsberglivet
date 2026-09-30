@@ -5,6 +5,7 @@ import {
   Briefcase, Plane, Train, ChevronRight, Sparkles
 } from 'lucide-react';
 import { NaeringslivetLogo } from '@/components/brand/BrandLogos';
+import { NavJobsWidget } from '@/components/jobs/NavJobsWidget';
 
 export const metadata: Metadata = {
   title: 'Næringslivet i Tønsberg | Tønsberglivet',
@@ -119,6 +120,15 @@ export default function NaeringslivetPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── Ledige stillinger i Tønsberg (NAV Arbeidsplassen Live API) ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <NavJobsWidget
+          title="Karrieremuligheter i Tønsbergregionen"
+          subtitle="Hentes direkte fra NAV Arbeidsplassen for Tønsberg og Færder kommune."
+          limit={6}
+        />
       </section>
 
       {/* ── Næringsarealer og Byutvikling ── */}

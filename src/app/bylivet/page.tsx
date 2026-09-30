@@ -2,8 +2,11 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { Store, Gift, CalendarDays, PlusCircle, Filter, Sparkles, ChevronRight, ArrowRight, MapPin, Clock } from 'lucide-react';
 import { SectionCard, BusinessCard } from '@/components/ui/Cards';
-import { PhotoGallery } from '@/components/ui/PhotoGallery';
 import { BylivetLogo } from '@/components/brand/BrandLogos';
+import { PublicTransportWidget } from '@/components/transit/PublicTransportWidget';
+import { TrafficWidget } from '@/components/traffic/TrafficWidget';
+import { OceanConditionsWidget } from '@/components/weather/OceanConditionsWidget';
+import { PhotoGallery } from '@/components/ui/PhotoGallery';
 
 export const metadata: Metadata = {
   title: 'Bylivet | Tønsberglivet',
@@ -76,6 +79,17 @@ export default function BylivetPage() {
             gradient="linear-gradient(135deg, #8B5CF6, #7C3AED)"
             icon={<CalendarDays className="w-8 h-8 text-white" />}
           />
+        </div>
+      </section>
+
+      {/* ── Bypuls & Sanntidsdata (Entur, Kanalbrua & MET Sjøforhold) ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <PublicTransportWidget />
+          <div className="space-y-8">
+            <TrafficWidget />
+            <OceanConditionsWidget />
+          </div>
         </div>
       </section>
 

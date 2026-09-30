@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "tonsberglivet.no",
       },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "s1.ticketm.net",
+      },
+      {
+        protocol: "https",
+        hostname: "media.ticketmaster.com",
+      },
     ],
   },
   async redirects() {

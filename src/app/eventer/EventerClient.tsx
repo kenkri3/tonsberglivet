@@ -5,6 +5,7 @@ import { HeroSection } from '@/components/ui/HeroSection';
 import { EventCard } from '@/components/ui/Cards';
 import { Calendar, Filter, Ticket, RefreshCw, ExternalLink } from 'lucide-react';
 import { TicketmasterEvent } from '@/lib/ticketmaster';
+import { LibraryEventsWidget } from '@/components/culture/LibraryEventsWidget';
 
 const categories = ['Alle', 'Konsert', 'Kultur', 'Mat & Drikke', 'Familie', 'Teater'];
 
@@ -137,6 +138,11 @@ export default function EventerClient() {
               />
             </div>
           ))}
+        </div>
+
+        {/* ── Tønsberg og Færder Bibliotek & Litteraturhus Feed ── */}
+        <div className="mt-14">
+          <LibraryEventsWidget />
         </div>
       </div>
     </main>
