@@ -48,8 +48,24 @@ export default function BookingHubPage() {
   const [requests, setRequests] = useState<BookingRequest[]>(initialRequests);
   const [selectedSpot, setSelectedSpot] = useState<typeof spotsData[0] | null>(spotsData[0]);
 
-  const handleApprove = (id: string) => {
+  const [approvalFeedback, setApprovalFeedback] = useState<string | null>(null);
+
+  const handleApprove = async (id: string) => {
     setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' } : r));
+    try {
+      const res = await fetch('/api/agent/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve', bookingId: id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setApprovalFeedback(data.message || `Booking #${id} er godkjent og e-postbekreftelse er sendt.`);
+      }
+    } catch {
+      setApprovalFeedback(`Booking #${id} er godkjent i systemet.`);
+    }
+    setTimeout(() => setApprovalFeedback(null), 5000);
   };
 
   const handleReject = (id: string) => {
@@ -60,6 +76,7 @@ export default function BookingHubPage() {
     if (filterTab === 'all') return true;
     return r.status === filterTab;
   });
+
 
   const totalRevenue = requests
     .filter(r => r.status === 'approved' || r.status === 'invoiced')
@@ -325,7 +342,15 @@ export default function BookingHubPage() {
           </div>
         </div>
 
+        {approvalFeedback && (
+          <div className="p-4 rounded-2xl bg-success-light border border-success/30 text-success text-xs font-bold flex items-center justify-between shadow-xs">
+            <span>✅ {approvalFeedback}</span>
+            <button onClick={() => setApprovalFeedback(null)} className="text-success hover:opacity-80">Lukk</button>
+          </div>
+        )}
+
         <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-xs">
+
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-surface-muted text-foreground uppercase font-bold border-b border-border">

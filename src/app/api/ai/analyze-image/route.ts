@@ -1,21 +1,18 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { getEffectiveGeminiApiKey } from '@/lib/ai-config';
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = await getEffectiveGeminiApiKey();
     const body = await request.json();
     const { imageName, folder } = body;
 
     if (!apiKey) {
-      // Mock fallback response if API key is not configured yet in local dev environment
       return NextResponse.json({
-        success: true,
-        aiTags: ['Tønsberg', 'Torvet', 'Sommer', 'Folkeliv', 'Uteservering'],
-        suggestedGdpr: 'APPROVED',
-        confidenceScore: 0.95,
-        aiSummary: `Bilde "${imageName}" gjenkjent som sommerstemning på Torvet i Tønsberg.`,
-      });
+        success: false,
+        error: 'Ingen aktiv Gemini API-nøkkel funnet. Legg inn egen nøkkel under Admin > Innstillinger (BYOK).',
+      }, { status: 400 });
     }
 
     const ai = new GoogleGenAI({ apiKey });

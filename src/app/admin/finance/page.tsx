@@ -32,6 +32,8 @@ const initialInvoices: InvoiceRow[] = [
 export default function DuettFinancePage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [invoices] = useState<InvoiceRow[]>(initialInvoices);
   const [filter, setFilter] = useState<'all' | 'sent' | 'pending'>('all');
 
@@ -45,8 +47,49 @@ export default function DuettFinancePage() {
     }, 1200);
   };
 
+  const handleExportDuett = async () => {
+    setIsExporting(true);
+    setExportMessage(null);
+    try {
+      // 1. Trigger export and webhook via API
+      const res = await fetch('/api/finance/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingIds: invoices.map((i) => i.id) }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.data?.csvContent) {
+        // 2. Trigger browser download of CSV
+        const blob = new Blob([data.data.csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', data.data.filename || `Duett_Fakturagrunnlag_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        setExportMessage(data.message || `Fakturagrunnlag (${data.data.items.length} poster) er eksportert og lastet ned.`);
+      } else {
+        setExportMessage('Fakturagrunnlag generert.');
+      }
+    } catch (e) {
+      console.error('Export error:', e);
+      // Fallback: Last ned via direkte GET
+      window.location.href = '/api/finance/export';
+      setExportMessage('Laster ned Duett ERP CSV-fil...');
+    } finally {
+      setIsExporting(false);
+      setTimeout(() => setExportMessage(null), 6000);
+    }
+  };
+
   const totalBilled = invoices.reduce((acc, curr) => acc + curr.totalAmount, 0);
   const totalVat = invoices.reduce((acc, curr) => acc + curr.vat, 0);
+
 
   const filteredInvoices = invoices.filter(inv => {
     if (filter === 'all') return true;
@@ -164,15 +207,34 @@ export default function DuettFinancePage() {
           </div>
         </div>
 
-        <button
-          onClick={handleManualSync}
-          disabled={isSyncing}
-          className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50 shrink-0"
-        >
-          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-          <span>{isSyncing ? 'Kjører Duett-synk...' : syncSuccess ? 'Synkronisert!' : 'Kjør Manuell Synk'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <button
+            onClick={handleExportDuett}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-5 py-3 bg-foreground hover:bg-foreground/90 text-surface rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50"
+          >
+            <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
+            <span>{isExporting ? 'Eksporterer...' : 'Eksporter til Duett ERP'}</span>
+          </button>
+
+          <button
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            className="flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>{isSyncing ? 'Kjører Duett-synk...' : syncSuccess ? 'Synkronisert!' : 'Kjør Manuell Synk'}</span>
+          </button>
+        </div>
       </section>
+
+      {/* Tilbakemelding ved eksport */}
+      {exportMessage && (
+        <div className="p-4 rounded-2xl bg-success-light border border-success/30 text-success text-xs font-bold flex items-center justify-between shadow-xs">
+          <span>✅ {exportMessage}</span>
+          <button onClick={() => setExportMessage(null)} className="text-success hover:opacity-80">Lukk</button>
+        </div>
+      )}
 
       {/* ── Seksjon 3: Transaksjonsjournal ── */}
       <section className="space-y-6">
@@ -182,20 +244,32 @@ export default function DuettFinancePage() {
             <p className="text-xs text-foreground-muted mt-0.5">Siste transaksjoner overført til Duett Økonomisystem</p>
           </div>
 
-          <div className="flex items-center gap-2 bg-surface-muted p-1.5 rounded-2xl border border-border">
-            {(['all', 'sent', 'pending'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  filter === tab ? 'bg-primary text-white shadow-xs' : 'text-foreground-muted hover:text-foreground'
-                }`}
-              >
-                {tab === 'all' ? 'Alle' : tab === 'sent' ? 'EHF Sendt' : 'Venter'}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleExportDuett}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-surface-muted hover:bg-surface border border-border text-foreground rounded-xl text-xs font-bold transition-all"
+            >
+              <Download className="w-3.5 h-3.5 text-primary" />
+              <span>Last ned CSV</span>
+            </button>
+
+            <div className="flex items-center gap-2 bg-surface-muted p-1.5 rounded-2xl border border-border">
+              {(['all', 'sent', 'pending'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setFilter(tab)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    filter === tab ? 'bg-primary text-white shadow-xs' : 'text-foreground-muted hover:text-foreground'
+                  }`}
+                >
+                  {tab === 'all' ? 'Alle' : tab === 'sent' ? 'EHF Sendt' : 'Venter'}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
 
         <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
