@@ -27,6 +27,7 @@ function LinkedinIcon({ className }: { className?: string }) {
   );
 }
 import { footerLinks } from '@/lib/navigation';
+import { TonsberglivetLogo } from '@/components/brand/BrandLogos';
 
 export function Footer() {
   return (
@@ -37,10 +38,8 @@ export function Footer() {
 
           {/* Kolonne 1 — Om Tønsberglivet */}
           <div className="lg:col-span-1">
-            <Link href="/" className="inline-block mb-4">
-              <span className="text-xl font-bold tracking-tight text-foreground">
-                tønsberglivet
-              </span>
+            <Link href="/" className="inline-block mb-4" aria-label="Tønsberglivet forside">
+              <TonsberglivetLogo className="h-7 w-auto text-[#16193d] dark:text-[#d3dafe]" />
             </Link>
             <p className="text-foreground-muted text-sm leading-relaxed mb-6">
               Tønsberglivet er et samarbeid mellom aktører som vil bidra til 

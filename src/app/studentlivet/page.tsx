@@ -5,6 +5,7 @@ import {
   BookOpen, Coffee, PartyPopper, ChevronRight, ArrowRight, Sparkles
 } from 'lucide-react';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
+import { StudentlivetLogo } from '@/components/brand/BrandLogos';
 
 export const metadata: Metadata = {
   title: 'Studentlivet i Tønsberg | Tønsberglivet',
@@ -25,7 +26,7 @@ export default function StudentlivetPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10 w-full">
           <div className="max-w-3xl space-y-4">
             
             {/* Breadcrumb */}
@@ -35,12 +36,18 @@ export default function StudentlivetPage() {
               <span className="text-amber-300">Studentlivet</span>
             </div>
 
-            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">
-              Student i Tønsberg
+            {/* Offisiell logo */}
+            <div className="pt-2">
+              <StudentlivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+            </div>
+
+            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
+              Student i Tønsberg. <br />
+              <span className="font-serif italic font-normal text-amber-300">Studiested med puls og samhold.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl">
-              Velkommen som student i Norges eldste by! Her får du en studietid med nærhet til campus, fantastisk kystnatur og et pulserende byliv.
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow">
+              Velkommen som student ved USN Campus Vestfold i Norges eldste by! Her får du moderne fasiliteter, trygge studentboliger via SSN, rabatter i sentrum og et sprudlende uteliv på Brygga.
             </p>
 
             <div className="pt-2 flex flex-wrap gap-4">

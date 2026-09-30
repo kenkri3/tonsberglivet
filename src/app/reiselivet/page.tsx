@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/Cards';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
+import { ReiselivetLogo } from '@/components/brand/BrandLogos';
 
 export const metadata: Metadata = {
   title: 'Reiselivet i Tønsberg | Tønsberglivet',
@@ -26,7 +27,7 @@ export default function ReiselivetPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10 w-full">
           <div className="max-w-3xl space-y-4">
             
             {/* Breadcrumb */}
@@ -36,12 +37,18 @@ export default function ReiselivetPage() {
               <span className="text-amber-300">Reiselivet</span>
             </div>
 
-            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">
-              Opplev Tønsberg & Færder
+            {/* Offisiell logo */}
+            <div className="pt-2">
+              <ReiselivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+            </div>
+
+            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
+              Opplev Tønsberg & Færder. <br />
+              <span className="font-serif italic font-normal text-amber-300">Historie, kyst og uforglemmelige øyeblikk.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl">
-              Norges eldste by byr på en uforglemmelig miks av vikinghistorie, idyllisk skjærgård og et yrende byliv på Brygga.
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow">
+              Norges eldste by byr på en storslått miks av tusenårig vikinghistorie, idylliske øyer i Færder Nasjonalpark, Verdens Ende og et yrende bryggeliv.
             </p>
 
             <div className="pt-2 flex flex-wrap gap-4">

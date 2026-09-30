@@ -6,6 +6,10 @@ import { Menu, X, Search, ChevronDown, LayoutDashboard, ArrowUpRight, Sparkles }
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { WeatherWidget } from '@/components/ui/WeatherWidget';
 import { navigation, secondaryNavigation, type NavItem } from '@/lib/navigation';
+import { 
+  TonsberglivetLogo, BylivetLogo, HverdagslivetLogo, 
+  NaeringslivetLogo, ReiselivetLogo, StudentlivetLogo 
+} from '@/components/brand/BrandLogos';
 
 const searchableItems = [
   { title: 'Færderbiennalen & Sommerkultur', category: 'Bylivet', href: '/nyheter/faerderbiennalen' },
@@ -108,19 +112,11 @@ export function Header() {
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center gap-3 group"
+              className="flex items-center gap-3 group py-1"
               aria-label="Tønsberglivet — Hjem"
             >
-              <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-lg shadow-md group-hover:scale-105 transition-all">
-                T
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-extrabold tracking-tight text-foreground group-hover:text-primary transition-colors">
-                  tønsberglivet
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-foreground-subtle -mt-1 hidden sm:block">
-                  Offisiell Byportal
-                </span>
+              <div className="flex items-center">
+                <TonsberglivetLogo className="h-7 sm:h-8 md:h-9 w-auto text-[#16193d] dark:text-[#d3dafe] group-hover:opacity-85 transition-all duration-300" />
               </div>
             </Link>
 
@@ -135,10 +131,10 @@ export function Header() {
                 >
                   <Link
                     href={item.href}
-                    className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-foreground
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-foreground
                                hover:text-primary transition-colors rounded-xl hover:bg-surface-muted"
                   >
-                    {item.label}
+                    <span>{item.label}</span>
                     {item.children && (
                       <ChevronDown
                         className={`w-3.5 h-3.5 transition-transform duration-200 ${
@@ -151,18 +147,34 @@ export function Header() {
                   {/* Dropdown */}
                   {item.children && activeDropdown === item.label && (
                     <div className="absolute top-full left-0 pt-2 animate-slide-down z-50">
-                      <div className="rounded-2xl shadow-2xl p-2 min-w-[240px] bg-surface border border-border">
-                        {item.children.map((child) => (
-                          <Link
-                            key={child.href}
-                            href={child.href}
-                            className="block px-4 py-2.5 text-sm font-medium text-foreground
-                                       hover:text-primary hover:bg-surface-muted
-                                       rounded-xl transition-colors"
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
+                      <div className="rounded-2xl shadow-2xl p-3 min-w-[260px] bg-surface border border-border backdrop-blur-xl space-y-2">
+                        {/* Kategoriheader med merkevare SVG */}
+                        <div className="px-3 pt-2 pb-2 border-b border-border/60 flex items-center justify-between">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-foreground-subtle">
+                            {item.label}
+                          </span>
+                          <div className="h-4">
+                            {item.label === 'Bylivet' && <BylivetLogo className="h-3.5 w-auto text-primary" />}
+                            {item.label === 'Hverdagslivet' && <HverdagslivetLogo className="h-3.5 w-auto text-emerald-600 dark:text-emerald-400" />}
+                            {item.label === 'Næringslivet' && <NaeringslivetLogo className="h-3.5 w-auto text-purple-600 dark:text-purple-400" />}
+                            {item.label === 'Reiselivet' && <ReiselivetLogo className="h-3.5 w-auto text-amber-600 dark:text-amber-400" />}
+                            {item.label === 'Studentlivet' && <StudentlivetLogo className="h-3.5 w-auto text-red-600 dark:text-red-400" />}
+                          </div>
+                        </div>
+
+                        <div className="space-y-0.5">
+                          {item.children.map((child) => (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              className="block px-3 py-2 text-xs font-semibold text-foreground
+                                         hover:text-primary hover:bg-surface-muted
+                                         rounded-xl transition-colors"
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}

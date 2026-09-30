@@ -4,6 +4,7 @@ import {
   TrendingUp, Building2, Lightbulb, Users, ArrowRight,
   Briefcase, Plane, Train, ChevronRight, Sparkles
 } from 'lucide-react';
+import { NaeringslivetLogo } from '@/components/brand/BrandLogos';
 
 export const metadata: Metadata = {
   title: 'Næringslivet i Tønsberg | Tønsberglivet',
@@ -24,7 +25,7 @@ export default function NaeringslivetPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10 w-full">
           <div className="max-w-3xl space-y-4">
             
             {/* Breadcrumb */}
@@ -34,12 +35,18 @@ export default function NaeringslivetPage() {
               <span className="text-amber-300">Næringslivet</span>
             </div>
 
-            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">
-              Næringslivet i Tønsberg
+            {/* Offisiell logo */}
+            <div className="pt-2">
+              <NaeringslivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+            </div>
+
+            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
+              Næringslivet i Tønsberg. <br />
+              <span className="font-serif italic font-normal text-amber-300">Kraftsentrum for vekst og nyskaping.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl">
-              Et mangfoldig og fremoverlent næringsliv i sterk vekst. Fra historiske håndverksbedrifter i Gründergata til innovative teknologiselskaper.
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow">
+              Et fremoverlent næringsliv med over 7 500 bedrifter, 33 000 arbeidsplasser og sterke kompetanseklynger innen IT, finans, helse og maritim industri.
             </p>
 
             <div className="pt-2 flex flex-wrap gap-4">

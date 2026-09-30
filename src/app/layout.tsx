@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { OrganizationJsonLd } from "@/components/seo/JsonLd";
@@ -9,6 +9,13 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  display: "swap",
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -53,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
 
   return (
-    <html lang="nb" className={`${inter.variable} h-full`} suppressHydrationWarning>
+    <html lang="nb" className={`${inter.variable} ${playfair.variable} h-full`} suppressHydrationWarning>
       <head>
         {/* Forhindre flash av feil tema */}
         <script

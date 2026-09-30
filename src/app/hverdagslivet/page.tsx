@@ -6,6 +6,7 @@ import {
   ArrowRight, ChevronRight, Sparkles
 } from 'lucide-react';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
+import { HverdagslivetLogo } from '@/components/brand/BrandLogos';
 
 export const metadata: Metadata = {
   title: 'Hverdagslivet i Tønsberg | Tønsberglivet',
@@ -26,7 +27,7 @@ export default function HverdagslivetPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10 w-full">
           <div className="max-w-3xl space-y-4">
             
             {/* Breadcrumb */}
@@ -36,12 +37,18 @@ export default function HverdagslivetPage() {
               <span className="text-amber-300">Hverdagslivet</span>
             </div>
 
-            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">
-              Bo & leve i Tønsberg
+            {/* Offisiell logo */}
+            <div className="pt-2">
+              <HverdagslivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+            </div>
+
+            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
+              Bo & leve i Tønsberg. <br />
+              <span className="font-serif italic font-normal text-amber-300">Det gode liv mellom sjø og skog.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl">
-              Å bo i Tønsbergregionen gir deg det beste av to verdener – nærhet til urbane fasiliteter og kort vei til fantastisk natur, strender og skjærgård.
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow">
+              Å bo i Tønsbergregionen gir deg det beste av to verdener – nærhet til urbane fasiliteter, trygge skoler og oppvekstmiljøer, og kort vei til fantastisk natur og kyststi.
             </p>
 
             <div className="pt-2 flex flex-wrap gap-4">

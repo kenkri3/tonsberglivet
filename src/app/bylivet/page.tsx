@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Store, Gift, CalendarDays, PlusCircle, Filter, Sparkles, ChevronRight, ArrowRight, MapPin, Clock } from 'lucide-react';
 import { SectionCard, BusinessCard } from '@/components/ui/Cards';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
+import { BylivetLogo } from '@/components/brand/BrandLogos';
 
 export const metadata: Metadata = {
   title: 'Bylivet | Tønsberglivet',
@@ -23,7 +24,7 @@ export default function BylivetPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/70 to-slate-950/40" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10 w-full">
           <div className="max-w-3xl space-y-4">
             
             {/* Breadcrumb */}
@@ -33,12 +34,18 @@ export default function BylivetPage() {
               <span className="text-amber-300">Bylivet</span>
             </div>
 
-            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight">
-              Bylivet i Tønsberg
+            {/* Offisiell logo */}
+            <div className="pt-2">
+              <BylivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+            </div>
+
+            <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
+              Bylivet i Tønsberg. <br />
+              <span className="font-serif italic font-normal text-amber-300">Mat, handel og kystmagi.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl">
-              I Tønsberg sentrum finner du et rikt utvalg av butikker, restauranter, kafeer, kultur og opplevelser. Oppdag alt det spennende byen har å by på.
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow">
+              I Tønsberg sentrum finner du et rikt utvalg av over 300 butikker, prisvinnende restauranter, koselige kaffebarer og yrende kulturliv ved bryggekanten.
             </p>
 
           </div>

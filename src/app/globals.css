@@ -104,6 +104,10 @@
   --color-error: var(--error);
   --color-error-light: var(--error-light);
   --font-sans: var(--font-inter);
+  --font-serif: var(--font-serif);
+  --color-theme-dark: #16193d;
+  --color-theme-light: #d3dafe;
+  --color-theme-medium: #e8e8ea;
   --animate-fade-in: fade-in 0.5s ease-out;
   --animate-slide-up: slide-up 0.5s ease-out;
   --animate-slide-down: slide-down 0.3s ease-out;
