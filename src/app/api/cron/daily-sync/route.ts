@@ -13,12 +13,18 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Validerer cron-kall mot konfigurert CRON_SECRET eller bearer token.
+ * Fail-closed i produksjon dersom ingen hemmelighet er satt.
  */
 async function isAuthorizedCronRequest(request: Request): Promise<boolean> {
   const configuredSecret =
     (await getSetting('cron_secret')) ||
     process.env.CRON_SECRET ||
-    'tonsberg_cron_secret_2026';
+    (process.env.NODE_ENV === 'development' ? 'tonsberg_cron_dev_secret' : null);
+
+  if (!configuredSecret) {
+    console.error('[Cron Security Error]: Ingen CRON_SECRET konfigurert i produksjon. Forespørsel avvist.');
+    return false;
+  }
 
   const authHeader = request.headers.get('authorization') || '';
   const xCronSecret = request.headers.get('x-cron-secret') || '';
@@ -36,11 +42,6 @@ async function isAuthorizedCronRequest(request: Request): Promise<boolean> {
 
   // 3. Sjekk query parameter (?key=...)
   if (queryKey === configuredSecret) return true;
-
-  // 4. I lokal utvikling uten hemmelighet satt
-  if (process.env.NODE_ENV === 'development' && !process.env.CRON_SECRET) {
-    return true;
-  }
 
   return false;
 }
@@ -146,8 +147,24 @@ async function handleDailySync(request: Request) {
 
     const activeEventsCount = liveEvents.length;
 
-    // ── 5. Send morgen-sammendrag til Slack/Teams via sendAgentNotification ──
-    const morningSummary = `God morgen! I dag er det ${activeEventsCount} aktive arrangementer i Tønsberg, ${pendingCount} ventende torvleiesøknader, og byskjermene viser dagens program.`;
+    // ── 5. GDPR Art. 5(1)(e): Automatisk lagringsbegrensning og sletting av gamle meldinger ──
+    let purgedMessagesCount = 0;
+    try {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      const purgeResult = await prisma.contactMessage.deleteMany({
+        where: {
+          createdAt: { lt: oneYearAgo },
+          read: true,
+        },
+      });
+      purgedMessagesCount = purgeResult.count;
+    } catch {
+      // Ignorer ved manglende tabell
+    }
+
+    // ── 6. Send morgen-sammendrag til Slack/Teams via sendAgentNotification ──
+    const morningSummary = `God morgen! I dag er det ${activeEventsCount} aktive arrangementer i Tønsberg, ${pendingCount} ventende torvleiesøknader, og byskjermene viser dagens program.${purgedMessagesCount > 0 ? ` (GDPR-rydding: ${purgedMessagesCount} eldre meldinger slettet).` : ''}`;
 
     await sendAgentNotification({
       title: 'Morgen-oppdatering fra Tønsberglivet',
@@ -158,6 +175,7 @@ async function handleDailySync(request: Request) {
         'Ventende Torvleie': `${pendingCount} søknader`,
         'Byskjermer': '3/3 i drift (Torvet, Kanalen, Kaldnes)',
         'Spilleliste': todayPlaylist.map((p) => p.spotTitle).join(' • '),
+        'GDPR Lagringsvern': `${purgedMessagesCount} utgåtte meldinger slettet`,
       },
     });
 

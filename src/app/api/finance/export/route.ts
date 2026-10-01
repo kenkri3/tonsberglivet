@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { generateDuettInvoiceExport, triggerDuettWebhook } from '@/lib/services/finance';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const auth = requireAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const url = new URL(request.url);
     const format = url.searchParams.get('format') || 'csv';
@@ -36,6 +42,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const auth = requireAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const bookingIds: string[] | undefined = Array.isArray(body?.bookingIds)

@@ -4,10 +4,21 @@ import { GoogleGenAI } from '@google/genai';
 import { toolGetRealEvents, toolGetRealtimeStatus, toolSearchBusinesses } from '@/lib/agent-tools';
 import { logVisitorQuestion } from '@/lib/chatbot-logger';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  // Rate limiting for offentlig KI-chat: maks 20 spørsmål per 10 minutter per IP
+  const ip = getClientIp(request);
+  const rateLimit = checkRateLimit(`public_chat_${ip}`, 20, 600);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { success: false, error: `Du har stilt mange spørsmål på kort tid. Vennligst vent ${rateLimit.resetSeconds} sekunder.` },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const message = (body.message || '').trim();

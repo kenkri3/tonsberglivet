@@ -1,4 +1,11 @@
-import Script from 'next/script';
+/**
+ * Server-side rendret Schema.org JSON-LD for Next.js App Router
+ * i henhold til The Lazy Developer Structured Data Guide & Google Rich Results.
+ *
+ * Ved å bruke native <script type="application/ld+json"> i stedet for next/script
+ * strategy="afterInteractive", sikres det at søkemotorer og KI-crawlere (GPTBot, Perplexity)
+ * mottar de fullstendige strukturerte dataene direkte i det initielle HTML-svaret fra serveren.
+ */
 
 export function EnterpriseGraphJsonLd({
   id = 'jsonld-graph',
@@ -10,10 +17,9 @@ export function EnterpriseGraphJsonLd({
   if (!schema) return null;
 
   return (
-    <Script
+    <script
       id={id}
       type="application/ld+json"
-      strategy="afterInteractive"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
@@ -55,10 +61,9 @@ export function OrganizationJsonLd() {
   };
 
   return (
-    <Script
+    <script
       id="jsonld-organization"
       type="application/ld+json"
-      strategy="afterInteractive"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
@@ -152,10 +157,9 @@ export function EventJsonLd({
   };
 
   return (
-    <Script
+    <script
       id={`jsonld-event-${encodeURIComponent(title)}`}
       type="application/ld+json"
-      strategy="afterInteractive"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
@@ -234,10 +238,9 @@ export function ArticleJsonLd({
   };
 
   return (
-    <Script
+    <script
       id={`jsonld-article-${encodeURIComponent(title)}`}
       type="application/ld+json"
-      strategy="afterInteractive"
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireEditorOrAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -121,6 +122,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { title, url, folder, photographer, aiTags, gdprStatus } = body;

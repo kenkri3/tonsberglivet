@@ -16,3 +16,4 @@ Tønsberglivet er det offisielle by- og regionutviklingsselskapet for Tønsberg 
 - E-post: hei@tonsberglivet.no
 - Telefon: +47 971 69 755
 - Nettside: https://tonsberglivet.no
+- Utvidet AI-katalog: https://tonsberglivet.no/llms-full.txt

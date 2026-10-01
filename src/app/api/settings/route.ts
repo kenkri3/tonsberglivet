@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { setSetting, getSetting, getAllSettings } from '@/lib/settings';
+import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +9,12 @@ function maskSecret(val?: string): string {
   return val.substring(0, 6) + '••••••••' + val.substring(val.length - 4);
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = requireAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const geminiKey = await getSetting('gemini_api_key');
     const braveKey = await getSetting('brave_api_key');
@@ -24,6 +30,21 @@ export async function GET() {
     const duettUrl = await getSetting('duett_webhook_url');
     const notificationEmail = await getSetting('notification_email', 'post@tonsberglivet.no');
     const autoApprove = await getSetting('auto_approve_bookings', 'false');
+    const autonomyMode = await getSetting('autonomy_mode', 'manual');
+    const autoPublishArticles = (await getSetting('auto_publish_articles', 'false')) === 'true';
+    const autoPublishEvents = (await getSetting('auto_publish_events', 'true')) === 'true';
+    const autoRedirectExpired = (await getSetting('auto_redirect_expired', 'true')) === 'true';
+
+    // Meta & SoMe
+    const metaPageId = await getSetting('meta_page_id', '');
+    const metaGroupId = await getSetting('meta_group_id', '');
+    const metaInstagramId = await getSetting('meta_instagram_id', '');
+    const metaAccessToken = await getSetting('meta_access_token', '');
+
+    // Google Business Profile
+    const googleBusinessAccountId = await getSetting('google_business_account_id', '');
+    const googleBusinessLocationId = await getSetting('google_business_location_id', '');
+    const googleBusinessAccessToken = await getSetting('google_business_access_token', '');
 
     return NextResponse.json({
       success: true,
@@ -54,6 +75,19 @@ export async function GET() {
         discordConfigured: !!discordUrl,
         notificationEmail,
         autoApproveBookings: autoApprove === 'true',
+        autonomyMode,
+        autoPublishArticles,
+        autoPublishEvents,
+        autoRedirectExpired,
+        metaPageId,
+        metaGroupId,
+        metaInstagramId,
+        metaAccessToken: maskSecret(metaAccessToken),
+        metaConfigured: !!metaAccessToken,
+        googleBusinessAccountId,
+        googleBusinessLocationId,
+        googleBusinessAccessToken: maskSecret(googleBusinessAccessToken),
+        googleBusinessConfigured: !!googleBusinessAccessToken,
       },
     });
   } catch (error: any) {
@@ -62,6 +96,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = requireAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
 
@@ -87,6 +126,17 @@ export async function POST(request: Request) {
       discordWebhookUrl,
       notificationEmail,
       autoApproveBookings,
+      autonomyMode,
+      autoPublishArticles,
+      autoPublishEvents,
+      autoRedirectExpired,
+      metaPageId,
+      metaGroupId,
+      metaInstagramId,
+      metaAccessToken,
+      googleBusinessAccountId,
+      googleBusinessLocationId,
+      googleBusinessAccessToken,
     } = body;
 
     if (geminiApiKey && !geminiApiKey.includes('••••')) {
@@ -130,6 +180,43 @@ export async function POST(request: Request) {
     }
     if (autoApproveBookings !== undefined) {
       await setSetting('auto_approve_bookings', String(autoApproveBookings), 'AUTOMATION');
+    }
+    if (autonomyMode !== undefined) {
+      await setSetting('autonomy_mode', String(autonomyMode), 'AUTOMATION');
+    }
+    if (autoPublishArticles !== undefined) {
+      await setSetting('auto_publish_articles', String(autoPublishArticles), 'AUTOMATION');
+    }
+    if (autoPublishEvents !== undefined) {
+      await setSetting('auto_publish_events', String(autoPublishEvents), 'AUTOMATION');
+    }
+    if (autoRedirectExpired !== undefined) {
+      await setSetting('auto_redirect_expired', String(autoRedirectExpired), 'AUTOMATION');
+    }
+
+    // Meta & SoMe
+    if (metaPageId !== undefined) {
+      await setSetting('meta_page_id', metaPageId.trim(), 'SOME');
+    }
+    if (metaGroupId !== undefined) {
+      await setSetting('meta_group_id', metaGroupId.trim(), 'SOME');
+    }
+    if (metaInstagramId !== undefined) {
+      await setSetting('meta_instagram_id', metaInstagramId.trim(), 'SOME');
+    }
+    if (metaAccessToken && !metaAccessToken.includes('••••')) {
+      await setSetting('meta_access_token', metaAccessToken.trim(), 'SOME');
+    }
+
+    // Google Business Profile
+    if (googleBusinessAccountId !== undefined) {
+      await setSetting('google_business_account_id', googleBusinessAccountId.trim(), 'SOME');
+    }
+    if (googleBusinessLocationId !== undefined) {
+      await setSetting('google_business_location_id', googleBusinessLocationId.trim(), 'SOME');
+    }
+    if (googleBusinessAccessToken && !googleBusinessAccessToken.includes('••••')) {
+      await setSetting('google_business_access_token', googleBusinessAccessToken.trim(), 'SOME');
     }
 
     return NextResponse.json({ success: true, message: 'Innstillinger er lagret!' });

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sanitizeInput } from '@/lib/validations';
+import { requireEditorOrAdmin } from '@/lib/auth';
+import { getSetting } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +41,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { title, category, excerpt, content, imageUrl, published } = body;
@@ -57,6 +64,11 @@ export async function POST(request: Request) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
 
+    const autoPublishSetting = await getSetting('auto_publish_articles', 'false');
+    const autonomyMode = await getSetting('autonomy_mode', 'manual');
+    const isAuto = autoPublishSetting === 'true' || autonomyMode === 'auto';
+    const shouldPublish = published !== undefined ? published : isAuto;
+
     try {
       const article = await prisma.article.create({
         data: {
@@ -65,7 +77,7 @@ export async function POST(request: Request) {
           category: (category as any) || 'BYLIVET',
           excerpt: cleanExcerpt,
           content,
-          published: published ?? true,
+          published: shouldPublish,
         },
       });
       return NextResponse.json({ success: true, data: article }, { status: 201 });
@@ -78,7 +90,7 @@ export async function POST(request: Request) {
         excerpt: cleanExcerpt,
         content,
         imageUrl,
-        published: published ?? true,
+        published: shouldPublish,
         createdAt: new Date().toISOString(),
       };
       memoryArticles.unshift(newArticle);

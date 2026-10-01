@@ -4,6 +4,10 @@ import { prisma } from './prisma';
 const memorySettings: Record<string, string> = {
   cron_secret: 'tonsberg_cron_secret_2026',
   notification_email: 'post@tonsberglivet.no',
+  autonomy_mode: 'manual',
+  auto_publish_articles: 'false',
+  auto_publish_events: 'true',
+  auto_redirect_expired: 'true',
 };
 
 /**
@@ -88,6 +92,17 @@ export async function getAllSettings(): Promise<Record<string, string>> {
     'agent_webhook_url',
     'duett_webhook_url',
     'notification_email',
+    'autonomy_mode',
+    'auto_publish_articles',
+    'auto_publish_events',
+    'auto_redirect_expired',
+    'meta_page_id',
+    'meta_group_id',
+    'meta_instagram_id',
+    'meta_access_token',
+    'google_business_account_id',
+    'google_business_location_id',
+    'google_business_access_token',
   ];
 
   for (const k of knownKeys) {

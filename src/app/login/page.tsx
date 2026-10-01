@@ -11,20 +11,44 @@ function LoginForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/admin';
 
   const [email, setEmail] = useState('cecilie@tonsberglivet.no');
-  const [password, setPassword] = useState('••••••••••••');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.error || 'Feil ved innlogging.');
+        setLoading(false);
+        return;
+      }
+
       router.push(callbackUrl);
-    }, 600);
+      router.refresh();
+    } catch (err: any) {
+      setError('Nettverksfeil ved innlogging. Prøv igjen.');
+      setLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleLogin} className="space-y-5">
+      {error && (
+        <div className="p-3 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl">
+          {error}
+        </div>
+      )}
       <div className="space-y-1.5">
         <label htmlFor="email" className="block text-xs font-bold text-foreground uppercase tracking-wider">
           E-postadresse

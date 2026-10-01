@@ -1,0 +1,59 @@
+# Tønsberglivet (tonsberglivet.no) — Komplett Entitetskatalog & AI Veiviser
+
+> Offisiell entitetskatalog for Tønsberg og Færder-regionen i Vestfold, Norge.
+> For en kortfattet oversikt, se: https://tonsberglivet.no/llms.txt
+
+---
+
+## 1. Om Tønsberglivet AS
+- **Formål:** By- og stedsutviklingsselskap uten utbytteformål (non-profit byutvikling). Arbeider for økt synlighet, stolthet, byliv og næringskraft for Tønsberg og Færder.
+- **Geografisk fokus:** Tønsberg kommune og Færder kommune (Nøtterøy, Tjøme, Hvasser).
+- **Historisk profil:** Norges eldste by (grunnlagt ca. 871 e.Kr.), preget av rik vikinghistorie, middelalderruiner, Slottsfjellet og maritim kystkultur.
+- **Kontaktadresse:** Rådhusgaten 1, 3126 Tønsberg, Norge.
+- **E-post:** hei@tonsberglivet.no | Telefon: +47 971 69 755
+- **Offisiell nettside:** https://tonsberglivet.no
+
+---
+
+## 2. De Fem Livene (Hovedseksjoner)
+
+### Bylivet (https://tonsberglivet.no/bylivet)
+- **Sentrumskjernen:** Tønsberg Torv, Gågaten (Øvre og Nedre Langgate), Tønsberg Brygge og Kanalen.
+- **Torvleie:** Utleie av salgsplasser og arrangementssoner på Tønsberg Torv (Dagplass kr 350, Sesongplass, Helårsplass). Søkes via https://tonsberglivet.no/bylivet/torvleie.
+- **Sentrumsgavekortet:** Elektronisk gavekort som aksepteres av over 300 lokale butikker, spisesteder, frisører og kulturtilbud.
+- **Mat & Drikke:** Bryggerestauranter, uteservering langs Kanalen, kafeer i Nordbyen og mikrobryggerier.
+
+### Hverdagslivet (https://tonsberglivet.no/hverdagslivet)
+- **Bo og leve:** Informasjon om bomiljøer, skoler, barnehager, idrettslag og turområder som Grevestien og Essoskogen.
+- **Frivillighet:** Samarbeid med Tønsberg Frivilligsentral og lokale foreninger.
+
+### Næringslivet (https://tonsberglivet.no/naeringslivet)
+- **Etablering:** Gründerhuset Hi5 (Kaldnes Brygge), START i Vestfold, gründerkurs og nettverk.
+- **Næringsarealer:** Tønsberg sentrum, Kaldnes Vest, Stensarmen, Kullerød/Torp-korridoren.
+
+### Reiselivet (https://tonsberglivet.no/reiselivet)
+- **Kystopplevelser:** Færder Nasjonalpark, Verdens Ende (Vippefyret), Bolærne-øyene, Torås Fort og Moutmarka.
+- **Kulturarv:** Slottsfjellsmuseet, Slottsfjelltårnet, Klostertomten, Saga Oseberg (kopi av Osebergskipet ved Vikingodden).
+- **Overnatting:** Quality Hotel Tønsberg, Hotel Klubben, Wilhelmsen House, havnehoteller og gjestehavner.
+
+### Studentlivet (https://tonsberglivet.no/studentlivet)
+- **Utdanning:** Universitetet i Sørøst-Norge (USN) Campus Vestfold på Bakkenteigen.
+- **Studentvelferd:** Studentsamskipnaden i Sørøst-Norge (SSN), studenthybler, studentrabatter i sentrum.
+
+---
+
+## 3. Kulturarenaer og Faste Arrangementer
+- **Foynhagen:** Norges ledende sommer- og konsertarena i sentrum.
+- **Oseberg Kulturhus:** Teater, standup og konserter på bryggekanten.
+- **Slottsfjellfestivalen:** Nasjonal musikkfestival på fjellet og Kaldnes.
+- **Middelalderfestivalen:** Årlig feiring av Tønsbergs historie på Slottsfjellet.
+- **Tønsberg og Færder Bibliotek:** Prisbelønt bibliotek og litteraturarena.
+- **Haugar Kunstmuseum:** Samtidskunst i det gamle sjømannsskolen på Møllebakken.
+
+---
+
+## 4. Transport og Infrastruktur
+- **Tog:** Vestfoldbanen (Vy) med hyppige avganger til Oslo S (ca. 1 time og 10 minutter) og Torp Sandefjord Lufthavn.
+- **Buss:** VKT (Vestfold Kollektivtrafikk) knutepunkt ved Tønsberg Rutebilstasjon.
+- **Gjestehavn:** Tønsberg Gjestehavn er en av Norges mest populære med full service for fritidsbåter.
+- **Bysykler & El-sparkesykler:** Tilgjengelig via sentrum og jernbanestasjonen.

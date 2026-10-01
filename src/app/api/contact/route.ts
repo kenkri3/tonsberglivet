@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { contactSchema } from '@/lib/validations';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { requireEditorOrAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +36,16 @@ const memoryMessages: Array<{
 ];
 
 export async function POST(request: Request) {
+  // Rate-limiting: maks 5 henvendelser per 10 minutter per IP
+  const ip = getClientIp(request);
+  const rateLimit = checkRateLimit(`contact_${ip}`, 5, 600);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { success: false, error: `For mange henvendelser. Vennligst vent ${rateLimit.resetSeconds} sekunder før du prøver igjen.` },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
     const validated = contactSchema.parse(body);
@@ -69,7 +81,12 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const msgs = await prisma.contactMessage.findMany({
       orderBy: { createdAt: 'desc' },

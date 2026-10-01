@@ -61,7 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const dbArticles = await prisma.article.findMany({
       where: { published: true },
       select: { slug: true, updatedAt: true },
-      take: 50,
+      take: 100,
     });
 
     for (const art of dbArticles) {
@@ -76,6 +76,50 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   } catch (e) {
     // Fortsett uten DB-artikler ved feil
+  }
+
+  // Hent dynamisk publiserte arrangementer (Event)
+  try {
+    const dbEvents = await prisma.event.findMany({
+      where: { published: true },
+      select: { slug: true, updatedAt: true },
+      take: 100,
+    });
+
+    for (const ev of dbEvents) {
+      if (ev.slug) {
+        sitemapItems.push({
+          url: `${baseUrl}/eventer/${ev.slug}`,
+          lastModified: ev.updatedAt || new Date(),
+          changeFrequency: 'daily',
+          priority: 0.85,
+        });
+      }
+    }
+  } catch (e) {
+    // Fortsett uten DB-eventer ved feil
+  }
+
+  // Hent dynamisk publiserte bedrifter (Business)
+  try {
+    const dbBusinesses = await prisma.business.findMany({
+      where: { published: true },
+      select: { slug: true, updatedAt: true },
+      take: 100,
+    });
+
+    for (const biz of dbBusinesses) {
+      if (biz.slug) {
+        sitemapItems.push({
+          url: `${baseUrl}/naeringslivet/bedrifter/${biz.slug}`,
+          lastModified: biz.updatedAt || new Date(),
+          changeFrequency: 'monthly',
+          priority: 0.75,
+        });
+      }
+    }
+  } catch (e) {
+    // Fortsett uten DB-bedrifter ved feil
   }
 
   return sitemapItems;
