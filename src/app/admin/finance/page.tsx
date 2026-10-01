@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Building2, ArrowUpRight, 
   RefreshCw, FileText, Download, ShieldCheck,
-  Zap, Clock
+  Zap, Clock, Sparkles
 } from 'lucide-react';
 
 interface InvoiceRow {
@@ -34,8 +34,23 @@ export default function DuettFinancePage() {
   const [syncSuccess, setSyncSuccess] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
-  const [invoices] = useState<InvoiceRow[]>(initialInvoices);
+  const [invoices, setInvoices] = useState<InvoiceRow[]>(initialInvoices);
   const [filter, setFilter] = useState<'all' | 'sent' | 'pending'>('all');
+
+  // Sanntidssynk med AI Co-Pilot / Autonom Agent
+  useEffect(() => {
+    const handleAction = (e: any) => {
+      if (e.detail?.action === 'duett_synced') {
+        setSyncSuccess(true);
+        setInvoices(prev => prev.map(inv => ({ ...inv, ehfStatus: 'sent' })));
+        setExportMessage('AI Agent fullførte Duett ERP-synkronisering i sanntid! Alle EHF 3.0 bilag er overført.');
+        setTimeout(() => setSyncSuccess(false), 4000);
+        setTimeout(() => setExportMessage(null), 6000);
+      }
+    };
+    window.addEventListener('tonsberg:action-completed', handleAction);
+    return () => window.removeEventListener('tonsberg:action-completed', handleAction);
+  }, []);
 
   const handleManualSync = () => {
     setIsSyncing(true);

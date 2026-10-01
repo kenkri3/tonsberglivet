@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Search, Eye, Pencil, Sparkles } from 'lucide-react';
 import { SoMeModal } from '@/components/admin/SoMeModal';
@@ -15,17 +15,40 @@ const demoArticles = [
 ];
 
 export default function ArtiklerPage() {
+  const [articles, setArticles] = useState(demoArticles);
   const [search, setSearch] = useState('');
   const [activeArticle, setActiveArticle] = useState<typeof demoArticles[0] | null>(null);
-
   const [selectedCategory, setSelectedCategory] = useState('Alle');
+  const [aiAlert, setAiAlert] = useState<string | null>(null);
+
+  // Sanntidssynk med AI Co-Pilot / Autonom Agent
+  useEffect(() => {
+    const handleAction = (e: any) => {
+      if (e.detail?.action === 'article_created' || e.detail?.action === 'create_article') {
+        const title = e.detail?.result?.title || 'Ny AI-generert artikkel: Helgeguide';
+        const newArt = {
+          id: `ai-${Date.now()}`,
+          title: title,
+          category: 'Bylivet',
+          status: 'Utkast',
+          date: new Date().toISOString().split('T')[0],
+        };
+        setArticles((prev) => [newArt, ...prev]);
+        setAiAlert(`Agenten opprettet nettopp «${title}» i CMS!`);
+        setTimeout(() => setAiAlert(null), 5000);
+      }
+    };
+    window.addEventListener('tonsberg:action-completed', handleAction);
+    return () => window.removeEventListener('tonsberg:action-completed', handleAction);
+  }, []);
 
   const categories = ['Alle', 'Bylivet', 'Næringslivet', 'Reiselivet', 'Studentlivet'];
 
-  const filtered = demoArticles.filter((a) => {
+  const filtered = articles.filter((a) => {
     const matchesCategory = selectedCategory === 'Alle' || a.category === selectedCategory;
-    const matchesSearch = a.title.toLowerCase().includes(search.toLowerCase()) ||
-                          a.category.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      a.title.toLowerCase().includes(search.toLowerCase()) ||
+      a.category.toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -37,6 +60,13 @@ export default function ArtiklerPage() {
           category={activeArticle.category}
           onClose={() => setActiveArticle(null)}
         />
+      )}
+
+      {aiAlert && (
+        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 flex items-center gap-2.5 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-200">
+          <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 animate-pulse" />
+          <span>{aiAlert}</span>
+        </div>
       )}
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

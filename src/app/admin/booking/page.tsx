@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Users, CalendarDays, 
   MapPin, Zap, Droplets, 
-  ArrowUpRight, X, Building, Check, RefreshCw
+  ArrowUpRight, X, Building, Check, RefreshCw, Sparkles
 } from 'lucide-react';
 
 interface BookingRequest {
@@ -49,6 +49,27 @@ export default function BookingHubPage() {
   const [selectedSpot, setSelectedSpot] = useState<typeof spotsData[0] | null>(spotsData[0]);
 
   const [approvalFeedback, setApprovalFeedback] = useState<string | null>(null);
+
+  // Sanntidssynk med AI Co-Pilot / Autonom Agent
+  useEffect(() => {
+    const handleAction = (e: any) => {
+      if (e.detail?.action === 'booking_approved' || e.detail?.action === 'approve_booking') {
+        setRequests(prev => {
+          const firstPendingIndex = prev.findIndex(r => r.status === 'pending');
+          if (firstPendingIndex !== -1) {
+            const updated = [...prev];
+            updated[firstPendingIndex] = { ...updated[firstPendingIndex], status: 'approved' };
+            setApprovalFeedback(`AI Agent godkjente torvleiesøknad for «${updated[firstPendingIndex].vendor}» i sanntid!`);
+            return updated;
+          }
+          return prev;
+        });
+        setTimeout(() => setApprovalFeedback(null), 5000);
+      }
+    };
+    window.addEventListener('tonsberg:action-completed', handleAction);
+    return () => window.removeEventListener('tonsberg:action-completed', handleAction);
+  }, []);
 
   const handleApprove = async (id: string) => {
     setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' } : r));
