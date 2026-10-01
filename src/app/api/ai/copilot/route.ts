@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
-import { getEffectiveGeminiApiKey } from '@/lib/ai-config';
+import { getEffectiveGeminiApiKey, generateUnifiedAiResponse } from '@/lib/ai-config';
 import { 
   ENTERPRISE_SEO_SYSTEM_INSTRUCTION, 
   generateSafeSlug, 
@@ -26,6 +25,7 @@ export async function POST(request: Request) {
     } = body;
 
     const apiKey = await getEffectiveGeminiApiKey();
+    const oneMinKey = await (await import('@/lib/ai-config')).getEffectiveOneMinAiKey();
 
     if (!prompt) {
       return NextResponse.json({ success: false, error: 'Prompt er påkrevd' }, { status: 400 });
@@ -44,14 +44,14 @@ export async function POST(request: Request) {
     }
 
     // 2. Hvis ingen nøkkel finnes, returner feil eller pedagogisk instruksjon
-    if (!apiKey) {
+    if (!apiKey && !oneMinKey) {
       return NextResponse.json({
         success: false,
-        error: 'Ingen aktiv Gemini API-nøkkel funnet. Vennligst legg inn egen gratis nøkkel fra Google AI Studio under Admin > Innstillinger (BYOK).',
+        error: 'Ingen aktiv AI API-nøkkel funnet. Vennligst legg inn 1_MIN_AI i Railway eller Gemini-nøkkel under Admin > Innstillinger (BYOK).',
       }, { status: 400 });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const { generateUnifiedAiResponse } = await import('@/lib/ai-config');
 
     // 3. Modus: Enterprise SEO & Content Engine
     if (mode === 'enterprise-seo') {
@@ -74,16 +74,11 @@ HUSK KRAVENE FRA SYSTEMINSTRUKSJONEN:
 
 SVAR KUN MED ET VALID JSON-OBJEKT I DET OPPGITTE FORMATET. INGEN TEKST UTENFOR JSON-OBJEKTET.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: fullPrompt,
-        config: {
-          systemInstruction: ENTERPRISE_SEO_SYSTEM_INSTRUCTION,
-          responseMimeType: 'application/json',
-        },
-      });
-
-      const rawText = response.text || '{}';
+      const rawText = (await generateUnifiedAiResponse({
+        prompt: fullPrompt,
+        systemInstruction: ENTERPRISE_SEO_SYSTEM_INSTRUCTION,
+        preferEu: true,
+      })) || '{}';
       let parsedData: EnterpriseSeoOutput;
 
       try {
@@ -129,15 +124,12 @@ Rolle: ${agent || 'Lokaljournalist'}.
 Stemning/Tone: ${tone || 'varm og engasjerende'}.
 Skriv på levende, velskrevet norsk (bokmål) med markdown-formatering, overskrifter (H1, H2, H3) og avsnitt.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        systemInstruction,
-      },
+    const outputText = await generateUnifiedAiResponse({
+      prompt,
+      systemInstruction,
+      preferEu: true,
     });
 
-    const outputText = response.text || '';
     return NextResponse.json({ success: true, text: outputText });
   } catch (error: any) {
     console.error('AI Copilot error:', error);

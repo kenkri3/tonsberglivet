@@ -131,8 +131,37 @@ export function formatAiMarkdown(text: string): string {
 
   let finalResult = resultLines.join('\n');
   finalResult = finalResult.replace(/\n{3,}/g, '\n\n');
+  finalResult = linkifyUrlsAndDomains(finalResult);
 
   return finalResult;
+}
+
+/**
+ * Gjør råe nettadresser og domenenavn (f.eks. foynhagen.no, nrk.no/tonsberg)
+ * om til klikkbare markdown-lenker dersom de ikke allerede er lenket.
+ */
+function linkifyUrlsAndDomains(text: string): string {
+  const parts = text.split(/(\[[^\]]+\]\([^\)]+\))/g);
+  for (let i = 0; i < parts.length; i++) {
+    if (!parts[i].startsWith('[')) {
+      parts[i] = parts[i].replace(
+        /(^|[\s(\[])((?:https?:\/\/[^\s,)]+)|(?:[a-zA-Z0-9-]+\.(?:no|com|org|net|io|info|app)(?:\/[^\s,)]*)?))/gi,
+        (match, prefix, url) => {
+          let cleanUrl = url;
+          let trailing = '';
+          const punctMatch = cleanUrl.match(/[.,;:!?]+$/);
+          if (punctMatch) {
+            trailing = punctMatch[0];
+            cleanUrl = cleanUrl.slice(0, -trailing.length);
+          }
+          if (cleanUrl.length < 4 || !cleanUrl.includes('.')) return match;
+          const href = cleanUrl.startsWith('http') ? cleanUrl : `https://${cleanUrl}`;
+          return `${prefix}[${cleanUrl}](${href})${trailing}`;
+        }
+      );
+    }
+  }
+  return parts.join('');
 }
 
 export function stripMarkdownFormatting(text: string): string {

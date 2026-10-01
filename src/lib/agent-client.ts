@@ -263,10 +263,16 @@ export async function queryAutonomousAgent(params: {
 }): Promise<AgentResponse | null> {
   const { message, sessionId = `sess-${Date.now()}`, userName = 'Cecilie' } = params;
 
+  // Be agenten om alltid å legge ved kildelenker når den finner ekstern info
+  const promptMessage =
+    message.includes('kilde') || message.includes('lenke') || message.includes('url')
+      ? message
+      : `${message}\n\n(Vennligst oppgi alltid direkte klikkbare kildelenker/URL-er til kildene når du henter informasjon fra utsiden av portalen).`;
+
   // 1. Prioritet: WEBHOOK_AGENT hvis tilgjengelig
   const webhookUrl = process.env.WEBHOOK_AGENT;
   if (webhookUrl && webhookUrl.trim().startsWith('http')) {
-    const webhookRes = await callAgentWebhook(webhookUrl.trim(), message, sessionId, userName);
+    const webhookRes = await callAgentWebhook(webhookUrl.trim(), promptMessage, sessionId, userName);
     if (webhookRes && webhookRes.success) {
       return webhookRes;
     }
@@ -275,7 +281,7 @@ export async function queryAutonomousAgent(params: {
   // 2. Prioritet: AGENT_API (MCP gateway)
   const agentApiKey = process.env.AGENT_API || process.env.NEXT_PUBLIC_AGENT_API;
   if (agentApiKey && agentApiKey.trim()) {
-    const mcpRes = await callAgentMcp(agentApiKey.trim(), message, sessionId);
+    const mcpRes = await callAgentMcp(agentApiKey.trim(), promptMessage, sessionId);
     if (mcpRes && mcpRes.success) {
       return mcpRes;
     }

@@ -662,6 +662,17 @@ export function TonsbergAgentChat({
                                 {children}
                               </code>
                             ),
+                            a: ({ href, children }) => (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-primary hover:text-primary-hover underline font-semibold decoration-primary/40 hover:decoration-primary transition-colors break-all"
+                              >
+                                <span>{children}</span>
+                                <ExternalLink className="w-3 h-3 inline-block shrink-0 opacity-70" />
+                              </a>
+                            ),
                           }}
                         >
                           {formatAiMarkdown(m.content)}
