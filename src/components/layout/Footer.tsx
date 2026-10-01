@@ -211,10 +211,10 @@ export function Footer() {
                 Informasjonskapsler
               </Link>
               <Link
-                href="/admin"
+                href="/login"
                 className="text-xs font-semibold text-primary hover:underline transition-colors"
               >
-                Admin Hub / Backend
+                Admin innlogging
               </Link>
               <a
                 href="#top"

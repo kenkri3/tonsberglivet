@@ -104,7 +104,7 @@ export function Header() {
             </Link>
             <span className="text-slate-700">|</span>
             <Link
-              href="/admin"
+              href="/login"
               className="text-slate-400 hover:text-amber-300 transition-colors"
               title="Intern administrasjon"
             >

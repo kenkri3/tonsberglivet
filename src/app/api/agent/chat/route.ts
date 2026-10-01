@@ -452,34 +452,45 @@ RETNINGSLINJER:
           const [pendingCount, articlesCount, eventsRes] = await Promise.all([
             prisma.bookingRequest.count({ where: { status: { in: ['NEW', 'PROCESSING'] } } }).catch(() => 0),
             prisma.article.count().catch(() => 0),
-            toolGetRealEvents(7).catch(() => ({ data: [] })),
+            toolGetRealEvents(14).catch(() => ({ data: [] })),
           ]);
 
-          const oneMinRes = await createOneMinChatCompletion([
-            {
-              role: 'system',
-              content: `Du er den handlekraftige, helautonome AI-agenten for Tønsberglivet (Tønsberglivet OS).
+          const allEvents = eventsRes.data || [];
+
+          const oneMinRes = await createOneMinChatCompletion(
+            [
+              {
+                role: 'system',
+                content: `Du er den handlekraftige, helautonome AI-agenten for Tønsberglivet (Tønsberglivet OS).
 Driftes i samsvar med GDPR og norsk personvernlovgivning.
 Du bistår Cecilie og ledelsen med å skrive artikler, helgeguider, verifisere åpningstider, håndtere torvleie og analysere bylivet.
 
 SANNTIDSSTATUS I TØNSBERGLIVET NÅ:
 - Ventende torvleiesøknader i databasen: ${pendingCount}
 - Registrerte CMS-artikler: ${articlesCount}
-- Aktuelle arrangementer i kalenderen: ${JSON.stringify(eventsRes.data?.slice(0, 5) || [])}
+- Aktuelle arrangementer i Tønsberg (inkl. Foynhagen, Oseberg Kulturhus, Støperiet, Papirhuset): ${JSON.stringify(allEvents)}
 - Web Intelligence: Brave API, Tavily API og Apify er integrert.
 
-Svar alltid på levende, profesjonelt norsk bokmål med formatering, overskrifter og emojier.`,
-            },
+INSTRUKSJONER FOR SVAR:
+1. Svar alltid på levende, profesjonelt norsk bokmål med Markdown-formatering, overskrifter og emojier.
+2. Når du svarer på arrangementsforespørsler eller «Event-Radar», trekk ut de spesifikke scenene (f.eks. Foynhagen og Oseberg Kulturhus), vis dato, klokkeslett, artist/tittel og oppgi direkte klikkbare lenker dersom tilgjengelig.
+3. Oppgi alltid kilder for ekstern informasjon.`,
+              },
+              {
+                role: 'user',
+                content: message,
+              },
+            ],
             {
-              role: 'user',
-              content: message,
-            },
-          ], {
-            model: 'gpt-4.1-mini',
-          });
+              model: 'gpt-4o-mini',
+              maxTokens: 1500,
+            }
+          );
 
           if (oneMinRes.success && oneMinRes.content) {
             replyText = oneMinRes.content;
+            quickReplies.push({ title: '📰 Opprett som artikkel i CMS', payload: `Opprett som artikkel basert på dette` });
+            quickReplies.push({ title: '📣 Lag SoMe-pakke', payload: `Lag SoMe-poster for dette` });
           }
         }
       } catch (oneMinErr: any) {
@@ -488,20 +499,66 @@ Svar alltid på levende, profesjonelt norsk bokmål med formatering, overskrifte
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // 🛡️ 3. ROBUST LOKAL MOTOR (HVIS GEMINI NØKKEL IKKE ER SATT ENNÅ)
+    // 🛡️ 3. ROBUST LOKAL MOTOR (HVIS INGEN SKY-KI SVARTE)
     // ═══════════════════════════════════════════════════════════════
     if (!replyText) {
-      // Hvis meldingen handler om arrangementer eller helg
-      if (lower.includes('arrangement') || lower.includes('helg') || lower.includes('konsert') || lower.includes('hva skjer')) {
-        const evRes = await toolGetRealEvents(10);
-        const events = evRes.data || [];
-        replyText = `🌟 **Faktiske arrangementer i Tønsberg (Sanntid fra kalender & Ticketmaster):**\n\n` +
-          (events.length > 0
-            ? events.map((e: any) => `• **${e.title}** — ${e.location} (${e.date} kl. ${e.time})\n  *Kilde: ${e.source}*`).join('\n\n')
-            : 'Ingen planlagte arrangementer de neste dagene i kalenderen.') +
+      // Hvis meldingen handler om arrangementer, helg, konserter, event-radar, Foynhagen eller Oseberg
+      if (
+        lower.includes('arrangement') ||
+        lower.includes('helg') ||
+        lower.includes('konsert') ||
+        lower.includes('hva skjer') ||
+        lower.includes('event') ||
+        lower.includes('radar') ||
+        lower.includes('foynhagen') ||
+        lower.includes('oseberg') ||
+        lower.includes('kulturhus')
+      ) {
+        const evRes = await toolGetRealEvents(14);
+        const allEvents = evRes.data || [];
+
+        let filteredEvents = allEvents;
+        if (lower.includes('foynhagen') || lower.includes('oseberg')) {
+          const matched = allEvents.filter((e: any) => {
+            const loc = (e.location || '').toLowerCase();
+            const tit = (e.title || '').toLowerCase();
+            return (
+              (lower.includes('foynhagen') && (loc.includes('foynhagen') || tit.includes('foynhagen'))) ||
+              (lower.includes('oseberg') && (loc.includes('oseberg') || tit.includes('oseberg')))
+            );
+          });
+          if (matched.length > 0) {
+            filteredEvents = matched;
+          }
+        }
+
+        const sceneLabel = lower.includes('foynhagen') && lower.includes('oseberg')
+          ? 'Foynhagen & Oseberg Kulturhus'
+          : lower.includes('foynhagen')
+          ? 'Foynhagen'
+          : lower.includes('oseberg')
+          ? 'Oseberg Kulturhus'
+          : 'Tønsberg';
+
+        replyText = `📡 **Event-Radar: ${sceneLabel} for kommende uke**\n\n` +
+          `Her er de bekreftede arrangementene hentet live fra Ticketmaster og Tønsberglivets arrangementskalender:\n\n` +
+          (filteredEvents.length > 0
+            ? filteredEvents
+                .map(
+                  (e: any) =>
+                    `• **${e.title}**\n` +
+                    `  📍 **Scene/Sted:** ${e.location}\n` +
+                    `  🗓️ **Dato & Tid:** ${e.date} kl. ${e.time}\n` +
+                    (e.ticketUrl ? `  🎟️ [Kjøp billetter her](${e.ticketUrl})\n` : '') +
+                    `  *Kilde: ${e.source}*`
+                )
+                .join('\n\n')
+            : `Fant ingen oppførte arrangementer for ${sceneLabel} i den umiddelbare arrangementskalenderen for denne uken. Besøk [foynhagen.no](https://foynhagen.no) og [osebergkulturhus.no](https://osebergkulturhus.no) for oppdaterte sesongprogram.`) +
           `\n\n💡 *Vil du at jeg skal opprette en helgeguide-artikkel basert på dette i CMS?*`;
-        quickReplies.push({ title: '📰 Opprett som artikkel i CMS', payload: 'Opprett som artikkel: Helgeguide for Tønsberg' });
+
+        quickReplies.push({ title: '📰 Opprett som artikkel i CMS', payload: 'Opprett som artikkel: Kommende konserter i Tønsberg' });
         quickReplies.push({ title: '📣 Lag SoMe-pakke', payload: 'Lag SoMe-pakke for helgens arrangementer' });
+        quickReplies.push({ title: '📅 Vis alle scener', payload: 'Hent live arrangementer' });
       }
       // Hvis meldingen handler om vær, sjø, båt eller transport
       else if (lower.includes('båt') || lower.includes('vær') || lower.includes('sjø') || lower.includes('bade') || lower.includes('tog') || lower.includes('buss')) {

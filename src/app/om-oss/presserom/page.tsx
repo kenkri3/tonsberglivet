@@ -40,14 +40,25 @@ export default function PresseromPage() {
               </div>
             </div>
             <div className="bg-surface-muted p-6 rounded-2xl border border-border text-center">
-              <div className="w-20 h-20 rounded-full bg-primary/20 text-primary font-bold text-2xl flex items-center justify-center mx-auto mb-4">
-                CB
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 shadow-xs">
+                <Download className="w-6 h-6" />
               </div>
-              <p className="font-bold text-foreground">Bildebank for pressen</p>
-              <p className="text-xs text-foreground-muted mt-1 mb-4">Høyoppløselige bilder av Tønsberg, styret og arrangementer kan lastes ned i vår bildebank.</p>
-              <Link href="/admin/bildebank" className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl text-xs hover:bg-primary-hover transition-colors">
-                Gå til Bildebank <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
+              <p className="font-bold text-foreground text-sm">Pressepakke & Bildebank</p>
+              <p className="text-xs text-foreground-muted mt-1 mb-4 leading-relaxed">
+                Høyoppløselige pressebilder, profilmanual og offisielle logoer i trykkvalitet for redaksjonell omtale.
+              </p>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="mailto:hei@tonsberglivet.no?subject=Foresp%C3%B8rsel%20om%20pressebilder%20og%20akkreditering"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl text-xs hover:bg-primary-hover transition-colors shadow-2xs"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  Bestill pressebilder & akkreditering
+                </a>
+                <span className="text-[11px] text-foreground-subtle">
+                  Fotograf? Send inn bildebidrag direkte til redaksjonen.
+                </span>
+              </div>
             </div>
           </div>
         </section>

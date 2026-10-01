@@ -2,12 +2,13 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock, Mail, ArrowRight, KeyRound } from 'lucide-react';
+import { Lock, Mail, ArrowRight, KeyRound, CheckCircle2 } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/admin';
+  const isLoggedOut = searchParams.get('loggedOut') === 'true';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,6 +44,12 @@ function LoginForm() {
 
   return (
     <form onSubmit={handleLogin} className="space-y-5">
+      {isLoggedOut && !error && (
+        <div className="p-3 text-xs text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-2.5 font-medium animate-in fade-in duration-300">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <span>Du er nå logget helt ut av administrasjonspanelet.</span>
+        </div>
+      )}
       {error && (
         <div className="p-3 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl">
           {error}

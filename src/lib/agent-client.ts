@@ -22,6 +22,27 @@ function toConversationId(sessionId: string): string {
 }
 
 /**
+ * Sjekker om teksten er en teknisk feilmelding fra ekstern agent/server
+ * i stedet for et ekte svar til brukeren.
+ */
+export function isBotErrorMessage(text: string): boolean {
+  if (!text || typeof text !== 'string') return true;
+  const l = text.toLowerCase().trim();
+  return (
+    l.includes('failed to get bot response') ||
+    l.includes('no response received from server') ||
+    l.includes('no response received') ||
+    l.includes('internal server error') ||
+    l.includes('bad gateway') ||
+    l.includes('service unavailable') ||
+    l.includes('timed out') ||
+    l.startsWith('error:') ||
+    l === 'null' ||
+    l === 'undefined'
+  );
+}
+
+/**
  * Parser responsdata og strukturerte meldinger
  */
 function parseAgentResponsePayload(rawText: string): { reply: string; quickReplies: Array<{ title: string; payload: string }> } {
@@ -127,13 +148,15 @@ async function callAgentWebhook(
       reply = data.reply;
     }
 
-    if (reply) {
+    if (reply && !isBotErrorMessage(reply)) {
       return {
         success: true,
         reply,
         quickReplies: quickReplies.slice(0, 4),
         source: 'webhook',
       };
+    } else if (reply && isBotErrorMessage(reply)) {
+      console.warn('[Agent Gateway] Webhook returnerte feilmelding:', reply);
     }
   } catch (err: any) {
     console.warn('[Agent Gateway] Feil ved oppkall til webhook:', err?.message);
@@ -232,13 +255,15 @@ async function callAgentMcp(
             const firstText = contentItems[0]?.text || '';
             const parsed = parseAgentResponsePayload(firstText);
 
-            if (parsed.reply) {
+            if (parsed.reply && !isBotErrorMessage(parsed.reply)) {
               return {
                 success: true,
                 reply: parsed.reply,
                 quickReplies: parsed.quickReplies.slice(0, 4),
                 source: 'mcp',
               };
+            } else if (parsed.reply && isBotErrorMessage(parsed.reply)) {
+              console.warn('[Agent Gateway] MCP returnerte feilrespons fra bakenforliggende agent:', parsed.reply);
             }
           }
         } catch {

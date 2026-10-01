@@ -27,6 +27,7 @@ import {
   RotateCcw,
   CheckCircle2,
   Bell,
+  LogOut,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -60,7 +61,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [recentNotifText, setRecentNotifText] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const prevCountRef = useRef(0);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      window.location.href = '/login?loggedOut=true';
+    }
+  };
 
   // Syntetisk lydsignal ved nye meldinger (Web Audio API uten eksterne filer)
   const playChime = () => {
@@ -264,7 +277,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
 
           {/* Bunn */}
-          <div className="border-t border-border p-4 pb-10 lg:pb-4 shrink-0">
+          <div className="border-t border-border p-4 pb-10 lg:pb-4 shrink-0 space-y-1">
             <Link
               href="/"
               className="flex items-center gap-2 px-3 py-2 text-xs text-foreground-muted
@@ -273,6 +286,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <ChevronLeft className="w-4 h-4" />
               Tilbake til nettsiden
             </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-600 dark:text-rose-400
+                         hover:text-rose-700 hover:bg-rose-500/10 rounded-lg transition-colors font-medium"
+            >
+              <LogOut className="w-4 h-4" />
+              {loggingOut ? 'Logger ut...' : 'Logg ut'}
+            </button>
           </div>
         </div>
       </aside>
@@ -470,6 +493,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <span className="text-emerald-500 font-bold">PostgreSQL OK</span>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHeaderMenuOpen(false);
+                        handleLogout();
+                      }}
+                      disabled={loggingOut}
+                      className="w-full text-left px-3.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2.5 transition-colors border-t border-border mt-1"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>{loggingOut ? 'Logger ut...' : 'Logg ut av systemet'}</span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -477,14 +512,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {/* Tema-velger (Lyst / Mørkt) */}
               <ThemeToggle />
 
-              {/* Brukerprofil-badge */}
-              <div className="flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-border">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-xs">
-                  <span className="text-xs font-bold text-primary-foreground">TL</span>
+              {/* Brukerprofil-badge & Logg ut */}
+              <div className="flex items-center gap-2 sm:gap-2.5 pl-2 sm:pl-3 border-l border-border">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-xs">
+                    <span className="text-xs font-bold text-primary-foreground">TL</span>
+                  </div>
+                  <span className="hidden xl:block text-xs font-bold text-foreground">
+                    Tønsberglivet Admin
+                  </span>
                 </div>
-                <span className="hidden sm:block text-xs font-bold text-foreground">
-                  Tønsberglivet Admin
-                </span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-colors"
+                  title="Logg ut av administrasjonspanelet"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{loggingOut ? 'Logger ut...' : 'Logg ut'}</span>
+                </button>
               </div>
             </div>
           </div>
