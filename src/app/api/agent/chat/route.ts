@@ -1,16 +1,190 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEffectiveGeminiApiKey } from '@/lib/ai-config';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
+import {
+  toolBraveSearch,
+  toolTavilySearch,
+  toolApifyScrape,
+  toolGetRealEvents,
+  toolCreateRealArticle,
+  toolGetRealBookings,
+  toolApproveBooking,
+  toolGetRealtimeStatus,
+  toolSearchBusinesses,
+  toolGetVisitorPulse,
+  toolExportToDuett,
+  AgentExecutionResult,
+} from '@/lib/agent-tools';
 import { prisma } from '@/lib/prisma';
+import { smartWebSearch } from '@/lib/web-intelligence';
 
 export const dynamic = 'force-dynamic';
-
-const BOT_API_KEY = process.env.AGENT_API || 'UDuz6jJYyXeVli7LuNyWqNUJHORWZQBDZYeF3sKs';
-const CONVERSE_ENDPOINT = 'https://agentic.botsify.com/api/v1/converse';
 
 interface ChatHistoryItem {
   role: 'user' | 'assistant';
   content: string;
+}
+
+// 🛠️ Verktøydeklarasjoner for Google Gemini 2.5 Flash
+const toolDeclarations: FunctionDeclaration[] = [
+  {
+    name: 'sok_nettet_brave',
+    description: 'Søk etter sanntidsinformasjon, nyheter, åpningstider og hendelser i Tønsberg og omverdenen med Brave Search API.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        query: { type: Type.STRING, description: 'Søkefrase på norsk eller engelsk' },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'research_tavily',
+    description: 'Dyp fakta-research og kildegransking med Tavily AI Search for å finne pålitelige kilder og sammendrag.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        query: { type: Type.STRING, description: 'Forskningsspørsmål eller tema' },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'skrap_nettside_apify',
+    description: 'Skrap og les fullt innhold fra en spesifikk URL (f.eks. konsertprogram fra foynhagen.no, osebergkulturhus.no, tonsberg.kommune.no) med Apify.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        url: { type: Type.STRING, description: 'Full URL til nettsiden som skal leses' },
+      },
+      required: ['url'],
+    },
+  },
+  {
+    name: 'hent_live_arrangementer',
+    description: 'Hent faktiske, oppdaterte arrangementer for Tønsberg fra databasen, live Ticketmaster og biblioteket.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        dagerFrem: { type: Type.NUMBER, description: 'Hvor mange dager frem i tid det skal søkes (standard 14)' },
+      },
+    },
+  },
+  {
+    name: 'hent_sanntidsinformasjon',
+    description: 'Hent sanntidsdata for Tønsberg: togtider (Entur), sjøtemperatur og flo/fjære (Havvarsel), luftkvalitet og veimeldinger.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {},
+    },
+  },
+  {
+    name: 'opprett_artikkel_cms',
+    description: 'Opprett en ekte redaksjonell artikkel eller helgeguide i Tønsberglivets CMS database.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: 'Tittel på artikkelen' },
+        excerpt: { type: Type.STRING, description: 'Kort ingress (1-2 setninger)' },
+        content: { type: Type.STRING, description: 'Fullstendig brødtekst i markdown-format' },
+        category: {
+          type: Type.STRING,
+          enum: ['BYLIVET', 'HVERDAGSLIVET', 'NAERINGSLIVET', 'REISELIVET', 'STUDENTLIVET'],
+          description: 'Hovedkategori for saken',
+        },
+        published: { type: Type.BOOLEAN, description: 'True for umiddelbar publisering, false for utkast (standard false)' },
+      },
+      required: ['title', 'content'],
+    },
+  },
+  {
+    name: 'hent_ventende_torvleie',
+    description: 'Hent faktiske ventende søknader om leie av standplass på Tønsberg Torv eller Kaldnes Brygge.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {},
+    },
+  },
+  {
+    name: 'godkjenn_torvleie_booking',
+    description: 'Godkjenn en reell torvleiesøknad i databasen, send automatisk bekreftelse og rigginstruks til leietaker.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        bookingId: { type: Type.STRING, description: 'Valgfri booking ID (hvis utelatt godkjennes eldste ventende)' },
+      },
+    },
+  },
+  {
+    name: 'sok_bedrifter_og_brreg',
+    description: 'Søk i lokale bedrifter i Tønsberg samt foretaksdata i Brønnøysundregistrene (Enhetsregisteret).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        query: { type: Type.STRING, description: 'Bedriftsnavn eller bransje' },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'analyser_publikumshenvendelser',
+    description: 'Analyser hva innbyggere og turister spør om i chatboten på landingssiden (Tønsberg-Guiden) for å identifisere innholdsbehov.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {},
+    },
+  },
+  {
+    name: 'eksporter_til_duett',
+    description: 'Klargjør og synkroniser fakturagrunnlag for godkjente torvleier til Duett ERP (Peppol EHF 3.0).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {},
+    },
+  },
+];
+
+/**
+ * Utfører et deklarert verktøykall mot det virkelige systemet
+ */
+async function executeAgentTool(name: string, args: any): Promise<AgentExecutionResult> {
+  switch (name) {
+    case 'sok_nettet_brave':
+      return await toolBraveSearch(args?.query || 'Tønsberg');
+    case 'research_tavily':
+      return await toolTavilySearch(args?.query || 'Tønsberg');
+    case 'skrap_nettside_apify':
+      return await toolApifyScrape(args?.url || '', args?.instructions);
+    case 'hent_live_arrangementer':
+      return await toolGetRealEvents(args?.dagerFrem || 14);
+    case 'hent_sanntidsinformasjon':
+      return await toolGetRealtimeStatus();
+    case 'opprett_artikkel_cms':
+      return await toolCreateRealArticle({
+        title: args.title,
+        excerpt: args.excerpt,
+        content: args.content,
+        category: args.category || 'BYLIVET',
+        published: args.published ?? false,
+      });
+    case 'hent_ventende_torvleie':
+      return await toolGetRealBookings();
+    case 'godkjenn_torvleie_booking':
+      return await toolApproveBooking(args?.bookingId);
+    case 'sok_bedrifter_og_brreg':
+      return await toolSearchBusinesses(args?.query || 'Tønsberg');
+    case 'analyser_publikumshenvendelser':
+      return await toolGetVisitorPulse();
+    case 'eksporter_til_duett':
+      return await toolExportToDuett();
+    default:
+      return {
+        toolName: name,
+        success: false,
+        message: `Ukjent verktøy: ${name}`,
+        data: null,
+      };
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -33,396 +207,364 @@ export async function POST(request: NextRequest) {
     let actionExecuted: string | null = null;
     let actionResult: any = null;
 
-    // Rengjør sessionId til et gyldig Botsify fbId (kun siffer, 10-15 tegn)
-    const digits = sessionId.replace(/\D/g, '');
-    const cleanFbId = digits.length >= 8 ? digits.slice(0, 15) : `${Date.now()}`;
-
-    // ═══════════════════════════════════════════════════════════════
-    // 🧠 1. SJEKK REELLE DATA FRA TØNSBERGLIVET-DATABASEN
-    // ═══════════════════════════════════════════════════════════════
-    let dbEvents: any[] = [];
-    let pendingBookings: any[] = [];
-    let dbArticlesCount = 0;
-
-    try {
-      dbEvents = await prisma.event.findMany({
-        where: { published: true },
-        orderBy: { startDate: 'asc' },
-        take: 8,
-      }).catch(() => []);
-
-      pendingBookings = await (prisma as any).bookingRequest?.findMany({
-        where: { status: 'PENDING' },
-        take: 5,
-      }).catch(() => []);
-
-      dbArticlesCount = await (prisma as any).article?.count().catch(() => 0);
-    } catch (e) {
-      // Ignorer DB-feil ved oppstart
-    }
-
     const lower = message.toLowerCase();
 
     // ═══════════════════════════════════════════════════════════════
-    // 🚀 2. AUTONOME DIREKTEHANDLINGER (HVIS BRUKEREN BER OM KONKRET OPPGAVE)
+    // ⚡ 1. HURTIGHÅNDTERING AV EKSPLISITTE SØKE- OG HANDLINGSINSTRUKSER
     // ═══════════════════════════════════════════════════════════════
 
-    // A. OPPRETT ARTIKKEL DIREKTE I DATABASEN
-    if (
+    // A. Direkte Brave Search instruks
+    if (lower.includes('brave') && (lower.includes('søk') || lower.includes('search') || lower.includes('finn') || lower.includes('sjekk'))) {
+      const query = message.replace(/(?:gjør et|kjør et)?\s*(?:nettsøk|søk|search)\s*(?:etter|om)?\s*/i, '').replace(/via brave(?: api)?/i, '').replace(/med brave/i, '').trim();
+      const res = await toolBraveSearch(query || 'Tønsberg sentrum nyheter');
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        replyText = `🔍 **Reelle søkeresultater via Brave Search API for «${query}»:**\n\n` +
+          res.data.map((r: any, idx: number) => `**${idx + 1}. [${r.title}](${r.url})**\n${r.snippet}\n*Kilde: ${r.url}*`).join('\n\n') +
+          `\n\n💡 *Vil du at jeg skal skrive en redaksjonell artikkel eller lage SoMe-poster basert på disse funnene?*`;
+        quickReplies.push({ title: '✍️ Skriv artikkel om dette', payload: `Skriv en artikkel basert på søket: ${query}` });
+        quickReplies.push({ title: '📣 Lag SoMe-pakke', payload: `Lag SoMe-poster om nyhetene fra ${query}` });
+      } else {
+        replyText = `⚠️ **Brave Search:** ${res.message}\n\nTips: Du kan konfigurere din egen Brave Search API-nøkkel i **/admin/innstillinger** under BYOK.`;
+      }
+    }
+
+    // B. Direkte Tavily AI Research instruks
+    else if (lower.includes('tavily') && (lower.includes('søk') || lower.includes('research') || lower.includes('finn') || lower.includes('analyser'))) {
+      const query = message.replace(/(?:gjør|kjør)?\s*(?:tavily|research)\s*(?:søk)?\s*(?:etter|om)?\s*/i, '').trim();
+      const res = await toolTavilySearch(query || 'Tønsberg byliv og kultur');
+      if (res.success && res.data) {
+        replyText = `🧠 **Dyp research via Tavily AI Search:**\n\n` +
+          (res.data.answer ? `### 📌 Syntese & Faktaunderlag:\n${res.data.answer}\n\n` : '') +
+          `### 🔗 Verifiserte kilder:\n` +
+          (res.data.results || []).map((r: any, idx: number) => `• **[${r.title}](${r.url})**\n  ${r.snippet.slice(0, 200)}...`).join('\n\n');
+        quickReplies.push({ title: '📰 Opprett som artikkel', payload: `Opprett artikkel: ${query}` });
+        quickReplies.push({ title: '📅 Sjekk arrangementskalender', payload: 'Hent live arrangementer' });
+      } else {
+        replyText = `⚠️ **Tavily Research:** ${res.message}\n\nTips: Konfigurer Tavily API-nøkkel under **/admin/innstillinger** for automatisert forskning.`;
+      }
+    }
+
+    // C. Direkte Apify skrape-instruks
+    else if (lower.includes('apify') || lower.includes('skrap') || (lower.includes('les') && lower.includes('http'))) {
+      const urlMatch = message.match(/https?:\/\/[^\s]+/i);
+      const targetUrl = urlMatch ? urlMatch[0] : 'https://tonsberglivet.no';
+      const res = await toolApifyScrape(targetUrl);
+      if (res.success && res.data) {
+        replyText = `🕸️ **Innhold skrapet fra nettsiden: «${res.data.title}»**\n*Kilde: ${res.data.url}*\n\n` +
+          `---\n\n` +
+          res.data.contentSnippet +
+          (res.data.fullLength > 3000 ? `\n\n*(Viser 3000 av ${res.data.fullLength} tegn)*` : '') +
+          `\n\n---\n💡 *Hva vil du at jeg skal gjøre med dette innholdet?*`;
+        quickReplies.push({ title: '✍️ Lag artikkelutkast', payload: `Lag en artikkel basert på innholdet fra ${targetUrl}` });
+        quickReplies.push({ title: '📅 Trekk ut arrangementer', payload: `Trekk ut eventer fra ${targetUrl}` });
+      } else {
+        replyText = `⚠️ **Skraping feilet:** ${res.message}`;
+      }
+    }
+
+    // D. Direkte opprettelse av artikkel i databasen
+    else if (
       lower.startsWith('opprett artikkel') ||
       lower.startsWith('opprett som artikkel') ||
-      lower.startsWith('lagre artikkel') ||
-      lower.startsWith('lagre som artikkel')
+      lower.startsWith('lagre artikkel')
     ) {
       let articleTitle = message
         .replace(/^(?:opprett\s+som\s+artikkel|opprett\s+artikkel|lagre\s+som\s+artikkel|lagre\s+artikkel)[:\s–-]*/i, '')
         .trim();
       if (!articleTitle || articleTitle.length < 3) {
-        articleTitle = 'Helgeguide for Tønsberg: Konserter, marked og byliv';
+        articleTitle = 'Bylivet i Tønsberg: Helgens høydepunkter, scener og byrom';
       }
-      const cleanSlug = articleTitle
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
 
-      try {
-        const sampleContent = `## Helgens store bylivsguide i Tønsberg\n\nNorges eldste by byr på magisk stemning denne helgen. Fra konserter på Foynhagen og uteservering langs Brygga, til sesongmarked på Torvet og utsikt fra Slottsfjellstårnet.\n\n### Høydepunkter:\n- Konserter og musikk på lokale scener\n- Sesongens mat- og håndverksboder på Torvet\n- Familievennlige aktiviteter på Haugar og Slottsfjellet\n\nVelkommen til en innholdsrik helg i Tønsberg!`;
+      // Hent ferske arrangementer for å fylle reelt innhold
+      const eventsRes = await toolGetRealEvents(7);
+      const eventsList = (eventsRes.data || [])
+        .map((e: any) => `- **${e.title}** (${e.location}, ${e.date} kl. ${e.time})`)
+        .join('\n');
 
-        await prisma.article.create({
-          data: {
-            title: articleTitle,
-            slug: `${cleanSlug}-${Date.now().toString().slice(-4)}`,
-            excerpt: 'Komplett oversikt over helgens høydepunkter, scener og byrom i Tønsberg.',
-            content: sampleContent,
-            category: 'BYLIVET',
-            published: false,
-          },
-        }).catch((e) => {
-          console.warn('[Agent Chat] Prisma opprettelse feilet, bruker memory-fallback:', e?.message);
-        });
+      const realContent = `## ${articleTitle}\n\nTønsberg yrer av liv med konserter, markeder og opplevelser langs Brygga og i sentrumsgatene.\n\n### Aktuelle arrangementer i kalenderen:\n${eventsList || 'Se fullstendig arrangementskalender på tonsberglivet.no.'}\n\n### Mat, drikke og byrom:\nNyt uteserveringen på Brygga, besøk de lokale galleriene og opplev Norges eldste by på sitt aller beste.\n\nVelkommen til Tønsberg!`;
 
-        actionExecuted = 'article_created';
-        actionResult = { title: articleTitle, slug: cleanSlug };
-        replyText = `✅ **Artikkel er opprettet som godkjent utkast i CMS!**\n\n` +
-          `• **Tittel:** «${articleTitle}»\n` +
+      const createRes = await toolCreateRealArticle({
+        title: articleTitle,
+        content: realContent,
+        excerpt: `Komplett oversikt over ${articleTitle}.`,
+        category: 'BYLIVET',
+        published: false,
+      });
+
+      if (createRes.success) {
+        actionExecuted = createRes.actionExecuted || 'article_created';
+        actionResult = createRes.actionResult;
+        replyText = `✅ **Artikkel er opprettet og lagret i CMS-databasen!**\n\n` +
+          `• **Tittel:** «${createRes.data.title}»\n` +
           `• **Status:** Utkast (Klar for redaksjonell godkjenning)\n` +
-          `• **Kategori:** Bylivet\n` +
-          `• **Slug:** \`${cleanSlug}\`\n\n` +
-          `Saken er klargjort i Tønsberglivets system og er tilgjengelig i adminpanelet under **Artikler**.`;
-
-        quickReplies.push({ title: '📣 Lag 3 SoMe-poster', payload: `Lag en SoMe-pakke for artikkelen «${articleTitle}»` });
-        quickReplies.push({ title: '📅 Vis arrangementer', payload: 'Hent de nyeste arrangementene i Tønsberg' });
-      } catch (err: any) {
-        actionExecuted = 'article_created';
-        actionResult = { title: articleTitle, slug: cleanSlug };
-        replyText = `✅ **Artikkel «${articleTitle}» er opprettet i utkast-køen!**\n\nStatus er satt til utkast, klar for gjennomgang under **Artikler**.`;
+          `• **Kategori:** ${createRes.data.category}\n` +
+          `• **Slug:** \`${createRes.data.slug}\`\n\n` +
+          `Saken ligger nå i adminpanelet under **Artikler** og er klar til publisering.`;
+        quickReplies.push({ title: '📣 Lag SoMe-pakke', payload: `Lag SoMe-poster for artikkelen «${articleTitle}»` });
+        quickReplies.push({ title: '📅 Vis kalender', payload: 'Hent live arrangementer' });
+      } else {
+        replyText = `❌ ${createRes.message}`;
       }
     }
 
-    // B. GODKJENN TORVLEIESØKNAD DIREKTE
+    // E. Direkte godkjenning av torvleiesøknad i databasen
     else if (
       lower.includes('godkjenn') &&
-      (lower.includes('torvleie') || lower.includes('søknad') || lower.includes('booking') || lower.includes('eldste') || lower.includes('neste'))
+      (lower.includes('torvleie') || lower.includes('booking') || lower.includes('søknad'))
     ) {
-      actionExecuted = 'booking_approved';
-      actionResult = { id: '1', vendor: 'Foodtruck Spesial AS' };
-      replyText = `✅ **Torvleiesøknad er godkjent i systemet!**\n\n` +
-        `• **Leietaker:** Foodtruck Spesial AS (Org.nr: 928 341 092)\n` +
-        `• **Plassering:** Sone A1 — Foodtruck Sone (Tønsberg Torv)\n` +
-        `• **Periode:** 15. Aug – 18. Aug (4 dager)\n` +
-        `• **Teknisk rigg:** 16A 230V strømuttak og ferskvannstilkobling aktivert\n` +
-        `• **Beløp:** kr 7.400,- ekskl. mva\n\n` +
-        `Bekreftelse og rigginstruks er automatisk sendt til leietakers e-post, og ordren er klargjort for Duett ERP EHF-eksport.`;
+      // Trekk ut eventuell ID: "godkjenn booking #123"
+      const idMatch = message.match(/(?:#|id\s*[:=]?\s*)([a-z0-9_-]+)/i);
+      const bookingId = idMatch ? idMatch[1] : undefined;
 
-      quickReplies.push({ title: '💳 Send til Duett ERP', payload: 'Klargjør og overfør godkjente torvleier til Duett ERP' });
-      quickReplies.push({ title: '📄 Lag svarbrev til søker', payload: 'Lag et formelt godkjenningsbrev for torvleie med sjekkliste' });
-      quickReplies.push({ title: '📅 Se helgeguide', payload: 'Generer ukens helgeguide' });
-    }
-
-    // C. OVERFØR TIL DUETT ERP / EHF 3.0
-    else if (
-      lower.includes('duett') ||
-      lower.includes('ehf') ||
-      (lower.includes('faktura') && (lower.includes('overfør') || lower.includes('send') || lower.includes('synk') || lower.includes('klargjør')))
-    ) {
-      actionExecuted = 'duett_synced';
-      actionResult = { exportedCount: 4, totalAmount: 27600 };
-      replyText = `💳 **Duett ERP & Peppol EHF 3.0 Synkronisering Fullført!**\n\n` +
-        `• **Transaksjoner:** 4 godkjente torvleieavtaler og DoOH-byskjermkampanjer overført\n` +
-        `• **Totalfakturert:** kr 27.600,- ekskl. mva\n` +
-        `• **Status:** Klargjort i Duett Innboks (Kunde- og fakturalogikk validert)\n` +
-        `• **Protokoll:** Peppol BIS Billing 3.0 (EHF)\n\n` +
-        `Alle bilag og ordrebekreftelser er arkivert og synkronisert med regnskap.`;
-
-      quickReplies.push({ title: '📊 Vis omsetningsrapport', payload: 'Vis omsetningsrapport for byrom og boder' });
-      quickReplies.push({ title: '🏛️ Se torvleiestatus', payload: 'Vis status på torvleiesøknader' });
-    }
-
-    // D. HELGEGUIDE & ARRANGEMENTER (HENT OG SKRIV FERDIG HELGEGUIDE)
-    else if (
-      lower.includes('helgeguide') ||
-      (lower.includes('arrangement') && (lower.includes('helg') || lower.includes('skriv') || lower.includes('hent') || lower.includes('guide'))) ||
-      lower.includes('foynhagen')
-    ) {
-      let eventsFormatted = '';
-      if (dbEvents.length > 0) {
-        eventsFormatted = dbEvents
-          .map((e: any) => `• **${e.title}** — ${e.location || 'Tønsberg'} (${new Date(e.startDate).toLocaleDateString('nb-NO', { weekday: 'short', day: 'numeric', month: 'short' })})`)
-          .join('\n');
+      const approveRes = await toolApproveBooking(bookingId);
+      if (approveRes.success) {
+        actionExecuted = approveRes.actionExecuted || 'booking_approved';
+        actionResult = approveRes.actionResult;
+        replyText = `${approveRes.message}\n\nFakturagrunnlag er klargjort for Duett ERP.`;
+        quickReplies.push({ title: '💳 Send til Duett ERP', payload: 'Klargjør og overfør godkjente torvleier til Duett ERP' });
+        quickReplies.push({ title: '🏛️ Vis resterende søknader', payload: 'Hent ventende torvleiesøknader' });
       } else {
-        eventsFormatted =
-          `• **Foynhagen:** Livekonsert og sommershow ved bryggekanten\n` +
-          `• **Støperiet / Kaldnes:** Kulturscene og stand-up kveld\n` +
-          `• **Tønsberg Torv:** Lørdagsmarked med lokale matprodusenter\n` +
-          `• **Papirhuset Teater:** Teaterforestilling og improkveld\n` +
-          `• **Slottsfjellet:** Åpent tårn med 360° utsikt over Vestfold`;
+        replyText = `ℹ️ ${approveRes.message}`;
       }
-
-      replyText = `🌟 **Helgeguide for Tønsberg: Konserter, kultur og byliv**\n\n` +
-        `Her er den komplette, redaksjonelle helgeguiden klargjort for publisering på nettsiden og i sosiale medier:\n\n` +
-        `---\n\n` +
-        `### 🎸 Fredag: Afterwork og kveldstoner på Brygga\n` +
-        `- **Stemning:** Bryggepromenaden fylles opp fra kl. 16:00 med afterwork på uteserveringene.\n` +
-        `- **Konserter & Live:** Dørene åpner på Foynhagen med livemusikk og god stemning under trærne.\n` +
-        `- **Mat & Drikke:** Friske sjømatplatter på Havariet og håndverkspizza langs bryggekanten.\n\n` +
-        `### 🛍️ Lørdag: Marked på Torvet og pulserende byliv\n` +
-        `- **Torvet kl. 10:00–16:00:** Sesongens mat- og håndverksmarked. Lokale gårder byr på ferske råvarer, bær og bakst.\n` +
-        `- **Familie & Kunst:** Haugar Kunstmuseum og aktiviteter for barn i biblioteket og gågata.\n` +
-        `- **Kveld:** Konsert på Støperiet og kveldsstemning på Tønsbergs barer og scener.\n\n` +
-        `### 🏰 Søndag: Utsikt, søndagstur og ro\n` +
-        `- **Slottsfjellet:** Ta turen opp til Tårnet for Tønsbergs vakreste fjordutsikt og historiske ruiner.\n` +
-        `- **Kyststien & Gjestehavna:** Spasertur langs bryggekanten, iskrem og kaffe i rolig søndagsatmosfære.\n\n` +
-        `### 📅 Aktuelle arrangementer i kalenderen:\n${eventsFormatted}\n\n` +
-        `---\n` +
-        `💡 *Vil du at jeg skal opprette denne guiden som en artikkel i CMS, eller lage en SoMe-pakke for Facebook og Instagram?*`;
-
-      quickReplies.push({ title: '📰 Opprett som artikkel i CMS', payload: 'Opprett som artikkel: Helgeguide for Tønsberg' });
-      quickReplies.push({ title: '📣 Lag 3 SoMe-versjoner', payload: 'Lag en SoMe-pakke for helgeguiden' });
-      quickReplies.push({ title: '🦁 Åpningstids-audit Brygga', payload: 'Sjekk åpningstider for restaurantene på Brygga' });
-      quickReplies.push({ title: '📊 Vis torvleiestatus', payload: 'Vis status på torvleiesøknader' });
     }
 
-    // E. TORVLEIE & BYROM (KVALIFISERING, PRISER OG DOKUMENTASJON)
+    // F. Publikumsanalyse fra landingsside-chatboten
     else if (
-      lower.includes('torvleie') ||
-      lower.includes('leie av torv') ||
-      lower.includes('standplass') ||
-      lower.includes('torvet')
+      lower.includes('publikum') ||
+      lower.includes('trend') ||
+      lower.includes('hva spør') ||
+      lower.includes('hva søker') ||
+      lower.includes('chatboten på nettsiden')
     ) {
-      const pendingCount = pendingBookings.length;
-
-      replyText = `🏛️ **Torvleie & Byrom — Tønsberg Torv & Kaldnes Brygge**\n\n` +
-        `Her er gjeldende vilkår, satser og saksbehandlingsrutiner for leie av standplass:\n\n` +
-        `### 💰 Gjeldende satser (2026):\n` +
-        `• **Dagplass (3x3 m):** kr 350,- per dag\n` +
-        `• **Helgeplass (fre–søn):** kr 750,- totalt\n` +
-        `• **Sesongbod / Foodtruck:** kr 4.500,- per måned\n` +
-        `• **Strømtilkobling (16A enfas):** kr 120,- per dag / kr 600,- per uke\n\n` +
-        `### 📋 Dokumentasjonskrav for nye søkere:\n` +
-        `1. **Foretaksattest:** Må være registrert i Enhetsregisteret (Brreg).\n` +
-        `2. **Mattilsynet:** Næringsmiddelgodkjenning ved salg av tilberedt mat eller ferskvarer.\n` +
-        `3. **Brann- og gassikkerhet:** Gyldig godkjenning ved bruk av gass/frityr.\n` +
-        `4. **Riggeregler:** Innkjøring før kl. 09:30, ingen biler parkert på Torvet under salgstid.\n\n` +
-        `### 📊 Status i dag:\n` +
-        `Det ligger for øyeblikket **${pendingCount} ubehandlede torvleiesøknader** i systemet.\n\n` +
-        `Vil du at jeg skal godkjenne ventende søknader eller utstede et svarbrev til en ny søker?`;
-
-      quickReplies.push({ title: '✅ Godkjenn neste søknad', payload: 'Godkjenn eldste ventende torvleiesøknad' });
-      quickReplies.push({ title: '📄 Lag svarbrev til søker', payload: 'Lag et formelt godkjenningsbrev for torvleie med sjekkliste' });
-      quickReplies.push({ title: '📅 Se helgeguide', payload: 'Generer ukens helgeguide' });
-    }
-
-    // D. ÅPNINGSTIDER & RESTAURANT-AUDIT (BRYGGA)
-    else if (
-      lower.includes('åpningstid') ||
-      lower.includes('restaurant') ||
-      lower.includes('brygga') ||
-      lower.includes('audit')
-    ) {
-      replyText = `🦁 **Åpningstider- & Restaurant-Audit — Tønsberg Brygge**\n\n` +
-        `Gjennomgang av serverings- og handelssteder langs Bryggepromenaden:\n\n` +
-        `### 🍽️ Registrerte nøkkelsteder:\n` +
-        `• **Roar i Bua:** Åpent tir–søn 11:00–21:00 (Ferske reker og bryggemat)\n` +
-        `• **Havariet:** Åpent man–søn 11:30–23:00 (Lunsj, middag og uteservering)\n` +
-        `• **Foyn Bar & Restaurant:** Åpent ons–lør 16:00–02:00 (Natteliv og konsertservering)\n` +
-        `• **Kokeriet:** Åpent man–søn 11:00–22:00 (Historisk atmosfære og sjømat)\n` +
-        `• **Brygga 11 (Geir Skeie):** Åpent tir–lør 12:00–21:30 (Gourmet og skalldyr)\n\n` +
-        `### ✉️ Utkast til henvendelse til medlemmene:\n` +
-        `> «Hei! Tønsberglivet oppdaterer nå den felles byguiden før helgen og høysesongen. Vennligst bekreft deres åpningstider og eventuelle spesialmenyer innen torsdag kl. 12:00 slik at gjester finner korrekt informasjon på tonsberglivet.no.»\n\n` +
-        `Vil du at jeg skal sende denne oppdateringsmeldingen til medlemslisten?`;
-
-      quickReplies.push({ title: '📲 Klargjør utsendelse', payload: 'Klargjør e-post til alle serveringssteder på Brygga' });
-      quickReplies.push({ title: '🌟 Lag helgeguide', payload: 'Generer ukens helgeguide' });
-    }
-
-    // E. BÅTFOLK & GJESTEHAVNA GUIDE
-    else if (
-      lower.includes('båt') ||
-      lower.includes('gjestehavn') ||
-      lower.includes('kanalbrua') ||
-      lower.includes('havn')
-    ) {
-      replyText = `⚓ **Hurtigguide for Båtfolk & Tønsberg Gjestehavn**\n\n` +
-        `Her er nøkkelopplysninger for fritidsbåter og besøkende sjøveien:\n\n` +
-        `### 🌉 Kanalbrua Åpningstider (Sesong):\n` +
-        `• **Faste åpninger:** Kl. 09:05, 12:05, 14:05, 18:05 og 20:05.\n` +
-        `• **VHF-kanal:** Lyttevakt på **VHF kanal 12** (kallesignal: «Kanalbrua»).\n\n` +
-        `### ⚓ Fasiliteter i Gjestehavna:\n` +
-        `• **Plasser:** Ca. 150 gjesteplasser langs Brygga og ved Kanalen.\n` +
-        `• **Servicebygg:** Døgnåpne toaletter, varme dusjer, vaskemaskiner og tørketromler.\n` +
-        `• **Strøm & Vann:** Strømstolper (16A) på samtlige brygger. Fylling av ferskvann inkludert.\n` +
-        `• **Septiktømming:** Gratis stasjon for sugetømming ytterst på Kanalbrygga.\n` +
-        `• **Drivstoff:** Bunkring av bensin og avgiftsfri diesel ved Ollebukta (2 min unna).\n\n` +
-        `### 🛒 Nærmeste servicetilbud:\n` +
-        `Meny Farmandstredet og Kiwi Brygga ligger 3 minutters gange fra havnekontoret.`;
-
-      quickReplies.push({ title: '📰 Opprett som artikkel i CMS', payload: 'Opprett som artikkel: Båtguide Tønsberg Gjestehavn' });
-      quickReplies.push({ title: '📣 Lag SoMe-post for båtfolk', payload: 'Lag en Facebook-post med tips til båtfolk i Tønsberg gjestehavn' });
-    }
-
-    // F. SOME-PAKKE (FACEBOOK + INSTAGRAM + LINKEDIN)
-    else if (
-      lower.includes('some') ||
-      lower.includes('facebook') ||
-      lower.includes('instagram') ||
-      lower.includes('linkedin')
-    ) {
-      replyText = `📣 **SoMe-Pakke klargjort for Tønsberglivet**\n\n` +
-        `### 1️⃣ Facebook (Bredt engasjement & emojier):\n` +
-        `Klar for helgen i Norges eldste by? ☀️ Helgen byr på magisk stemning langs Tønsberg Brygge, marked på Torvet og livekonserter på Foynhagen! 🎶 Ta med vennegjengen eller familien på en deilig lunsj og nyt sommerbrisen. Hva er dine helgeplaner? Del gjerne i kommentarfeltet! 👇\n\n` +
-        `👉 Les hele helgeguiden på tonsberglivet.no/nyheter\n\n` +
-        `---\n\n` +
-        `### 2️⃣ Instagram (Visuell hook & hashtags):\n` +
-        `Sol over Slottsfjellet og sydende byliv langs bryggekanten ✨ Finnes det noe bedre sted å tilbringe helgen enn i Tønsberg? 🏰🍦\n\n` +
-        `📸 Tagg oss i dine øyeblikk med #tonsberglivet for repost!\n\n` +
-        `#tonsberglivet #tbglivet #tønsberg #visitvestfold #slottsfjellet #norgeseldsteby #byliv #sommer2026\n\n` +
-        `---\n\n` +
-        `### 3️⃣ LinkedIn (Næringsliv, handel og byutvikling):\n` +
-        `Tønsberg opplever sterk vekst i besøk og aktivitet. Denne helgen er byens handelsstand, kulturscener og serveringssteder rigget for høyt volum. Gjennom godt samarbeid mellom næringslivet og Tønsberglivet skaper vi bærekraftig byliv og økonomiske ringvirkninger for hele regionen.\n\n` +
-        `#Byutvikling #Næringsliv #Tønsberg #Destinasjonsledelse`;
-
-      quickReplies.push({ title: '📰 Se helgeguide', payload: 'Generer ukens helgeguide' });
-      quickReplies.push({ title: '📅 Vis arrangementer', payload: 'Hent de nyeste arrangementene i Tønsberg' });
+      const pulseRes = await toolGetVisitorPulse();
+      const p = pulseRes.data;
+      replyText = `📊 **Publikumspuls fra Tønsberg-Guiden (landingsside-chatboten):**\n\n` +
+        `• **Registrerte henvendelser siste døgn:** ${p.totalSisteDogn}\n\n` +
+        `### 🔥 Mest etterspurte temaer:\n` +
+        p.toppTemaer.map((t: any) => `• **${t.topic}:** ${t.antall} henvendelser (${t.prosent})`).join('\n') +
+        `\n\n### 💬 Siste spørsmål fra besøkende:\n` +
+        p.ferskeSporsmal.map((q: string) => `• «${q}»`).join('\n') +
+        `\n\n### 💡 Anbefalte redaksjonelle tiltak:\n` +
+        p.anbefalteTiltak.map((a: string) => `👉 ${a}`).join('\n');
+      quickReplies.push({ title: '✍️ Skriv helgeguide', payload: 'Generer ukens helgeguide' });
+      quickReplies.push({ title: '🏛️ Sjekk torvleiesøknader', payload: 'Hent ventende torvleiesøknader' });
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // 🧠 3. GOOGLE GEMINI 2.5 FLASH MED SØK & GROUNDING (VED SPESIFIKKE SPØRSMÅL)
+    // 🧠 2. GOOGLE GEMINI 2.5 FLASH MED MULTI-TOOL FUNCTION CALLING
     // ═══════════════════════════════════════════════════════════════
     if (!replyText) {
-      try {
-        const geminiApiKey = await getEffectiveGeminiApiKey();
-        if (geminiApiKey) {
+      const geminiApiKey = await getEffectiveGeminiApiKey();
+
+      if (geminiApiKey) {
+        try {
           const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
-          const systemInstruction = `Du er den handlekraftige, helautonome interne AI-agenten for Tønsberglivet (Tønsberglivet OS).
+          // Hent sanntidsoversikt over databasen for systemprompt
+          const [pendingCount, articlesCount] = await Promise.all([
+            prisma.bookingRequest.count({ where: { status: { in: ['NEW', 'PROCESSING'] } } }).catch(() => 0),
+            prisma.article.count().catch(() => 0),
+          ]);
+
+          const systemInstruction = `Du er den handlekraftige, helautonome AI-agenten for Tønsberglivet (Tønsberglivet OS).
 Rolle og formål:
-Du bistår Cecilie og administrasjonen med å UTFØRE oppgaver direkte i systemet: skrive artikler, analysere arrangementer, kvalifisere torvleie, lage SoMe-innhold og gi strategiske bylivsråd.
-Du svarer alltid på profesjonelt, levende og feilfritt norsk bokmål.
-Du har tilgang til:
-- Brave API (for rask nettsøk)
-- Tavily API (for dyp research)
-- Apify API (for web-skraping)
-- Tønsberglivet PostgreSQL-database (${pendingBookings.length} ventende torvleiesøknader, ${dbArticlesCount} publiserte artikler)
+Du bistår Cecilie og ledelsen med å drifte og løfte Tønsberg: skrive artikler og helgeguider, verifisere åpningstider, søke opp omverdensdata, kvalifisere torvleie, lage SoMe-innhold og analysere publikumshenvendelser.
+
+EKTE VERKTØY DU HAR TILGANG TIL VIA FUNKSJONSKALL:
+- sok_nettet_brave (Raskt sanntidssøk via Brave Search API)
+- research_tavily (Dyp AI-research og faktafangst via Tavily API)
+- skrap_nettside_apify (Skrape og lese full nettside via Apify)
+- hent_live_arrangementer (Faktiske eventer fra CMS, Ticketmaster og bibliotek)
+- hent_sanntidsinformasjon (Entur togtider, Havvarsel badetemperatur/flo, trafikk, luftkvalitet)
+- opprett_artikkel_cms (Oppretter faktisk artikkel i Postgres-databasen)
+- hent_ventende_torvleie (Reelle søknader fra databasen - akkurat nå: ${pendingCount} ventende)
+- godkjenn_torvleie_booking (Faktisk godkjenning i databasen og e-postutsending)
+- sok_bedrifter_og_brreg (CMS bedrifter og Brønnøysundregistrene)
+- analyser_publikumshenvendelser (Trender fra chatboten på nettsiden)
+- eksporter_til_duett (Peppol EHF 3.0 fakturaeksport)
 
 RETNINGSLINJER:
-1. Utfør alltid oppgaven direkte og fullverdig. ALDRI si «Hva vil du at jeg skal starte med?» eller «Hvordan kan jeg hjelpe deg?».
-2. Skriv ferdig utkast, guider og analyser i sin helhet.
-3. Formater med ryddige overskrifter, kulepunkter og emojier.`;
+1. Kall alltid de relevante verktøyene når du trenger fakta, søk i nettet, sanntidsdata eller skal utføre en handling.
+2. ALDRI finn på fiktive arrangementer eller falske data når du har tilgang til reelle verktøy.
+3. Hvis brukeren ber om et søk, bruk enten 'sok_nettet_brave' eller 'research_tavily'.
+4. Svar på profesjonelt, engasjerende norsk bokmål med formatering, overskrifter og emojier.`;
 
-          const prompt = `${systemInstruction}\n\nBrukerens instruks: "${message}"`;
-
-          const res = await ai.models.generateContent({
+          // Første kall til Gemini med verktøy
+          let response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: prompt,
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${systemInstruction}\n\nBrukerens oppgave: "${message}"` }],
+              },
+            ],
+            config: {
+              tools: [{ functionDeclarations: toolDeclarations }],
+            },
           });
 
-          if (res && res.text) {
-            replyText = res.text;
-          }
-        }
-      } catch (geminiErr: any) {
-        console.warn('[Agent Chat API] Gemini feilet eller mangler nøkkel:', geminiErr?.message);
-      }
-    }
+          // Håndter verktøykall hvis modellen ber om det
+          const functionCalls = response.functionCalls;
+          if (functionCalls && functionCalls.length > 0) {
+            const toolResultsParts: any[] = [];
 
-    // ═══════════════════════════════════════════════════════════════
-    // 🔄 4. FORSØK HEADLESS BOTSIFY CONVERSE (MED RENGJORT NUMERISK fbId)
-    // ═══════════════════════════════════════════════════════════════
-    if (!replyText && BOT_API_KEY && CONVERSE_ENDPOINT) {
-      try {
-        const payload = {
-          type: 'message',
-          fbId: cleanFbId,
-          bot_key: BOT_API_KEY,
-          text: message,
-          message: message,
-          current_messages: message,
-          url: 'https://tonsberglivet.no',
-          user_name: userName,
-          messages: [],
-        };
-
-        const response = await fetch(CONVERSE_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(payload),
-          signal: AbortSignal.timeout(8000), // Rask timeout så brukeren slipper å vente lenge
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.messages && Array.isArray(data.messages)) {
-            for (const m of data.messages) {
-              if (m.message) {
-                if (m.message.text) {
-                  replyText += (replyText ? '\n\n' : '') + m.message.text;
-                }
-                if (Array.isArray(m.message.quick_replies)) {
-                  for (const qr of m.message.quick_replies) {
-                    if (qr.title) {
-                      quickReplies.push({
-                        title: qr.title,
-                        payload: qr.payload || qr.title,
-                      });
-                    }
-                  }
-                }
+            for (const call of functionCalls) {
+              if (!call.name) continue;
+              const execResult = await executeAgentTool(call.name, call.args);
+              if (execResult.actionExecuted) {
+                actionExecuted = execResult.actionExecuted;
+                actionResult = execResult.actionResult;
               }
+              toolResultsParts.push({
+                functionResponse: {
+                  name: call.name,
+                  response: {
+                    output: execResult,
+                  },
+                },
+              });
             }
+
+            // Kall modellen på nytt med verktøysvarene for å generere endelig svar
+            const followUp = await ai.models.generateContent({
+              model: 'gemini-2.5-flash',
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `${systemInstruction}\n\nBrukerens oppgave: "${message}"` }],
+                },
+                {
+                  role: 'model',
+                  parts: functionCalls.map((fc) => ({
+                    functionCall: fc,
+                  })),
+                },
+                {
+                  role: 'user',
+                  parts: toolResultsParts,
+                },
+              ],
+            });
+
+            if (followUp && followUp.text) {
+              replyText = followUp.text;
+            }
+          } else if (response && response.text) {
+            replyText = response.text;
           }
+        } catch (geminiErr: any) {
+          console.warn('[Agent Chat API] Gemini verktøykall feilet:', geminiErr?.message);
         }
-      } catch (err: any) {
-        console.warn('[Agent Chat API] Converse feilet eller timet ut:', err?.message);
       }
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // 🛡️ 5. INTELLIGENT HOVEDSVAR HVIS INGEN MOTORER RETURNERTE
+    // 🚀 2.5 1MIN.AI MULTI-MODELL MOTOR (OPPKOBLING FRA RAILWAY 1_MIN_AI)
     // ═══════════════════════════════════════════════════════════════
     if (!replyText) {
-      replyText = `Hei ${userName}! Jeg har analysert oppgaven: **"${message}"**.\n\n` +
-        `Jeg har full tilgang til Tønsberglivets database og verktøy. Her er dagens operative status og forslag til handling:\n\n` +
-        `• **Torvleie:** ${pendingBookings.length} søknader venter på saksbehandling\n` +
-        `• **Artikler & Innhold:** ${dbArticlesCount} publiserte saker i CMS\n` +
-        `• **Arrangementer:** Kalenderen er aktiv og synkronisert\n\n` +
-        `Velg en av hurtighandlingene under for å utføre oppgaven umiddelbart:`;
+      try {
+        const { createOneMinChatCompletion, getEffectiveOneMinApiKey } = await import('@/lib/onemin-client');
+        const oneMinKey = await getEffectiveOneMinApiKey();
 
-      quickReplies.push({ title: '📅 Generer helgeguide', payload: 'Generer ukens helgeguide' });
-      quickReplies.push({ title: '🏛️ Kvalifiser torvleie', payload: 'Kvalifiser torvleie-forespørsel' });
-      quickReplies.push({ title: '🦁 Åpningstids-audit', payload: 'Sjekk åpningstider for restaurantene på Brygga' });
-      quickReplies.push({ title: '📣 Lag SoMe-pakke', payload: 'Lag en SoMe-pakke for helgeaktivitetene' });
+        if (oneMinKey) {
+          const [pendingCount, articlesCount, eventsRes] = await Promise.all([
+            prisma.bookingRequest.count({ where: { status: { in: ['NEW', 'PROCESSING'] } } }).catch(() => 0),
+            prisma.article.count().catch(() => 0),
+            toolGetRealEvents(7).catch(() => ({ data: [] })),
+          ]);
+
+          const oneMinRes = await createOneMinChatCompletion([
+            {
+              role: 'system',
+              content: `Du er den handlekraftige, helautonome AI-agenten for Tønsberglivet (Tønsberglivet OS).
+Driftes i samsvar med GDPR og norsk personvernlovgivning.
+Du bistår Cecilie og ledelsen med å skrive artikler, helgeguider, verifisere åpningstider, håndtere torvleie og analysere bylivet.
+
+SANNTIDSSTATUS I TØNSBERGLIVET NÅ:
+- Ventende torvleiesøknader i databasen: ${pendingCount}
+- Registrerte CMS-artikler: ${articlesCount}
+- Aktuelle arrangementer i kalenderen: ${JSON.stringify(eventsRes.data?.slice(0, 5) || [])}
+- Web Intelligence: Brave API, Tavily API og Apify er integrert.
+
+Svar alltid på levende, profesjonelt norsk bokmål med formatering, overskrifter og emojier.`,
+            },
+            {
+              role: 'user',
+              content: message,
+            },
+          ], {
+            model: 'gpt-4.1-mini',
+          });
+
+          if (oneMinRes.success && oneMinRes.content) {
+            replyText = oneMinRes.content;
+          }
+        }
+      } catch (oneMinErr: any) {
+        console.warn('[Agent Chat API] 1min.AI feilet:', oneMinErr?.message);
+      }
     }
 
-    // Sikre at vi alltid har relevante hurtigknapper
+    // ═══════════════════════════════════════════════════════════════
+    // 🛡️ 3. ROBUST LOKAL MOTOR (HVIS GEMINI NØKKEL IKKE ER SATT ENNÅ)
+    // ═══════════════════════════════════════════════════════════════
+    if (!replyText) {
+      // Hvis meldingen handler om arrangementer eller helg
+      if (lower.includes('arrangement') || lower.includes('helg') || lower.includes('konsert') || lower.includes('hva skjer')) {
+        const evRes = await toolGetRealEvents(10);
+        const events = evRes.data || [];
+        replyText = `🌟 **Faktiske arrangementer i Tønsberg (Sanntid fra kalender & Ticketmaster):**\n\n` +
+          (events.length > 0
+            ? events.map((e: any) => `• **${e.title}** — ${e.location} (${e.date} kl. ${e.time})\n  *Kilde: ${e.source}*`).join('\n\n')
+            : 'Ingen planlagte arrangementer de neste dagene i kalenderen.') +
+          `\n\n💡 *Vil du at jeg skal opprette en helgeguide-artikkel basert på dette i CMS?*`;
+        quickReplies.push({ title: '📰 Opprett som artikkel i CMS', payload: 'Opprett som artikkel: Helgeguide for Tønsberg' });
+        quickReplies.push({ title: '📣 Lag SoMe-pakke', payload: 'Lag SoMe-pakke for helgens arrangementer' });
+      }
+      // Hvis meldingen handler om vær, sjø, båt eller transport
+      else if (lower.includes('båt') || lower.includes('vær') || lower.includes('sjø') || lower.includes('bade') || lower.includes('tog') || lower.includes('buss')) {
+        const rt = await toolGetRealtimeStatus();
+        const d = rt.data;
+        replyText = `⚓ **Sanntidsstatus for Tønsberg:**\n\n` +
+          (d?.sjoOgVar
+            ? `### 🌊 Sjø og badevann:\n• **Vanntemperatur:** ${d.sjoOgVar.sjoTemperatur}\n• **Bølgehøyde:** ${d.sjoOgVar.bolgehoyde}\n• **Vannstand:** ${d.sjoOgVar.vannstand}\n\n`
+            : '') +
+          (d?.togAvganger && d.togAvganger.length > 0
+            ? `### 🚆 Neste togavganger fra Tønsberg Stasjon:\n` +
+              d.togAvganger.map((t: any) => `• **${t.line}** mot ${t.destination}: Kl. ${t.timeFormatted}`).join('\n')
+            : '') +
+          `\n\n• **Luftkvalitet:** ${d?.luftkvalitet || 'God'}`;
+        quickReplies.push({ title: '📅 Vis arrangementer', payload: 'Hent live arrangementer' });
+        quickReplies.push({ title: '🏛️ Sjekk torvleie', payload: 'Hent ventende torvleiesøknader' });
+      }
+      // Generelt smart svar med reell systemstatus
+      else {
+        const [pendingBookings, articlesCount] = await Promise.all([
+          prisma.bookingRequest.count({ where: { status: { in: ['NEW', 'PROCESSING'] } } }).catch(() => 0),
+          prisma.article.count().catch(() => 0),
+        ]);
+
+        replyText = `Hei ${userName}! Jeg har behandlet instruksen: **«${message}»**.\n\n` +
+          `Jeg er koblet direkte til Tønsberglivets produksjonsdatabase og sanntidsverktøy:\n\n` +
+          `• **Torvleie:** ${pendingBookings} ventende søknader i systemet\n` +
+          `• **CMS-artikler:** ${articlesCount} registrerte artikler\n` +
+          `• **Web Intelligence:** Brave Search, Tavily AI Research og Apify Scraper er klargjort\n` +
+          `• **Sanntidsdata:** Entur (tog), Havvarsel (sjøtemp), Ticketmaster (live scener)\n\n` +
+          `Velg en handling for å utføre oppgaven umiddelbart med ekte data:`;
+
+        quickReplies.push({ title: '🔍 Søk i omverdenen', payload: `Gjør et nettsøk etter nyheter om ${message} via Brave eller Tavily` });
+        quickReplies.push({ title: '📅 Hent ekte arrangementer', payload: 'Hent live arrangementer' });
+        quickReplies.push({ title: '📊 Publikumspuls fra nettsiden', payload: 'Analyser publikumshenvendelser fra nettsiden' });
+        quickReplies.push({ title: '🏛️ Sjekk torvleie', payload: 'Hent ventende torvleiesøknader' });
+      }
+    }
+
+    // Sikre dynamiske hurtigvalg
     if (quickReplies.length === 0) {
-      quickReplies.push({ title: '📅 Generer helgeguide', payload: 'Generer ukens helgeguide' });
-      quickReplies.push({ title: '📣 Lag SoMe-pakke', payload: 'Lag en SoMe-pakke for helgen' });
-      quickReplies.push({ title: '🏛️ Se torvleiestatus', payload: 'Vis status på torvleiesøknader' });
+      quickReplies.push({ title: '📅 Live arrangementer', payload: 'Hent live arrangementer' });
+      quickReplies.push({ title: '🔍 Brave-søk', payload: 'Gjør et Brave-søk etter siste nytt i Tønsberg' });
+      quickReplies.push({ title: '📊 Publikumspuls', payload: 'Analyser publikumshenvendelser fra nettsiden' });
+      quickReplies.push({ title: '🏛️ Torvleiestatus', payload: 'Hent ventende torvleiesøknader' });
     }
 
     return NextResponse.json({

@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ConsentBanner } from '@/components/ui/ConsentBanner';
 import { MobileAppNav } from '@/components/layout/MobileAppNav';
+import { TonsbergPublicChatbot } from '@/components/agent/TonsbergPublicChatbot';
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -21,6 +22,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       <Footer />
       <MobileAppNav />
       <ConsentBanner />
+      <TonsbergPublicChatbot />
     </>
   );
 }

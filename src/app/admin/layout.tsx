@@ -329,7 +329,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Side-om-side layout: Hovedinnhold + Integrert Co-Pilot */}
         <div className="flex-1 flex min-w-0 relative">
           {/* Hovedarbeidsflate for aktiv side */}
-          <main className="flex-1 min-w-0 p-4 lg:p-8 pb-28 lg:pb-8">{children}</main>
+          <main className={`flex-1 min-w-0 ${isFullAgentPage ? 'p-2 sm:p-4 lg:p-8 pb-16 lg:pb-8' : 'p-4 lg:p-8 pb-28 lg:pb-8'}`}>{children}</main>
 
           {/* Desktop Co-Pilot Side-Panel (Side om side i sanntid) */}
           {copilotOpen && !isFullAgentPage && (

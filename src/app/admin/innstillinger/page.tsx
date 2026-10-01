@@ -31,10 +31,19 @@ export default function InnstillingerPage() {
 
   // BYOK & Keys
   const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [braveApiKey, setBraveApiKey] = useState('');
+  const [tavilyApiKey, setTavilyApiKey] = useState('');
+  const [apifyApiKey, setApifyApiKey] = useState('');
   const [ticketmasterApiKey, setTicketmasterApiKey] = useState('');
   const [geminiConfigured, setGeminiConfigured] = useState(false);
+  const [braveConfigured, setBraveConfigured] = useState(false);
+  const [tavilyConfigured, setTavilyConfigured] = useState(false);
+  const [apifyConfigured, setApifyConfigured] = useState(false);
   const [ticketmasterConfigured, setTicketmasterConfigured] = useState(false);
   const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showBraveKey, setShowBraveKey] = useState(false);
+  const [showTavilyKey, setShowTavilyKey] = useState(false);
+  const [showApifyKey, setShowApifyKey] = useState(false);
   const [showTicketmasterKey, setShowTicketmasterKey] = useState(false);
   const [testingAi, setTestingAi] = useState(false);
   const [aiTestResult, setAiTestResult] = useState<string | null>(null);
@@ -82,6 +91,12 @@ export default function InnstillingerPage() {
       if (json.success && json.data) {
         setGeminiApiKey(json.data.geminiApiKey || '');
         setGeminiConfigured(json.data.geminiConfigured);
+        setBraveApiKey(json.data.braveApiKey || '');
+        setBraveConfigured(json.data.braveConfigured);
+        setTavilyApiKey(json.data.tavilyApiKey || '');
+        setTavilyConfigured(json.data.tavilyConfigured);
+        setApifyApiKey(json.data.apifyApiKey || '');
+        setApifyConfigured(json.data.apifyConfigured);
         setTicketmasterApiKey(json.data.ticketmasterApiKey || '');
         setTicketmasterConfigured(json.data.ticketmasterConfigured);
         setResendApiKey(json.data.resendApiKey || '');
@@ -120,6 +135,9 @@ export default function InnstillingerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           geminiApiKey,
+          braveApiKey,
+          tavilyApiKey,
+          apifyApiKey,
           ticketmasterApiKey,
           resendApiKey,
           smtpUrl,
@@ -420,6 +438,183 @@ export default function InnstillingerPage() {
               {aiTestResult && (
                 <span className="text-xs font-medium text-foreground">{aiTestResult}</span>
               )}
+            </div>
+          </div>
+
+          {/* BRAVE SEARCH API */}
+          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <ExternalLink className="w-5 h-5 text-orange-500" />
+                  Brave Search API (Sanntids nettsøk)
+                </h3>
+                <p className="text-sm text-foreground-muted mt-1">
+                  Gir den autonome agenten lynrask tilgang til ferske nyheter om Tønsberg, åpningstider, pressemeldinger og nettkilder.
+                </p>
+              </div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  braveConfigured
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                }`}
+              >
+                {braveConfigured ? 'Aktiv (Tilkoblet)' : 'Valgfri / Ikke satt'}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
+                Brave Search API-nøkkel
+              </label>
+              <div className="relative">
+                <input
+                  type={showBraveKey ? 'text' : 'password'}
+                  value={braveApiKey}
+                  onChange={(e) => setBraveApiKey(e.target.value)}
+                  placeholder="BSA..."
+                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowBraveKey(!showBraveKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
+                >
+                  {showBraveKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                <span className="text-foreground-muted">
+                  Gir agenten mulighet til å utføre uavhengige Brave-søk.
+                </span>
+                <a
+                  href="https://brave.com/search/api/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
+                >
+                  Hent Brave API-nøkkel (gratis kvote) <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* TAVILY SEARCH API */}
+          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-indigo-500" />
+                  Tavily AI Search API (Dyp Research)
+                </h3>
+                <p className="text-sm text-foreground-muted mt-1">
+                  Spesialdesignet forsknings- og faktasøkemotor for LLM-agenter. Finner faktabaserte kilder og sammendrag for artikler.
+                </p>
+              </div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  tavilyConfigured
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                }`}
+              >
+                {tavilyConfigured ? 'Aktiv (Tilkoblet)' : 'Valgfri / Ikke satt'}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
+                Tavily API-nøkkel
+              </label>
+              <div className="relative">
+                <input
+                  type={showTavilyKey ? 'text' : 'password'}
+                  value={tavilyApiKey}
+                  onChange={(e) => setTavilyApiKey(e.target.value)}
+                  placeholder="tvly-..."
+                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowTavilyKey(!showTavilyKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
+                >
+                  {showTavilyKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                <span className="text-foreground-muted">
+                  Syntetiserer forskningsrapporter og verifiserer kilder automatisk.
+                </span>
+                <a
+                  href="https://tavily.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
+                >
+                  Hent gratis Tavily API-nøkkel <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* APIFY WEB SCRAPER API */}
+          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-emerald-500" />
+                  Apify Web Scraper API (Nettleser- og dokumentskraping)
+                </h3>
+                <p className="text-sm text-foreground-muted mt-1">
+                  Lar agenten skrape og hente komplett innhold fra eksterne nettsider (Foynhagen, Oseberg kulturhus, Tønsberg kommune m.m.).
+                </p>
+              </div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  apifyConfigured
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                    : 'bg-surface-muted text-foreground-muted border border-border'
+                }`}
+              >
+                {apifyConfigured ? 'Aktiv (Tilkoblet)' : 'Innebygd direkteleser aktiv'}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
+                Apify API-token
+              </label>
+              <div className="relative">
+                <input
+                  type={showApifyKey ? 'text' : 'password'}
+                  value={apifyApiKey}
+                  onChange={(e) => setApifyApiKey(e.target.value)}
+                  placeholder="apify_api_..."
+                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApifyKey(!showApifyKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
+                >
+                  {showApifyKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                <span className="text-foreground-muted">
+                  Systemet har også innebygd resilient direkteleser som fallback.
+                </span>
+                <a
+                  href="https://apify.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
+                >
+                  Hent Apify-token <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             </div>
           </div>
 

@@ -1,0 +1,41 @@
+name: Tønsberglivet Autonomous Agent & Data Sync
+
+on:
+  schedule:
+    # Kjører hver morgen kl. 05:00 UTC (07:00 norsk sommertid)
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  agent-sync-and-audit:
+    name: Synkroniser arrangementer og valider agent
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Sjekk ut kildekode
+        uses: actions/checkout@v4
+
+      - name: Sett opp Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Installer avhengigheter
+        run: npm ci
+
+      - name: Generer Prisma-klient
+        run: npx prisma generate
+
+      - name: Kjør TypeScript Typecheck
+        run: npx tsc --noEmit
+
+      - name: Trigger daglig nattlig synkronisering (hvis produksjons-URL er konfigurert)
+        if: env.PRODUCTION_URL != ''
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          echo "Kaller nattlig synkroniserings-endepunkt for Tønsberglivet..."
+          curl -s -X POST "${{ secrets.PRODUCTION_URL }}/api/cron/daily-sync?key=${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"

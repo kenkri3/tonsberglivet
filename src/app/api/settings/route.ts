@@ -11,6 +11,9 @@ function maskSecret(val?: string): string {
 export async function GET() {
   try {
     const geminiKey = await getSetting('gemini_api_key');
+    const braveKey = await getSetting('brave_api_key');
+    const tavilyKey = await getSetting('tavily_api_key');
+    const apifyKey = await getSetting('apify_api_key');
     const ticketmasterKey = await getSetting('ticketmaster_api_key');
     const resendKey = await getSetting('resend_api_key');
     const smtpUrl = await getSetting('smtp_url');
@@ -27,6 +30,12 @@ export async function GET() {
       data: {
         geminiApiKey: maskSecret(geminiKey || process.env.GEMINI_API_KEY),
         geminiConfigured: !!(geminiKey || process.env.GEMINI_API_KEY),
+        braveApiKey: maskSecret(braveKey || process.env.BRAVE_API_KEY),
+        braveConfigured: !!(braveKey || process.env.BRAVE_API_KEY),
+        tavilyApiKey: maskSecret(tavilyKey || process.env.TAVILY_API_KEY),
+        tavilyConfigured: !!(tavilyKey || process.env.TAVILY_API_KEY),
+        apifyApiKey: maskSecret(apifyKey || process.env.APIFY_API_KEY),
+        apifyConfigured: !!(apifyKey || process.env.APIFY_API_KEY),
         ticketmasterApiKey: maskSecret(ticketmasterKey || process.env.TICKETMASTER_API_KEY),
         ticketmasterConfigured: !!(ticketmasterKey || process.env.TICKETMASTER_API_KEY),
         resendApiKey: maskSecret(resendKey || process.env.RESEND_API_KEY),
@@ -65,6 +74,9 @@ export async function POST(request: Request) {
     // 2. Samlet form-lagring
     const {
       geminiApiKey,
+      braveApiKey,
+      tavilyApiKey,
+      apifyApiKey,
       ticketmasterApiKey,
       resendApiKey,
       smtpUrl,
@@ -79,6 +91,15 @@ export async function POST(request: Request) {
 
     if (geminiApiKey && !geminiApiKey.includes('••••')) {
       await setSetting('gemini_api_key', geminiApiKey.trim(), 'AI');
+    }
+    if (braveApiKey && !braveApiKey.includes('••••')) {
+      await setSetting('brave_api_key', braveApiKey.trim(), 'AI');
+    }
+    if (tavilyApiKey && !tavilyApiKey.includes('••••')) {
+      await setSetting('tavily_api_key', tavilyApiKey.trim(), 'AI');
+    }
+    if (apifyApiKey && !apifyApiKey.includes('••••')) {
+      await setSetting('apify_api_key', apifyApiKey.trim(), 'AI');
     }
     if (ticketmasterApiKey && !ticketmasterApiKey.includes('••••')) {
       await setSetting('ticketmaster_api_key', ticketmasterApiKey.trim(), 'INTEGRATIONS');

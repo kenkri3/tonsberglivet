@@ -75,6 +75,9 @@ export async function getAllSettings(): Promise<Record<string, string>> {
   // Fyll inn fra env dersom ikke satt i DB/minne
   const knownKeys = [
     'gemini_api_key',
+    'brave_api_key',
+    'tavily_api_key',
+    'apify_api_key',
     'resend_api_key',
     'smtp_url',
     'ticketmaster_api_key',
