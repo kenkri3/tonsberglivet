@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ConsentBanner } from '@/components/ui/ConsentBanner';
-import { AgentWebWidget } from '@/components/agent/AgentWebWidget';
+import { MobileAppNav } from '@/components/layout/MobileAppNav';
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,8 +17,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-16 lg:pb-0">{children}</main>
       <Footer />
+      <MobileAppNav />
       <ConsentBanner />
     </>
   );

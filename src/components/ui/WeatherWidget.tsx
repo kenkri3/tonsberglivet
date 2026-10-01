@@ -39,9 +39,9 @@ export function WeatherWidget() {
       title={`Live vær i ${weather.location} fra Yr / Met.no`}
     >
       {renderIcon()}
-      <span>{weather.location}</span>
+      <span className="hidden sm:inline">{weather.location}</span>
       <span className="font-bold text-primary">{weather.temperature}°C</span>
-      <span className="text-foreground-subtle hidden sm:inline flex items-center gap-0.5">
+      <span className="text-foreground-subtle hidden md:inline flex items-center gap-0.5">
         <Wind className="w-3 h-3" /> {weather.windSpeed} m/s
       </span>
     </div>

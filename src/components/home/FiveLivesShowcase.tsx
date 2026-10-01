@@ -167,16 +167,16 @@ export function FiveLivesShowcase() {
             <button
               key={p.id}
               onClick={() => setActiveTab(idx)}
-              className={`flex items-center gap-2.5 px-5 py-3.5 rounded-2xl font-bold text-sm transition-all duration-300 whitespace-nowrap shrink-0 border ${
+              className={`flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-2xl font-bold transition-all duration-300 whitespace-nowrap shrink-0 border ${
                 isActive
                   ? 'bg-surface shadow-lg border-primary/40 text-foreground scale-[1.02] ring-2 ring-primary/20'
-                  : 'bg-surface-muted/70 hover:bg-surface border-border text-foreground-muted hover:text-foreground'
+                  : 'bg-surface-muted/70 hover:bg-surface border-border text-foreground-muted hover:text-foreground opacity-80 hover:opacity-100'
               }`}
+              aria-label={`Velg ${p.name}`}
             >
-              <div className={`h-4 transition-transform ${isActive ? 'scale-105' : 'opacity-70'}`}>
+              <div className={`h-4 sm:h-5 transition-transform ${isActive ? 'scale-105' : ''}`}>
                 {p.logo}
               </div>
-              <span className="text-xs uppercase tracking-wider hidden sm:inline">{p.name}</span>
             </button>
           );
         })}

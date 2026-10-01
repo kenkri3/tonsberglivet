@@ -53,6 +53,17 @@ export function Header() {
   }, []);
 
   useEffect(() => {
+    const openSearch = () => setSearchOpen(true);
+    const openMenu = () => setMobileOpen((prev) => !prev);
+    window.addEventListener('tonsberg-open-search', openSearch);
+    window.addEventListener('tonsberg-open-menu', openMenu);
+    return () => {
+      window.removeEventListener('tonsberg-open-search', openSearch);
+      window.removeEventListener('tonsberg-open-menu', openMenu);
+    };
+  }, []);
+
+  useEffect(() => {
     if (mobileOpen || searchOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -285,10 +296,31 @@ export function Header() {
 
       {/* Mobil fullskjermmeny */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-background/95 backdrop-blur-xl" />
+        <div className="fixed inset-0 z-50 lg:hidden flex flex-col bg-background/98 backdrop-blur-2xl">
+          {/* Mobil drawer header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border/70">
+            <Link
+              href="/"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center"
+              aria-label="Tønsberglivet — Hjem"
+            >
+              <TonsberglivetLogo className="h-7 w-auto text-theme-brand" />
+            </Link>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-muted hover:bg-surface border border-border text-foreground transition-all"
+                aria-label="Lukk meny"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
           <nav
-            className="relative pt-[calc(var(--header-height)+1rem)] px-6 pb-8 h-full overflow-y-auto"
+            className="flex-1 px-6 py-6 overflow-y-auto pb-24"
             aria-label="Mobilmeny"
           >
             {navigation.map((item) => (
