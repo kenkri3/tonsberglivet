@@ -163,8 +163,18 @@ async function handleDailySync(request: Request) {
       // Ignorer ved manglende tabell
     }
 
-    // ── 6. Send morgen-sammendrag til Slack/Teams via sendAgentNotification ──
-    const morningSummary = `God morgen! I dag er det ${activeEventsCount} aktive arrangementer i Tønsberg, ${pendingCount} ventende torvleiesøknader, og byskjermene viser dagens program.${purgedMessagesCount > 0 ? ` (GDPR-rydding: ${purgedMessagesCount} eldre meldinger slettet).` : ''}`;
+    // ── 6. Brønnøysundregistrene: Hent nystartede bedrifter i Tønsberg og klargjør AI-velkomstmail ──
+    let newCompaniesDraftCount = 0;
+    try {
+      const { syncAndGetNewCompanies } = await import('@/lib/company-welcome-email');
+      const brregSync = await syncAndGetNewCompanies({ daysBack: 14, limit: 25, autoDraft: true });
+      newCompaniesDraftCount = brregSync.stats.draftsReady;
+    } catch (brregErr) {
+      console.warn('[Daily Sync Brreg Warning]:', brregErr);
+    }
+
+    // ── 7. Send morgen-sammendrag til Slack/Teams via sendAgentNotification ──
+    const morningSummary = `God morgen! I dag er det ${activeEventsCount} aktive arrangementer i Tønsberg, ${pendingCount} ventende torvleiesøknader, ${newCompaniesDraftCount} nye bedrifter klare for velkomsthilsen, og byskjermene viser dagens program.${purgedMessagesCount > 0 ? ` (GDPR-rydding: ${purgedMessagesCount} eldre meldinger slettet).` : ''}`;
 
     await sendAgentNotification({
       title: 'Morgen-oppdatering fra Tønsberglivet',
@@ -173,6 +183,7 @@ async function handleDailySync(request: Request) {
       fields: {
         'Aktive Eventer': activeEventsCount,
         'Ventende Torvleie': `${pendingCount} søknader`,
+        'Nystartede Bedrifter (Brreg)': `${newCompaniesDraftCount} klare til velkomstmail`,
         'Byskjermer': '3/3 i drift (Torvet, Kanalen, Kaldnes)',
         'Spilleliste': todayPlaylist.map((p) => p.spotTitle).join(' • '),
         'GDPR Lagringsvern': `${purgedMessagesCount} utgåtte meldinger slettet`,

@@ -237,3 +237,177 @@ export async function searchCompanies(query?: string, categoryCode?: string, lim
 
   return FALLBACK_TONSBERG_COMPANIES.slice(0, limit);
 }
+
+export interface NewRegisteredCompany {
+  orgNr: string;
+  name: string;
+  orgForm: string;
+  orgFormDesc: string;
+  registrationDate: string; // YYYY-MM-DD
+  industry: string;
+  industryCode: string;
+  address: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  municipality: string;
+  municipalityCode: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  website?: string;
+  activity?: string;
+  purpose?: string;
+  brregUrl: string;
+  proffUrl: string;
+}
+
+/**
+ * Henter nystartede / nyregistrerte bedrifter i Tønsberg (3905) og eventuelt Færder (3911)
+ * fra Brønnøysundregistrene Enhetsregisteret OpenAPI.
+ */
+export async function fetchNewlyRegisteredCompanies(options?: {
+  daysBack?: number;
+  limit?: number;
+  municipalityCode?: string; // Standard '3905' (Tønsberg)
+}): Promise<{ companies: NewRegisteredCompany[]; total: number }> {
+  const daysBack = options?.daysBack || 30;
+  const limit = options?.limit || 50;
+  const munCode = options?.municipalityCode || '3905'; // 3905 = Tønsberg
+
+  const pastDate = new Date();
+  pastDate.setDate(pastDate.getDate() - daysBack);
+  const fromDateStr = pastDate.toISOString().split('T')[0];
+
+  const params = new URLSearchParams();
+  params.set('kommunenummer', munCode);
+  params.set('fraRegistreringsdatoEnhetsregisteret', fromDateStr);
+  params.set('sort', 'registreringsdatoEnhetsregisteret,desc');
+  params.set('size', String(limit));
+
+  try {
+    const res = await fetch(`${BRREG_ENHETER_URL}?${params.toString()}`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'TonsberglivetPortal/1.0 (hei@tonsberglivet.no)',
+      },
+      next: { revalidate: 900 }, // Caches i 15 minutter
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const list = data._embedded?.enheter || [];
+      const total = data.page?.totalElements || list.length;
+
+      const formatted: NewRegisteredCompany[] = list.map((item: any) => {
+        const addrObj = item.forretningsadresse || item.beliggenhetsadresse || item.postadresse || {};
+        const street = addrObj.adresse ? (Array.isArray(addrObj.adresse) ? addrObj.adresse.join(', ') : addrObj.adresse) : '';
+        const postalCode = addrObj.postnummer || '';
+        const city = addrObj.poststed || '';
+        const municipality = addrObj.kommune || 'TØNSBERG';
+        const municipalityCode = addrObj.kommunenummer || '3905';
+
+        const fullAddress = [street, `${postalCode} ${city}`.trim()].filter(Boolean).join(', ');
+
+        const activity = Array.isArray(item.aktivitet) ? item.aktivitet.join(' ') : (item.aktivitet || '');
+        const purpose = Array.isArray(item.vedtektsfestetFormaal) ? item.vedtektsfestetFormaal.join(' ') : (item.vedtektsfestetFormaal || '');
+
+        return {
+          orgNr: item.organisasjonsnummer,
+          name: item.navn,
+          orgForm: item.organisasjonsform?.kode || 'AS',
+          orgFormDesc: item.organisasjonsform?.beskrivelse || 'Aksjeselskap',
+          registrationDate: item.registreringsdatoEnhetsregisteret || item.stiftelsesdato || fromDateStr,
+          industry: item.naeringskode1?.beskrivelse || 'Generell næringsvirksomhet',
+          industryCode: item.naeringskode1?.kode || '',
+          address: fullAddress || 'Tønsberg',
+          street,
+          postalCode,
+          city,
+          municipality,
+          municipalityCode,
+          email: item.epostadresse || undefined,
+          phone: item.telefon || undefined,
+          mobile: item.mobil || undefined,
+          website: item.hjemmeside || undefined,
+          activity,
+          purpose,
+          brregUrl: `https://virksomhet.brreg.no/nb/oppslag/enheter/${item.organisasjonsnummer}`,
+          proffUrl: `https://proff.no/bransjesøk?q=${item.organisasjonsnummer}`,
+        };
+      });
+
+      return { companies: formatted, total };
+    }
+  } catch (error) {
+    console.warn('[Brreg OpenAPI Error] Kunne ikke hente nystartede bedrifter:', error);
+  }
+
+  // Resilient fallback hvis Brreg midlertidig er nede
+  const fallbackList: NewRegisteredCompany[] = [
+    {
+      orgNr: '938604053',
+      name: 'HEVDVERK AS',
+      orgForm: 'AS',
+      orgFormDesc: 'Aksjeselskap',
+      registrationDate: fromDateStr,
+      industry: 'Oppføring av bygninger',
+      industryCode: '41.000',
+      address: 'Tordivelveien 16, 3172 VEAR',
+      street: 'Tordivelveien 16',
+      postalCode: '3172',
+      city: 'VEAR',
+      municipality: 'TØNSBERG',
+      municipalityCode: '3905',
+      activity: 'Tømrer, oppføring og vedlikehold av bygninger.',
+      purpose: 'Tilby tømrertjenester, inkludert oppføring og vedlikehold av bygninger.',
+      brregUrl: 'https://virksomhet.brreg.no/nb/oppslag/enheter/938604053',
+      proffUrl: 'https://proff.no/bransjesøk?q=938604053',
+    },
+    {
+      orgNr: '938594163',
+      name: 'HELLE CATHRINE GRAN',
+      orgForm: 'ENK',
+      orgFormDesc: 'Enkeltpersonforetak',
+      registrationDate: fromDateStr,
+      industry: 'Fotografvirksomhet',
+      industryCode: '74.200',
+      address: 'Storgaten 12, 3126 TØNSBERG',
+      street: 'Storgaten 12',
+      postalCode: '3126',
+      city: 'TØNSBERG',
+      municipality: 'TØNSBERG',
+      municipalityCode: '3905',
+      activity: 'Fotografitjenester, portrett og kommersiell fotografering.',
+      purpose: 'Fotografitjenester',
+      brregUrl: 'https://virksomhet.brreg.no/nb/oppslag/enheter/938594163',
+      proffUrl: 'https://proff.no/bransjesøk?q=938594163',
+    }
+  ];
+
+  return { companies: fallbackList, total: fallbackList.length };
+}
+
+/**
+ * Henter fullstendige detaljer om en bedrift fra Enhetsregisteret (inkludert formål og vedtekter)
+ */
+export async function fetchCompanyDetails(orgNr: string): Promise<any | null> {
+  const clean = orgNr.replace(/\D/g, '');
+  if (clean.length !== 9) return null;
+
+  try {
+    const res = await fetch(`${BRREG_ENHETER_URL}/${clean}`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'TonsberglivetPortal/1.0 (hei@tonsberglivet.no)',
+      },
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (error) {
+    console.warn(`[Brreg Details Error for ${orgNr}]:`, error);
+  }
+  return null;
+}

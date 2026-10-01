@@ -36,6 +36,9 @@ export default function InnstillingerPage() {
   const [errorMessage, setErrorMessage] = useState('');
 
   // BYOK & Keys
+  const [oneMinApiKey, setOneMinApiKey] = useState('');
+  const [oneMinConfigured, setOneMinConfigured] = useState(false);
+  const [showOneMinKey, setShowOneMinKey] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [braveApiKey, setBraveApiKey] = useState('');
   const [tavilyApiKey, setTavilyApiKey] = useState('');
@@ -118,6 +121,8 @@ export default function InnstillingerPage() {
       const res = await fetch('/api/settings');
       const json = await res.json();
       if (json.success && json.data) {
+        setOneMinApiKey(json.data.oneMinApiKey || '');
+        setOneMinConfigured(json.data.oneMinConfigured);
         setGeminiApiKey(json.data.geminiApiKey || '');
         setGeminiConfigured(json.data.geminiConfigured);
         setBraveApiKey(json.data.braveApiKey || '');
@@ -182,6 +187,7 @@ export default function InnstillingerPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          oneMinApiKey,
           geminiApiKey,
           braveApiKey,
           tavilyApiKey,
@@ -503,31 +509,91 @@ export default function InnstillingerPage() {
       {/* TAB 1: BYOK */}
       {activeTab === 'byok' && (
         <div className="space-y-6">
+          {/* 1min.AI Seksjon (Railway 1_MIN_AI / OpenAI-kompatibel / EU GDPR) */}
           <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary" />
-                  AI API-nøkkel (1min.ai)
+                  1min.AI API-nøkkel (1_MIN_AI i Railway)
                 </h3>
                 <p className="text-sm text-foreground-muted mt-1">
-                  Brukes av redaksjonell Copilot, SoMe-generering og den autonome mobilagenten for naturlig språk.
+                  Brukes til AI-velkomstmailer til nystartede bedrifter, chatboten og innholdsgenerering. Støtter OpenAI-kompatible modeller med europeisk databehandling (EU GDPR).
+                </p>
+              </div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  oneMinConfigured
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                }`}
+              >
+                {oneMinConfigured ? 'Tilkoblet (1_MIN_AI Aktiv)' : 'Ikke registrert ennå'}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
+                1min.AI API-nøkkel (eller satt i Railway under "1_MIN_AI")
+              </label>
+              <div className="relative">
+                <input
+                  type={showOneMinKey ? 'text' : 'password'}
+                  value={oneMinApiKey}
+                  onChange={(e) => setOneMinApiKey(e.target.value)}
+                  placeholder="Skriv inn nøkkel eller la stå for å arve fra Railway (1_MIN_AI)..."
+                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOneMinKey(!showOneMinKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
+                >
+                  {showOneMinKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                <span className="text-foreground-muted">
+                  Ivaretar GDPR og personvernregler for offentlig sektor ved å prioritere modeller vertet i EU/EØS.
+                </span>
+                <a
+                  href="https://docs.1min.ai/docs/api/openai-compatible"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
+                >
+                  1min.AI API Dokumentasjon <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Google Gemini Seksjon */}
+          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-indigo-500" />
+                  Google Gemini API (Valgfri / Alternativ BYOK)
+                </h3>
+                <p className="text-sm text-foreground-muted mt-1">
+                  Valgfri sekundær nøkkel for multimodal bildeanalyse og Gemini 2.5 Flash.
                 </p>
               </div>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-bold ${
                   geminiConfigured
                     ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                    : 'bg-surface-muted text-foreground-subtle border border-border'
                 }`}
               >
-                {geminiConfigured ? 'Tilkoblet (Aktiv)' : 'Nøkkel mangler'}
+                {geminiConfigured ? 'Tilkoblet (Aktiv)' : 'Valgfritt'}
               </span>
             </div>
 
             <div className="space-y-2">
               <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
-                AI API-nøkkel
+                Gemini API-nøkkel
               </label>
               <div className="relative">
                 <input
@@ -547,35 +613,24 @@ export default function InnstillingerPage() {
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
                 <span className="text-foreground-muted">
-                  Nøkkelen lagres kryptert på serveren og benyttes kun for Tønsberglivet.
+                  Nøkkelen lagres trygt og benyttes kun for Tønsberglivet.
                 </span>
                 <a
-                  href="https://docs.1min.ai/docs/api/openai-compatible"
+                  href="https://aistudio.google.com/app/apikey"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline font-bold inline-flex items-center gap-1"
                 >
-                  Hent API-nøkkel fra 1min.ai <ExternalLink className="w-3 h-3" />
+                  Google AI Studio <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-surface-muted border border-border text-xs text-foreground-muted space-y-2">
-              <div className="flex items-center gap-2 font-bold text-foreground">
-                <ShieldAlert className="w-4 h-4 text-primary" />
-                Null kostnader & Gratis kvote:
-              </div>
-              <p>
-                Bruk din 1min.ai API-nøkkel her for å generere SoMe-innlegg og drive chatbot.
-                Dette dekker Tønsberglivets månedlige behov fullstendig uten binding eller ekstra kostnader.
-              </p>
             </div>
 
             <div className="flex items-center gap-4 pt-2">
               <button
                 type="button"
                 onClick={testAiConnection}
-                disabled={testingAi || (!geminiApiKey && !geminiConfigured)}
+                disabled={testingAi || (!geminiApiKey && !geminiConfigured && !oneMinConfigured && !oneMinApiKey)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-surface-muted hover:bg-border text-foreground font-bold text-xs rounded-xl transition-colors border border-border disabled:opacity-50"
               >
                 {testingAi ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-primary" />}

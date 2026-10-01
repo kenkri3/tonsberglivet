@@ -16,6 +16,7 @@ export async function GET(request: Request) {
   }
 
   try {
+    const oneMinKey = await getSetting('1_min_ai') || await getSetting('one_min_ai_key');
     const geminiKey = await getSetting('gemini_api_key');
     const braveKey = await getSetting('brave_api_key');
     const tavilyKey = await getSetting('tavily_api_key');
@@ -46,9 +47,13 @@ export async function GET(request: Request) {
     const googleBusinessLocationId = await getSetting('google_business_location_id', '');
     const googleBusinessAccessToken = await getSetting('google_business_access_token', '');
 
+    const effectiveOneMin = oneMinKey || process.env['1_MIN_AI'] || process.env.ONE_MIN_AI || process.env.ONE_MIN_AI_API_KEY;
+
     return NextResponse.json({
       success: true,
       data: {
+        oneMinApiKey: maskSecret(effectiveOneMin),
+        oneMinConfigured: !!effectiveOneMin,
         geminiApiKey: maskSecret(geminiKey || process.env.GEMINI_API_KEY),
         geminiConfigured: !!(geminiKey || process.env.GEMINI_API_KEY),
         braveApiKey: maskSecret(braveKey || process.env.BRAVE_API_KEY),
@@ -112,6 +117,7 @@ export async function POST(request: Request) {
 
     // 2. Samlet form-lagring
     const {
+      oneMinApiKey,
       geminiApiKey,
       braveApiKey,
       tavilyApiKey,
@@ -139,6 +145,9 @@ export async function POST(request: Request) {
       googleBusinessAccessToken,
     } = body;
 
+    if (oneMinApiKey && !oneMinApiKey.includes('••••')) {
+      await setSetting('1_min_ai', oneMinApiKey.trim(), 'AI');
+    }
     if (geminiApiKey && !geminiApiKey.includes('••••')) {
       await setSetting('gemini_api_key', geminiApiKey.trim(), 'AI');
     }
