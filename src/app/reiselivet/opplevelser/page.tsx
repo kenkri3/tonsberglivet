@@ -17,7 +17,7 @@ const attractions = [
     name: 'Verdens Ende & Vippefyret',
     area: 'Tjøme / Færder',
     desc: 'Ikonisk fyrtårn og værbitte svaberg på spissen av Tjøme med mektig panoramautsikt mot Skagerrak og Færder fyr.',
-    image: '/images/tonsberg/sommer_tonsberg.png',
+    image: '/images/tonsberg/ostre_bolarne.jpg',
   },
   {
     name: 'Færder Nasjonalpark',
