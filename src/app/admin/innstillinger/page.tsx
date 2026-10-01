@@ -262,10 +262,10 @@ export default function InnstillingerPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex flex-wrap border-b border-border gap-2">
+      <div className="flex overflow-x-auto border-b border-border gap-2 pb-px scrollbar-none scroll-smooth">
         <button
           onClick={() => setActiveTab('byok')}
-          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm border-b-2 transition-all ${
+          className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 font-bold text-xs sm:text-sm border-b-2 whitespace-nowrap transition-all ${
             activeTab === 'byok'
               ? 'border-primary text-primary'
               : 'border-transparent text-foreground-muted hover:text-foreground'
@@ -280,7 +280,7 @@ export default function InnstillingerPage() {
 
         <button
           onClick={() => setActiveTab('email')}
-          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm border-b-2 transition-all ${
+          className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 font-bold text-xs sm:text-sm border-b-2 whitespace-nowrap transition-all ${
             activeTab === 'email'
               ? 'border-primary text-primary'
               : 'border-transparent text-foreground-muted hover:text-foreground'
@@ -295,7 +295,7 @@ export default function InnstillingerPage() {
 
         <button
           onClick={() => setActiveTab('agent')}
-          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm border-b-2 transition-all ${
+          className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 font-bold text-xs sm:text-sm border-b-2 whitespace-nowrap transition-all ${
             activeTab === 'agent'
               ? 'border-primary text-primary'
               : 'border-transparent text-foreground-muted hover:text-foreground'
@@ -310,7 +310,7 @@ export default function InnstillingerPage() {
 
         <button
           onClick={() => setActiveTab('integrations')}
-          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm border-b-2 transition-all ${
+          className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 font-bold text-xs sm:text-sm border-b-2 whitespace-nowrap transition-all ${
             activeTab === 'integrations'
               ? 'border-primary text-primary'
               : 'border-transparent text-foreground-muted hover:text-foreground'
@@ -325,7 +325,7 @@ export default function InnstillingerPage() {
 
         <button
           onClick={() => setActiveTab('general')}
-          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm border-b-2 transition-all ${
+          className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 font-bold text-xs sm:text-sm border-b-2 whitespace-nowrap transition-all ${
             activeTab === 'general'
               ? 'border-primary text-primary'
               : 'border-transparent text-foreground-muted hover:text-foreground'

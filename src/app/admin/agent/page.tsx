@@ -305,7 +305,7 @@ export default function AdminAgentPage() {
             </div>
           )}
 
-          <div className="relative w-full rounded-2xl overflow-hidden border border-border bg-surface shadow-sm h-[750px] lg:h-[820px] flex flex-col">
+          <div className="relative w-full rounded-2xl overflow-hidden border border-border bg-surface shadow-sm h-[560px] sm:h-[660px] lg:h-[820px] flex flex-col">
             {/* Lasteindikator */}
             {isLoading && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface/90 backdrop-blur-xs transition-opacity">

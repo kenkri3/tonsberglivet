@@ -58,8 +58,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border
-                     transition-transform duration-300 lg:translate-x-0
+        className={`fixed inset-y-0 left-0 z-50 w-72 sm:w-80 lg:w-64 bg-surface border-r border-border
+                     transition-transform duration-300 lg:translate-x-0 shadow-2xl lg:shadow-none
                      ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex flex-col h-full">
@@ -118,7 +118,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
 
           {/* Bunn */}
-          <div className="border-t border-border p-4 shrink-0">
+          <div className="border-t border-border p-4 pb-10 shrink-0">
             <Link
               href="/"
               className="flex items-center gap-2 px-3 py-2 text-xs text-foreground-muted
@@ -175,7 +175,94 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* Sideinnhold */}
-        <main className="flex-1 p-4 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 lg:p-8 pb-28 lg:pb-8">{children}</main>
+
+        {/* Mobil App-bunnlinje (Native iOS/Android App Feeling) */}
+        <nav
+          className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-surface/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_25px_rgba(0,0,0,0.08)] pb-[max(env(safe-area-inset-bottom),0.6rem)] pt-1.5 transition-all duration-200 ${
+            sidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+          aria-label="Admin mobilapp-navigasjon"
+        >
+          <div className="grid grid-cols-5 items-center max-w-md mx-auto px-1.5">
+            {/* 1. Dashboard */}
+            <Link
+              href="/admin"
+              className={`flex flex-col items-center justify-center py-1 rounded-2xl transition-all select-none min-h-[48px] ${
+                pathname === '/admin'
+                  ? 'text-primary font-bold scale-105'
+                  : 'text-foreground-muted hover:text-foreground active:scale-95'
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-colors ${pathname === '/admin' ? 'bg-primary/10' : ''}`}>
+                <LayoutDashboard className={`w-5 h-5 ${pathname === '/admin' ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+              </div>
+              <span className="text-[10px] tracking-tight mt-0.5">Oversikt</span>
+            </Link>
+
+            {/* 2. Autonom Agent */}
+            <Link
+              href="/admin/agent"
+              className={`flex flex-col items-center justify-center py-1 rounded-2xl transition-all select-none min-h-[48px] relative ${
+                pathname.startsWith('/admin/agent')
+                  ? 'text-primary font-bold scale-105'
+                  : 'text-foreground-muted hover:text-foreground active:scale-95'
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-colors relative ${pathname.startsWith('/admin/agent') ? 'bg-primary/10' : ''}`}>
+                <Bot className={`w-5 h-5 ${pathname.startsWith('/admin/agent') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 animate-pulse border border-surface" />
+              </div>
+              <span className="text-[10px] tracking-tight mt-0.5">Agent</span>
+            </Link>
+
+            {/* 3. Artikler */}
+            <Link
+              href="/admin/artikler"
+              className={`flex flex-col items-center justify-center py-1 rounded-2xl transition-all select-none min-h-[48px] ${
+                pathname.startsWith('/admin/artikler')
+                  ? 'text-primary font-bold scale-105'
+                  : 'text-foreground-muted hover:text-foreground active:scale-95'
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-colors ${pathname.startsWith('/admin/artikler') ? 'bg-primary/10' : ''}`}>
+                <FileText className={`w-5 h-5 ${pathname.startsWith('/admin/artikler') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+              </div>
+              <span className="text-[10px] tracking-tight mt-0.5">Artikler</span>
+            </Link>
+
+            {/* 4. Torvleie & Booking */}
+            <Link
+              href="/admin/booking"
+              className={`flex flex-col items-center justify-center py-1 rounded-2xl transition-all select-none min-h-[48px] relative ${
+                pathname.startsWith('/admin/booking')
+                  ? 'text-primary font-bold scale-105'
+                  : 'text-foreground-muted hover:text-foreground active:scale-95'
+              }`}
+            >
+              <div className={`p-1 rounded-xl transition-colors relative ${pathname.startsWith('/admin/booking') ? 'bg-primary/10' : ''}`}>
+                <MapPin className={`w-5 h-5 ${pathname.startsWith('/admin/booking') ? 'stroke-[2.5]' : 'stroke-[1.8]'}`} />
+                <span className="absolute -top-1 -right-1 bg-amber-500 text-white font-black text-[8px] px-1 rounded-full border border-surface leading-tight">
+                  5
+                </span>
+              </div>
+              <span className="text-[10px] tracking-tight mt-0.5">Torvleie</span>
+            </Link>
+
+            {/* 5. Meny / Skuff */}
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="flex flex-col items-center justify-center py-1 rounded-2xl text-foreground-muted hover:text-foreground active:scale-95 transition-all select-none min-h-[48px]"
+              aria-label="Åpne alle moduler"
+            >
+              <div className="p-1 rounded-xl hover:bg-surface-muted transition-colors">
+                <Menu className="w-5 h-5 stroke-[1.8]" />
+              </div>
+              <span className="text-[10px] tracking-tight mt-0.5">Alle (14)</span>
+            </button>
+          </div>
+        </nav>
       </div>
     </div>
   );

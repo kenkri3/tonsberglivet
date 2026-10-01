@@ -98,9 +98,9 @@ export default function AdminMeldingerPage() {
               {/* Full melding innhold */}
               {isSelected && (
                 <div className="px-6 py-4 bg-surface-muted/60 border-t border-border/60 space-y-3 animate-slide-down">
-                  <div className="flex items-center justify-between text-xs text-foreground-muted">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground-muted">
                     <span className="flex items-center gap-1 font-semibold"><User className="w-3.5 h-3.5 text-primary" /> {m.name} &lt;{m.email}&gt;</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-primary" /> {m.createdAt}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-primary" /> {m.createdAt ? new Date(m.createdAt).toLocaleString('nb-NO', { dateStyle: 'short', timeStyle: 'short' }) : 'Nylig'}</span>
                   </div>
                   <div className="p-4 bg-surface rounded-xl border border-border text-sm text-foreground leading-relaxed whitespace-pre-line">
                     {m.message}
