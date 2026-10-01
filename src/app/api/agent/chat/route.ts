@@ -17,6 +17,7 @@ import {
 } from '@/lib/agent-tools';
 import { prisma } from '@/lib/prisma';
 import { smartWebSearch } from '@/lib/web-intelligence';
+import { queryAutonomousAgent } from '@/lib/agent-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -210,64 +211,44 @@ export async function POST(request: NextRequest) {
     const lower = message.toLowerCase();
 
     // ═══════════════════════════════════════════════════════════════
-    // ⚡ 1. HURTIGHÅNDTERING AV EKSPLISITTE SØKE- OG HANDLINGSINSTRUKSER
+    // 🤖 0. HOVEDMOTOR: AUTONOM AGENT (MCP / WEBHOOK VIA AGENT_API)
     // ═══════════════════════════════════════════════════════════════
-
-    // A. Direkte Brave Search instruks
-    if (lower.includes('brave') && (lower.includes('søk') || lower.includes('search') || lower.includes('finn') || lower.includes('sjekk'))) {
-      const query = message.replace(/(?:gjør et|kjør et)?\s*(?:nettsøk|søk|search)\s*(?:etter|om)?\s*/i, '').replace(/via brave(?: api)?/i, '').replace(/med brave/i, '').trim();
-      const res = await toolBraveSearch(query || 'Tønsberg sentrum nyheter');
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        replyText = `🔍 **Reelle søkeresultater via Brave Search API for «${query}»:**\n\n` +
-          res.data.map((r: any, idx: number) => `**${idx + 1}. [${r.title}](${r.url})**\n${r.snippet}\n*Kilde: ${r.url}*`).join('\n\n') +
-          `\n\n💡 *Vil du at jeg skal skrive en redaksjonell artikkel eller lage SoMe-poster basert på disse funnene?*`;
-        quickReplies.push({ title: '✍️ Skriv artikkel om dette', payload: `Skriv en artikkel basert på søket: ${query}` });
-        quickReplies.push({ title: '📣 Lag SoMe-pakke', payload: `Lag SoMe-poster om nyhetene fra ${query}` });
-      } else {
-        replyText = `⚠️ **Brave Search:** ${res.message}\n\nTips: Du kan konfigurere din egen Brave Search API-nøkkel i **/admin/innstillinger** under BYOK.`;
-      }
-    }
-
-    // B. Direkte Tavily AI Research instruks
-    else if (lower.includes('tavily') && (lower.includes('søk') || lower.includes('research') || lower.includes('finn') || lower.includes('analyser'))) {
-      const query = message.replace(/(?:gjør|kjør)?\s*(?:tavily|research)\s*(?:søk)?\s*(?:etter|om)?\s*/i, '').trim();
-      const res = await toolTavilySearch(query || 'Tønsberg byliv og kultur');
-      if (res.success && res.data) {
-        replyText = `🧠 **Dyp research via Tavily AI Search:**\n\n` +
-          (res.data.answer ? `### 📌 Syntese & Faktaunderlag:\n${res.data.answer}\n\n` : '') +
-          `### 🔗 Verifiserte kilder:\n` +
-          (res.data.results || []).map((r: any, idx: number) => `• **[${r.title}](${r.url})**\n  ${r.snippet.slice(0, 200)}...`).join('\n\n');
-        quickReplies.push({ title: '📰 Opprett som artikkel', payload: `Opprett artikkel: ${query}` });
-        quickReplies.push({ title: '📅 Sjekk arrangementskalender', payload: 'Hent live arrangementer' });
-      } else {
-        replyText = `⚠️ **Tavily Research:** ${res.message}\n\nTips: Konfigurer Tavily API-nøkkel under **/admin/innstillinger** for automatisert forskning.`;
-      }
-    }
-
-    // C. Direkte Apify skrape-instruks
-    else if (lower.includes('apify') || lower.includes('skrap') || (lower.includes('les') && lower.includes('http'))) {
-      const urlMatch = message.match(/https?:\/\/[^\s]+/i);
-      const targetUrl = urlMatch ? urlMatch[0] : 'https://tonsberglivet.no';
-      const res = await toolApifyScrape(targetUrl);
-      if (res.success && res.data) {
-        replyText = `🕸️ **Innhold skrapet fra nettsiden: «${res.data.title}»**\n*Kilde: ${res.data.url}*\n\n` +
-          `---\n\n` +
-          res.data.contentSnippet +
-          (res.data.fullLength > 3000 ? `\n\n*(Viser 3000 av ${res.data.fullLength} tegn)*` : '') +
-          `\n\n---\n💡 *Hva vil du at jeg skal gjøre med dette innholdet?*`;
-        quickReplies.push({ title: '✍️ Lag artikkelutkast', payload: `Lag en artikkel basert på innholdet fra ${targetUrl}` });
-        quickReplies.push({ title: '📅 Trekk ut arrangementer', payload: `Trekk ut eventer fra ${targetUrl}` });
-      } else {
-        replyText = `⚠️ **Skraping feilet:** ${res.message}`;
-      }
-    }
-
-    // D. Direkte opprettelse av artikkel i databasen
-    else if (
+    const isDirectSystemAction =
       lower.startsWith('opprett artikkel') ||
       lower.startsWith('opprett som artikkel') ||
-      lower.startsWith('lagre artikkel')
-    ) {
+      lower.startsWith('lagre artikkel') ||
+      ((lower.includes('godkjenn') && (lower.includes('torvleie') || lower.includes('booking') || lower.includes('søknad')))) ||
+      (lower.includes('duett') && lower.includes('eksporter'));
+
+    if (!isDirectSystemAction) {
+      try {
+        const agentResponse = await queryAutonomousAgent({
+          message,
+          sessionId,
+          userName,
+        });
+
+        if (agentResponse && agentResponse.success && agentResponse.reply) {
+          replyText = agentResponse.reply;
+          if (agentResponse.quickReplies && agentResponse.quickReplies.length > 0) {
+            quickReplies.push(...agentResponse.quickReplies);
+          }
+        }
+      } catch (agentErr: any) {
+        console.warn('[Agent Chat API] Autonom agent gateway feilet:', agentErr?.message);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ⚡ 1. HURTIGHÅNDTERING AV EKSPLISITTE SYSTEMHANDLINGER I CMS
+    // ═══════════════════════════════════════════════════════════════
+    if (!replyText) {
+      // A. Direkte opprettelse av artikkel i databasen
+      if (
+        lower.startsWith('opprett artikkel') ||
+        lower.startsWith('opprett som artikkel') ||
+        lower.startsWith('lagre artikkel')
+      ) {
       let articleTitle = message
         .replace(/^(?:opprett\s+som\s+artikkel|opprett\s+artikkel|lagre\s+som\s+artikkel|lagre\s+artikkel)[:\s–-]*/i, '')
         .trim();
@@ -349,6 +330,7 @@ export async function POST(request: NextRequest) {
       quickReplies.push({ title: '✍️ Skriv helgeguide', payload: 'Generer ukens helgeguide' });
       quickReplies.push({ title: '🏛️ Sjekk torvleiesøknader', payload: 'Hent ventende torvleiesøknader' });
     }
+  }
 
     // ═══════════════════════════════════════════════════════════════
     // 🧠 2. GOOGLE GEMINI 2.5 FLASH MED MULTI-TOOL FUNCTION CALLING

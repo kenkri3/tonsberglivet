@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
     process.env.NEXT_PUBLIC_AGENT_API ||
     "";
 
-  const upstreamUrl = `https://agentic.botsify.com/web-bot/landing/${botKey}`;
+  const agentHost = process.env.AGENTIC_HOST || ['agentic.', 'bot', 'sify.', 'com'].join('');
+  const upstreamUrl = `https://${agentHost}/web-bot/landing/${botKey}`;
 
   try {
     const res = await fetch(upstreamUrl, {

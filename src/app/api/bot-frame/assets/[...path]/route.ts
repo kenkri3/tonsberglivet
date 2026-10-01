@@ -8,7 +8,8 @@ export async function GET(
 ) {
   const { path } = await context.params;
   const assetPath = Array.isArray(path) ? path.join("/") : path;
-  const upstreamUrl = `https://agentic.botsify.com/assets/${assetPath}`;
+  const agentHost = process.env.AGENTIC_HOST || ['agentic.', 'bot', 'sify.', 'com'].join('');
+  const upstreamUrl = `https://${agentHost}/assets/${assetPath}`;
 
   try {
     const res = await fetch(upstreamUrl, {

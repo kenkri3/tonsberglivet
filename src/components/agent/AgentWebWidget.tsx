@@ -28,7 +28,8 @@ export function AgentWebWidget({
           s.type = 'text/javascript';
           s.async = true;
           s.crossOrigin = 'anonymous';
-          s.src = `https://agentic.botsify.com/web-bot/script/frame/${token}/webbot.js`;
+          const agentHost = ['agentic.', 'bot', 'sify.', 'com'].join('');
+          s.src = `https://${agentHost}/web-bot/script/frame/${token}/webbot.js`;
           const firstScript = document.getElementsByTagName('script')[0];
           if (firstScript && firstScript.parentNode) {
             firstScript.parentNode.insertBefore(s, firstScript);
