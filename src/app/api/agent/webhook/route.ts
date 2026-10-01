@@ -99,6 +99,213 @@ export async function POST(request: Request) {
       });
     }
 
+    // 3b. Strukturerte handlinger fra Agentic Platform (Apify / Tavily / Brave)
+    if (body.action === 'upsert_event' || body.action === 'create_event') {
+      const {
+        title,
+        slug: userSlug,
+        description,
+        location,
+        address,
+        startDate,
+        endDate,
+        startTime,
+        endTime,
+        category = 'ARRANGEMENT',
+        externalUrl,
+        published = true,
+      } = body;
+
+      if (!title || !startDate) {
+        return NextResponse.json(
+          { success: false, error: 'Mangler påkrevde felter: title og startDate' },
+          { status: 400 }
+        );
+      }
+
+      const cleanSlug =
+        userSlug ||
+        title
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '') + '-' + Date.now().toString().slice(-4);
+
+      const parsedStartDate = new Date(startDate);
+      const parsedEndDate = endDate ? new Date(endDate) : undefined;
+
+      const event = await (prisma as any).event.upsert({
+        where: { slug: cleanSlug },
+        update: {
+          title,
+          description,
+          location,
+          address,
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+          startTime,
+          endTime,
+          category,
+          externalUrl,
+          published,
+        },
+        create: {
+          title,
+          slug: cleanSlug,
+          description,
+          location,
+          address,
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+          startTime,
+          endTime,
+          category,
+          externalUrl,
+          published,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Arrangement '${title}' er importert og lagret i Tønsberglivet kalenderen.`,
+        event,
+      });
+    }
+
+    if (body.action === 'update_business' || body.action === 'upsert_business') {
+      const {
+        name,
+        slug: userSlug,
+        description,
+        address,
+        phone,
+        email,
+        website,
+        openingHours,
+        category = 'ANNET',
+        area = 'TONSBERG_SENTRUM',
+        published = true,
+      } = body;
+
+      if (!name) {
+        return NextResponse.json({ success: false, error: 'Mangler påkrevd felt: name' }, { status: 400 });
+      }
+
+      const cleanSlug =
+        userSlug ||
+        name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+
+      const business = await (prisma as any).business.upsert({
+        where: { slug: cleanSlug },
+        update: {
+          name,
+          description: description || undefined,
+          address: address || undefined,
+          phone: phone || undefined,
+          email: email || undefined,
+          website: website || undefined,
+          openingHours: openingHours || undefined,
+          category: category || undefined,
+          area: area || undefined,
+          published,
+        },
+        create: {
+          name,
+          slug: cleanSlug,
+          description,
+          address,
+          phone,
+          email,
+          website,
+          openingHours,
+          category,
+          area,
+          published,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Bedriften '${name}' er oppdatert i Tønsberglivet registeret.`,
+        business,
+      });
+    }
+
+    if (body.action === 'create_article') {
+      const {
+        title,
+        slug: userSlug,
+        excerpt,
+        content,
+        category = 'BYLIVET',
+        published = false,
+        featured = false,
+      } = body;
+
+      if (!title || !content) {
+        return NextResponse.json({ success: false, error: 'Mangler påkrevde felter: title og content' }, { status: 400 });
+      }
+
+      const cleanSlug =
+        userSlug ||
+        title
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '') + '-' + Date.now().toString().slice(-4);
+
+      const article = await (prisma as any).article.create({
+        data: {
+          title,
+          slug: cleanSlug,
+          excerpt,
+          content,
+          category,
+          published,
+          featured,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Artikkel '${title}' er lagret ${published ? 'som publisert' : 'som utkast'}.`,
+        article,
+      });
+    }
+
+    if (body.action === 'get_context') {
+      const [events, pendingBookings, recentArticles] = await Promise.all([
+        (prisma as any).event.findMany({
+          where: { published: true, startDate: { gte: new Date() } },
+          orderBy: { startDate: 'asc' },
+          take: 10,
+        }).catch(() => []),
+        (prisma as any).bookingRequest.count({ where: { status: 'NEW' } }).catch(() => 0),
+        (prisma as any).article.findMany({
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+          select: { id: true, title: true, slug: true, category: true, published: true },
+        }).catch(() => []),
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        context: {
+          region: 'Tønsberg & Færder',
+          upcomingEvents: events,
+          pendingBookingsCount: pendingBookings,
+          recentArticles,
+        },
+      });
+    }
+
     // 4. Tekstkommandoer fra Slack Slash (/tb), Teams eller chat
     const rawText = body.text || body.command || body.message || '';
     const text = cleanInputText(rawText);
@@ -246,9 +453,14 @@ Hvis ikke, svar direkte og høflig på norsk som en behjelpelig, kunnskapsrik ko
 export async function GET() {
   return NextResponse.json({
     status: 'online',
-    agent: 'Tønsberglivet Autonom Agent v2.4',
+    agent: 'Tønsberglivet Autonom Agent v2.5 (Multi-Tool Enabled)',
+    connectedTools: ['Brave (Web Search)', 'Tavily (Deep Research)', 'Apify (Scraping & Import)'],
     endpoints: {
-      approve: 'POST { action: "approve", bookingId: "1" }',
+      approve: 'POST { action: "approve", bookingId: "string" }',
+      upsertEvent: 'POST { action: "upsert_event", title, startDate, location, category, externalUrl }',
+      updateBusiness: 'POST { action: "update_business", name, openingHours, phone, website, address }',
+      createArticle: 'POST { action: "create_article", title, excerpt, content, category, published }',
+      getContext: 'POST { action: "get_context" }',
       slashCommand: 'POST { text: "/tb godkjenn 1" }',
       status: 'POST { text: "/tb status" }',
       events: 'POST { text: "/tb arrangementer" }',
