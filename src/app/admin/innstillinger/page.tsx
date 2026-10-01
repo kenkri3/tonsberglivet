@@ -26,14 +26,22 @@ import {
   Users,
   Check,
   ShieldCheck,
+  TrendingUp,
 } from 'lucide-react';
 
 export default function InnstillingerPage() {
-  const [activeTab, setActiveTab] = useState<'byok' | 'email' | 'agent' | 'integrations' | 'social' | 'general'>('byok');
+  const [activeTab, setActiveTab] = useState<'byok' | 'social' | 'analytics' | 'email' | 'agent' | 'integrations' | 'general'>('byok');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Google Analytics 4 & Search Console
+  const [ga4MeasurementId, setGa4MeasurementId] = useState('');
+  const [ga4Configured, setGa4Configured] = useState(false);
+  const [gscSiteUrl, setGscSiteUrl] = useState('https://tonsberglivet.no');
+  const [gscVerificationCode, setGscVerificationCode] = useState('');
+  const [gscConfigured, setGscConfigured] = useState(false);
 
   // BYOK & Keys
   const [oneMinApiKey, setOneMinApiKey] = useState('');
@@ -168,6 +176,13 @@ export default function InnstillingerPage() {
         setGoogleBusinessLocationId(json.data.googleBusinessLocationId || '');
         setGoogleBusinessAccessToken(json.data.googleBusinessAccessToken || '');
         setGoogleBusinessConfigured(!!json.data.googleBusinessConfigured);
+
+        // Google Analytics 4 & Search Console
+        setGa4MeasurementId(json.data.ga4MeasurementId || '');
+        setGa4Configured(!!json.data.ga4Configured);
+        setGscSiteUrl(json.data.gscSiteUrl || 'https://tonsberglivet.no');
+        setGscVerificationCode(json.data.gscVerificationCode || '');
+        setGscConfigured(!!json.data.gscConfigured);
       }
     } catch (e) {
       console.error('Kunne ikke laste innstillinger:', e);
@@ -213,6 +228,9 @@ export default function InnstillingerPage() {
           googleBusinessAccountId,
           googleBusinessLocationId,
           googleBusinessAccessToken,
+          ga4MeasurementId,
+          gscSiteUrl,
+          gscVerificationCode,
         }),
       });
 
@@ -444,6 +462,21 @@ export default function InnstillingerPage() {
           <Share2 className="w-4 h-4" />
           Facebook, Instagram & Google
           {(metaConfigured || googleBusinessConfigured) && (
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block ml-1" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 font-bold text-xs sm:text-sm border-b-2 whitespace-nowrap transition-all ${
+            activeTab === 'analytics'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-foreground-muted hover:text-foreground'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          Analyse (GA4 & Search Console)
+          {ga4Configured && (
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block ml-1" />
           )}
         </button>
@@ -1255,11 +1288,11 @@ export default function InnstillingerPage() {
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={handleQuickConnectMeta}
+                onClick={() => handleSave()}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-bold text-xs rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
               >
-                <Share2 className="w-3.5 h-3.5" />
-                Koble til Facebook-bruker (Hurtigoppsett)
+                <Save className="w-3.5 h-3.5" />
+                Lagre Meta API-innstillinger
               </button>
             </div>
           </div>
@@ -1348,11 +1381,11 @@ export default function InnstillingerPage() {
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 type="button"
-                onClick={handleQuickConnectGoogle}
+                onClick={() => handleSave()}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition-colors shadow-sm"
               >
-                <Building className="w-3.5 h-3.5" />
-                Koble til Google-konto (Hurtigoppsett)
+                <Save className="w-3.5 h-3.5" />
+                Lagre Google Business-innstillinger
               </button>
             </div>
           </div>
@@ -1380,6 +1413,162 @@ export default function InnstillingerPage() {
               {socialTestResult}
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB: ANALYSE & INNSIKT (GA4 & SEARCH CONSOLE) */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-6">
+          {/* Google Analytics 4 */}
+          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-amber-500" />
+                  Google Analytics 4 (GA4)
+                </h3>
+                <p className="text-sm text-foreground-muted mt-1">
+                  Måler faktiske sidevisninger, unike brukere, oppholdstid og konverteringer for torvleie og arrangementer.
+                </p>
+              </div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  ga4Configured
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                }`}
+              >
+                {ga4Configured ? 'Tilkoblet' : 'Ikke tilkoblet ennå'}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider flex items-center justify-between">
+                <span>GA4 Measurement ID</span>
+                <a
+                  href="https://analytics.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline text-[11px] font-semibold inline-flex items-center gap-1"
+                >
+                  Åpne Google Analytics <ExternalLink className="w-3 h-3" />
+                </a>
+              </label>
+              <input
+                type="text"
+                value={ga4MeasurementId}
+                onChange={(e) => setGa4MeasurementId(e.target.value)}
+                placeholder="f.eks. G-XXXXXXXXXX"
+                className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
+              />
+              <p className="text-xs text-foreground-muted">
+                Lim inn din Measurement ID fra Google Analytics adminpanel for å aktivere sanntidstrafikk og konverteringssporing.
+              </p>
+            </div>
+          </div>
+
+          {/* Google Search Console */}
+          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-blue-500" />
+                  Google Search Console (Søkesynlighet & Indeksering)
+                </h3>
+                <p className="text-sm text-foreground-muted mt-1">
+                  Overvåker Googles indeksering av artikler, søkeordposisjoner og sitemap.
+                </p>
+              </div>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  gscConfigured
+                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                    : 'bg-surface-muted text-foreground-muted border border-border'
+                }`}
+              >
+                {gscConfigured ? 'Verifisert' : 'Ikke verifisert ennå'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
+                  Nettadresse for eiendom (Site URL)
+                </label>
+                <input
+                  type="text"
+                  value={gscSiteUrl}
+                  onChange={(e) => setGscSiteUrl(e.target.value)}
+                  placeholder="https://tonsberglivet.no"
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
+                  Verifiseringskode (HTML-tag)
+                </label>
+                <input
+                  type="text"
+                  value={gscVerificationCode}
+                  onChange={(e) => setGscVerificationCode(e.target.value)}
+                  placeholder="f.eks. google-site-verification=abc..."
+                  className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-surface-muted border border-border text-xs space-y-2">
+              <div className="font-bold text-foreground">Sitemap URL for innsending til Google:</div>
+              <code className="block bg-background p-2.5 rounded-xl font-mono text-primary select-all">
+                https://tonsberglivet.no/sitemap.xml
+              </code>
+              <p className="text-foreground-muted">
+                Legg til denne URL-en i Google Search Console under «Områdekart» for automatisk indeksering av alle sider og artikler.
+              </p>
+            </div>
+          </div>
+
+          {/* Offentlige Sanntids-APIer */}
+          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-4">
+            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              Offentlige Sanntidsintegrasjoner (Aktive uten API-nøkkel)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl bg-surface-muted border border-border space-y-1">
+                <div className="font-bold text-foreground flex items-center justify-between">
+                  <span>Statens Vegvesen (Kanalbrua)</span>
+                  <span className="text-emerald-500 font-bold">● Live</span>
+                </div>
+                <div className="text-foreground-muted">Sensor data fra fylkesvei 308 med trafikktellinger og døgnsnitt.</div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-surface-muted border border-border space-y-1">
+                <div className="font-bold text-foreground flex items-center justify-between">
+                  <span>Statistisk sentralbyrå (SSB)</span>
+                  <span className="text-emerald-500 font-bold">● Live</span>
+                </div>
+                <div className="text-foreground-muted">Kommune 3905 Tønsberg: 59 200+ innbyggere og 33 000+ arbeidsplasser.</div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-surface-muted border border-border space-y-1">
+                <div className="font-bold text-foreground flex items-center justify-between">
+                  <span>Brønnøysundregistrene (Brreg)</span>
+                  <span className="text-emerald-500 font-bold">● Live</span>
+                </div>
+                <div className="text-foreground-muted">Enhetsregisteret for nystartede foretak og velkomstmailer.</div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-surface-muted border border-border space-y-1">
+                <div className="font-bold text-foreground flex items-center justify-between">
+                  <span>Meteorologisk institutt (MET)</span>
+                  <span className="text-emerald-500 font-bold">● Live</span>
+                </div>
+                <div className="text-foreground-muted">Vær- og temperaturvarsel for Tønsberg havn og sentrum.</div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

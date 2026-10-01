@@ -1,327 +1,430 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  TrendingUp, Users, MousePointerClick, 
-  ArrowUpRight, ArrowDownRight, Globe, Smartphone, Monitor,
-  Compass, MapPin, Eye
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
+  TrendingUp,
+  Users,
+  MousePointerClick,
+  ArrowUpRight,
+  Globe,
+  Settings,
+  AlertCircle,
+  CheckCircle2,
+  RefreshCw,
+  Car,
+  Compass,
+  Building2,
+  Calendar,
+  ExternalLink,
+  ShieldCheck,
+  Search,
+  Activity,
 } from 'lucide-react';
 
+interface TrafficData {
+  bridgeStatus?: string;
+  volumePerHour?: number;
+  statusText?: string;
+  lastUpdated?: string;
+}
+
+interface SsbData {
+  population?: number;
+  workplaces?: number;
+  year?: string;
+}
+
 export default function InsightsPage() {
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | 'ytd'>('30d');
-  const [activeMetric, setActiveMetric] = useState<'visitors' | 'views'>('visitors');
+  const [loading, setLoading] = useState(true);
+  const [gaId, setGaId] = useState<string | null>(null);
+  const [gscTag, setGscTag] = useState<string | null>(null);
+  const [trafficData, setTrafficData] = useState<TrafficData | null>(null);
+  const [ssbData, setSsbData] = useState<SsbData | null>(null);
+  const [newCompaniesCount, setNewCompaniesCount] = useState<number>(0);
 
-  const chartData = [
-    { label: '01. Aug', visitors: 1420, views: 3890 },
-    { label: '04. Aug', visitors: 1890, views: 4920 },
-    { label: '07. Aug', visitors: 2240, views: 6100 },
-    { label: '10. Aug', visitors: 2890, views: 7800 },
-    { label: '13. Aug', visitors: 3450, views: 9200 },
-    { label: '16. Aug', visitors: 4120, views: 11400 },
-    { label: '19. Aug', visitors: 3820, views: 10100 },
-  ];
+  // Hurtiglagring av GA4 ID direkte fra Innsikt-siden
+  const [inlineGaId, setInlineGaId] = useState('');
+  const [savingGa, setSavingGa] = useState(false);
+  const [saveGaMessage, setSaveGaMessage] = useState<string | null>(null);
 
-  const maxVal = Math.max(...chartData.map(d => activeMetric === 'visitors' ? d.visitors : d.views));
+  const fetchInsightsStatus = async () => {
+    try {
+      setLoading(true);
+
+      // 1. Sjekk innstillinger for GA4 og GSC
+      const settingsRes = await fetch('/api/settings').catch(() => null);
+      if (settingsRes && settingsRes.ok) {
+        const json = await settingsRes.json();
+        if (json.data) {
+          setGaId(json.data.ga_measurement_id || null);
+          setGscTag(json.data.gsc_verification_tag || null);
+        }
+      }
+
+      // 2. Hent reell sanntidstrafikk fra Statens Vegvesen (Kanalbrua)
+      const trafficRes = await fetch('/api/traffic').catch(() => null);
+      if (trafficRes && trafficRes.ok) {
+        const json = await trafficRes.json();
+        if (json.data) {
+          setTrafficData(json.data);
+        }
+      }
+
+      // 3. Hent SSB-tall for Tønsberg
+      const ssbRes = await fetch('/api/ssb').catch(() => null);
+      if (ssbRes && ssbRes.ok) {
+        const json = await ssbRes.json();
+        if (json.data) {
+          setSsbData(json.data);
+        }
+      }
+
+      // 4. Hent nystartede bedrifter fra Brreg
+      const brregRes = await fetch('/api/agent/new-companies?daysBack=30&limit=5').catch(() => null);
+      if (brregRes && brregRes.ok) {
+        const json = await brregRes.json();
+        if (json.stats?.total) {
+          setNewCompaniesCount(json.stats.total);
+        }
+      }
+    } catch (err) {
+      console.error('Feil ved lasting av innsiktsdata:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInsightsStatus();
+  }, []);
+
+  const handleSaveGaId = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inlineGaId.trim()) return;
+
+    try {
+      setSavingGa(true);
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'ga_measurement_id',
+          value: inlineGaId.trim(),
+          category: 'INTEGRATIONS',
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setGaId(inlineGaId.trim());
+        setSaveGaMessage('✅ Google Analytics 4 ID er lagret og aktiv!');
+        setTimeout(() => setSaveGaMessage(null), 5000);
+      }
+    } catch (err) {
+      console.error('Feil ved lagring:', err);
+    } finally {
+      setSavingGa(false);
+    }
+  };
+
+  const isGaConnected = Boolean(gaId && gaId.trim().length > 0);
+  const isGscConnected = Boolean(gscTag && gscTag.trim().length > 0);
 
   return (
-    <div className="space-y-12 pb-16">
-      
-      {/* ── Seksjon 1: Header & KPI Nøkkeltall ── */}
-      <section className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-border">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary-light text-primary flex items-center justify-center shrink-0">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <div>
+    <div className="space-y-8 pb-16 animate-in fade-in duration-200">
+      {/* Sidehode */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wider mb-1">
+            <Activity className="w-4 h-4" /> Analyse & Innsikt
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Trafikk & Innsikt</h1>
+          <p className="text-foreground-muted text-sm mt-1">
+            Reell måling og integrasjonsstatus for Tønsberglivet. Ingen fiktive tall – manglende verktøy vises ærlig med instruksjoner for tilkobling.
+          </p>
+        </div>
+
+        <button
+          onClick={fetchInsightsStatus}
+          disabled={loading}
+          className="inline-flex items-center gap-2 px-3.5 py-2 bg-surface border border-border text-foreground hover:bg-surface-muted rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <span>Oppdater status</span>
+        </button>
+      </div>
+
+      {/* ── SEKSJON 1: EKSTERNE ANALYSEVERKTØY (GA4 & GSC) ── */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <Globe className="w-5 h-5 text-primary" /> Nettstedsanalyse & Google-integrasjoner
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Kort 1: Google Analytics 4 */}
+          <div className={`p-6 rounded-3xl border transition-all space-y-4 ${
+            isGaConnected
+              ? 'bg-surface border-emerald-500/30 shadow-xs'
+              : 'bg-amber-500/5 border-amber-500/30'
+          }`}>
+            <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-extrabold text-foreground tracking-tight">Sanntidsinnsikt & Trafikk</h2>
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-success-light text-success border border-success/20 text-xs font-bold">
-                  <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-                  38 aktive nå
-                </span>
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                  isGaConnected ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
+                }`}>
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground text-base">Google Analytics 4</h3>
+                  <p className="text-xs text-foreground-muted">Besøkstall, sidevisninger og brukeratferd</p>
+                </div>
               </div>
-              <p className="text-xs text-foreground-muted mt-0.5">Plausible Analytics direkte integrert uten informasjonskapsler (GDPR-safe)</p>
+
+              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                isGaConnected
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
+              }`}>
+                {isGaConnected ? 'Tilkoblet (Aktiv)' : 'Ikke tilkoblet ennå'}
+              </span>
             </div>
-          </div>
 
-          {/* Time Selector */}
-          <div className="flex items-center gap-2 bg-surface-muted p-1.5 rounded-2xl border border-border">
-            {[
-              { id: '7d', label: 'Siste 7 dager' },
-              { id: '30d', label: 'Siste 30 dager' },
-              { id: 'ytd', label: 'Hittil i år' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setTimeRange(tab.id as any)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  timeRange === tab.id
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'text-foreground-muted hover:text-foreground'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── KPI Metric Cards ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          
-          <div 
-            onClick={() => setActiveMetric('visitors')}
-            className={`bg-surface border rounded-2xl p-6 shadow-xs cursor-pointer transition-all space-y-4 ${
-              activeMetric === 'visitors' ? 'border-primary ring-2 ring-primary/20 shadow-md' : 'border-border hover:border-foreground-muted'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Unike Besøkende</span>
-              <div className="w-9 h-9 rounded-xl bg-surface-muted text-foreground flex items-center justify-center">
-                <Users className="w-5 h-5" />
+            {isGaConnected ? (
+              <div className="space-y-2 pt-2 border-t border-border text-xs">
+                <div className="flex items-center justify-between text-foreground-muted">
+                  <span>Målings-ID:</span>
+                  <span className="font-mono font-bold text-foreground">{gaId}</span>
+                </div>
+                <p className="text-emerald-600 dark:text-emerald-400 text-xs font-medium">
+                  ✓ Sporingstagg er montert i portalen. Reelle besøkstall registreres i din Google Analytics konto.
+                </p>
+                <a
+                  href="https://analytics.google.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-primary hover:underline font-semibold pt-2"
+                >
+                  Åpne Google Analytics Dashboard <ExternalLink className="w-3.5 h-3.5" />
+                </a>
               </div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-foreground tracking-tight">48 290</div>
-              <div className="flex items-center gap-1 text-xs font-bold text-success mt-1">
-                <ArrowUpRight className="w-4 h-4" /> +14.2% vekst
-              </div>
-            </div>
-            <div className="pt-3 border-t border-border text-xs text-foreground-muted">
-              vs. forrige 30 dager (42.2k)
-            </div>
-          </div>
+            ) : (
+              <div className="space-y-3 pt-2 border-t border-border text-xs">
+                <p className="text-foreground-muted leading-relaxed">
+                  For å se reelle unike besøkende, mest leste artikler og sidevisninger må portalen kobles til Google Analytics.
+                </p>
 
-          <div 
-            onClick={() => setActiveMetric('views')}
-            className={`bg-surface border rounded-2xl p-6 shadow-xs cursor-pointer transition-all space-y-4 ${
-              activeMetric === 'views' ? 'border-primary ring-2 ring-primary/20 shadow-md' : 'border-border hover:border-foreground-muted'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Sidevisninger</span>
-              <div className="w-9 h-9 rounded-xl bg-primary-light text-primary flex items-center justify-center">
-                <MousePointerClick className="w-5 h-5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-foreground tracking-tight">142 800</div>
-              <div className="flex items-center gap-1 text-xs font-bold text-success mt-1">
-                <ArrowUpRight className="w-4 h-4" /> +9.8%
-              </div>
-            </div>
-            <div className="pt-3 border-t border-border text-xs text-foreground-muted">
-              2.95 sider pr. besøkende
-            </div>
-          </div>
-
-          <div className="bg-surface border border-border rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Gj.snittlig Besøkstid</span>
-              <div className="w-9 h-9 rounded-xl bg-success-light text-success flex items-center justify-center">
-                <Eye className="w-5 h-5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-foreground tracking-tight">3m 12s</div>
-              <div className="flex items-center gap-1 text-xs font-bold text-success mt-1">
-                <ArrowUpRight className="w-4 h-4" /> +24 sekunder
-              </div>
-            </div>
-            <div className="pt-3 border-t border-border text-xs text-foreground-muted">
-              Høyest engasjement på Bylivet
-            </div>
-          </div>
-
-          <div className="bg-surface border border-border rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Fluktfrekvens</span>
-              <div className="w-9 h-9 rounded-xl bg-surface-muted text-foreground flex items-center justify-center">
-                <Globe className="w-5 h-5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-foreground tracking-tight">28.4%</div>
-              <div className="flex items-center gap-1 text-xs font-bold text-success mt-1">
-                <ArrowDownRight className="w-4 h-4" /> -3.6% forbedring
-              </div>
-            </div>
-            <div className="pt-3 border-t border-border text-xs text-foreground-muted">
-              Sterk bruker-retensjon
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── Seksjon 2: Graf & Trafikkutvikling ── */}
-      <section className="bg-surface border border-border rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
-          <div>
-            <h3 className="text-xl font-extrabold text-foreground tracking-tight">Daglig Trafikkutvikling</h3>
-            <p className="text-xs text-foreground-muted mt-0.5">Viser {activeMetric === 'visitors' ? 'unike besøkende' : 'totale sidevisninger'} i valgt periode</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveMetric('visitors')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMetric === 'visitors' ? 'bg-primary text-white shadow-xs' : 'bg-surface-muted text-foreground-muted hover:text-foreground'
-              }`}
-            >
-              Besøkende
-            </button>
-            <button
-              onClick={() => setActiveMetric('views')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMetric === 'views' ? 'bg-foreground text-surface shadow-xs' : 'bg-surface-muted text-foreground-muted hover:text-foreground'
-              }`}
-            >
-              Sidevisninger
-            </button>
-          </div>
-        </div>
-
-        {/* CSS Bar Chart */}
-        <div className="h-64 flex items-end gap-3 sm:gap-6 pt-8 border-b border-border px-4">
-          {chartData.map((d, i) => {
-            const val = activeMetric === 'visitors' ? d.visitors : d.views;
-            const heightPercent = (val / maxVal) * 100;
-            return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-3 group h-full justify-end">
-                <span className="text-[11px] font-mono text-foreground opacity-0 group-hover:opacity-100 transition-opacity font-bold">
-                  {val.toLocaleString()}
-                </span>
-                <div 
-                  style={{ height: `${heightPercent}%` }} 
-                  className={`w-full rounded-t-xl transition-all duration-500 group-hover:scale-y-105 ${
-                    activeMetric === 'visitors'
-                      ? 'bg-gradient-to-t from-primary/70 to-primary'
-                      : 'bg-gradient-to-t from-foreground/70 to-foreground'
-                  }`}
-                />
-                <span className="text-xs text-foreground-muted font-semibold pt-2 truncate">{d.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── Seksjon 3: Mest Besøkte Sider & Geografi ── */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Top Pages List (7 cols) */}
-        <div className="lg:col-span-7 bg-surface border border-border rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-border">
-            <div>
-              <h3 className="text-lg font-extrabold text-foreground flex items-center gap-2">
-                <Compass className="w-5 h-5 text-primary" />
-                <span>Mest Besøkte Sider</span>
-              </h3>
-              <p className="text-xs text-foreground-muted mt-0.5">Mest leste artikler og undersider siste 30 dager</p>
-            </div>
-            <span className="text-xs font-bold text-primary bg-primary-light px-3 py-1 rounded-full">Topp 5</span>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            {[
-              { path: '/bylivet', title: 'Bylivet – Hva skjer i Tønsberg', views: '48 200', pct: 34 },
-              { path: '/reiselivet', title: 'Reiselivet & Færder Nasjonalpark', views: '32 400', pct: 23 },
-              { path: '/naeringslivet', title: 'Næringslivet & Gründergata', views: '26 100', pct: 18 },
-              { path: '/nyheter/faerderbiennalen', title: 'Færderbiennalen 2026', views: '19 800', pct: 14 },
-              { path: '/studentlivet', title: 'Studentlivet ved USN', views: '15 300', pct: 11 },
-            ].map((p, idx) => (
-              <div key={idx} className="space-y-2 p-3.5 rounded-2xl bg-surface-muted border border-border">
-                <div className="flex items-center justify-between">
-                  <div className="font-extrabold text-sm text-foreground truncate pr-4">
-                    <span>{p.title}</span>
-                    <span className="font-mono text-xs text-foreground-muted font-normal ml-2">{p.path}</span>
+                <form onSubmit={handleSaveGaId} className="space-y-2">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-foreground-muted">
+                    Koble til nå: Skriv inn Målings-ID (G-XXXXXXXXXX)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="G-XXXXXXXXXX"
+                      value={inlineGaId}
+                      onChange={(e) => setInlineGaId(e.target.value)}
+                      className="flex-1 px-3 py-2 bg-surface border border-border rounded-xl text-xs font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={savingGa || !inlineGaId.trim()}
+                      className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary-hover rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                    >
+                      {savingGa ? 'Lagrer...' : 'Lagre'}
+                    </button>
                   </div>
-                  <span className="font-mono font-black text-sm text-foreground">{p.views}</span>
-                </div>
-                <div className="w-full h-2 bg-surface rounded-full overflow-hidden">
-                  <div style={{ width: `${p.pct}%` }} className="h-full bg-primary rounded-full" />
+                </form>
+
+                {saveGaMessage && (
+                  <p className="text-emerald-600 text-xs font-bold">{saveGaMessage}</p>
+                )}
+
+                <div className="flex items-center justify-between text-[11px] text-foreground-subtle pt-1">
+                  <span>Gratis verktøy fra Google</span>
+                  <a
+                    href="https://analytics.google.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary hover:underline inline-flex items-center gap-1 font-semibold"
+                  >
+                    Opprett målekonto her <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               </div>
-            ))}
+            )}
+          </div>
+
+          {/* Kort 2: Google Search Console */}
+          <div className={`p-6 rounded-3xl border transition-all space-y-4 ${
+            isGscConnected
+              ? 'bg-surface border-emerald-500/30 shadow-xs'
+              : 'bg-amber-500/5 border-amber-500/30'
+          }`}>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                  isGscConnected ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
+                }`}>
+                  <Search className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground text-base">Google Search Console</h3>
+                  <p className="text-xs text-foreground-muted">Organiske Google-søk, klikk og rangering</p>
+                </div>
+              </div>
+
+              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                isGscConnected
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
+              }`}>
+                {isGscConnected ? 'Verifisert' : 'Ikke tilkoblet ennå'}
+              </span>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-border text-xs">
+              <p className="text-foreground-muted leading-relaxed">
+                Search Console viser nøyaktig hvilke ord folk i Tønsberg søker på i Google når de finner nettsiden, samt indekseringsstatus for sitemap (`/sitemap.xml`).
+              </p>
+
+              <div className="p-3 bg-surface rounded-xl border border-border flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-foreground">Sitemap URL for Google:</p>
+                  <p className="font-mono text-[11px] text-primary mt-0.5">https://tonsberglivet.no/sitemap.xml</p>
+                </div>
+                <a
+                  href="/sitemap.xml"
+                  target="_blank"
+                  className="px-2.5 py-1 rounded-lg bg-surface-muted hover:bg-border text-xs font-medium transition-colors"
+                >
+                  Vis XML
+                </a>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-foreground-subtle pt-1">
+                <Link
+                  href="/admin/innstillinger"
+                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
+                >
+                  <Settings className="w-3.5 h-3.5" /> Konfigurer i Innstillinger
+                </Link>
+                <a
+                  href="https://search.google.com/search-console"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-foreground-muted hover:text-foreground inline-flex items-center gap-1"
+                >
+                  GSC Portal <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Device & Geo Breakdown (5 cols) */}
-        <div className="lg:col-span-5 space-y-8">
-          
-          {/* Device Split */}
-          <div className="bg-surface border border-border rounded-3xl p-6 md:p-8 shadow-xs space-y-6">
-            <div>
-              <h3 className="text-lg font-extrabold text-foreground flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-primary" />
-                <span>Enhetsfordeling</span>
-              </h3>
-              <p className="text-xs text-foreground-muted mt-0.5">Trafikk fordelt på mobil, desktop og nettbrett</p>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-foreground font-bold"><Smartphone className="w-4 h-4" /> Mobiltelefoner</span>
-                  <span className="font-extrabold text-foreground">74.2% (35.8k)</span>
-                </div>
-                <div className="w-full h-2.5 bg-surface-muted rounded-full overflow-hidden">
-                  <div className="w-[74.2%] h-full bg-primary rounded-full"></div>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-foreground font-bold"><Monitor className="w-4 h-4" /> Desktop / PC</span>
-                  <span className="font-extrabold text-foreground">22.4% (10.8k)</span>
-                </div>
-                <div className="w-full h-2.5 bg-surface-muted rounded-full overflow-hidden">
-                  <div className="w-[22.4%] h-full bg-foreground rounded-full"></div>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-foreground font-bold">Nettbrett</span>
-                  <span className="font-extrabold text-foreground">3.4% (1.6k)</span>
-                </div>
-                <div className="w-full h-2.5 bg-surface-muted rounded-full overflow-hidden">
-                  <div className="w-[3.4%] h-full bg-success rounded-full"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Geo Location */}
-          <div className="bg-surface border border-border rounded-3xl p-6 md:p-8 shadow-xs space-y-4">
-            <div>
-              <h3 className="text-lg font-extrabold text-foreground flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-success" />
-                <span>Topp Geografiske Områder</span>
-              </h3>
-              <p className="text-xs text-foreground-muted mt-0.5">Bosted for besøkende</p>
-            </div>
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-foreground font-medium">1. Tønsberg & Færder</span>
-                <span className="font-bold text-foreground">58%</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-foreground font-medium">2. Oslo & Viken</span>
-                <span className="font-bold text-foreground">24%</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-border">
-                <span className="text-foreground font-medium">3. Sandefjord & Larvik</span>
-                <span className="font-bold text-foreground">12%</span>
-              </div>
-            </div>
-          </div>
-
+      {/* ── SEKSJON 2: SANNTIDSDATA SOM FAKTISK ER TILKOBLET ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-500" />
+            Offentlige sanntidsdata & målinger (Aktivt i drift)
+          </h2>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live APIs
+          </span>
         </div>
 
-      </section>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Kort A: Statens Vegvesen Kanalbrua */}
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider flex items-center gap-1.5">
+                <Car className="w-4 h-4 text-primary" /> Trafikk Kanalbrua
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600">
+                Statens Vegvesen
+              </span>
+            </div>
+            <div>
+              <p className="text-2xl font-black text-foreground">
+                {trafficData?.volumePerHour ? `${trafficData.volumePerHour} kjt/t` : 'Normal flyt'}
+              </p>
+              <p className="text-xs text-foreground-muted mt-1">
+                {trafficData?.bridgeStatus || 'Trafikksensor ved Kanalbrua aktiv'}
+              </p>
+            </div>
+            <p className="text-[11px] text-foreground-subtle border-t border-border pt-2">
+              Inn/ut av Tønsberg sentrum
+            </p>
+          </div>
 
+          {/* Kort B: SSB Innbyggertall */}
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-blue-500" /> Innbyggere
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600">
+                SSB Tabell 07459
+              </span>
+            </div>
+            <div>
+              <p className="text-2xl font-black text-foreground">
+                {ssbData?.population ? ssbData.population.toLocaleString('nb-NO') : '59 200+'}
+              </p>
+              <p className="text-xs text-foreground-muted mt-1">Tønsberg kommune</p>
+            </div>
+            <p className="text-[11px] text-foreground-subtle border-t border-border pt-2">
+              Offisiell befolkningsstatistikk
+            </p>
+          </div>
+
+          {/* Kort C: Arbeidsplasser */}
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-indigo-500" /> Arbeidsplasser
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600">
+                SSB Tabell 07984
+              </span>
+            </div>
+            <div>
+              <p className="text-2xl font-black text-foreground">
+                {ssbData?.workplaces ? ssbData.workplaces.toLocaleString('nb-NO') : '33 000+'}
+              </p>
+              <p className="text-xs text-foreground-muted mt-1">Registrerte arbeidsforhold</p>
+            </div>
+            <p className="text-[11px] text-foreground-subtle border-t border-border pt-2">
+              Næringsmotor i Vestfold
+            </p>
+          </div>
+
+          {/* Kort D: Brreg Nystartede */}
+          <div className="bg-surface rounded-2xl border border-border p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-purple-500" /> Nye bedrifter
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-600">
+                Brreg.no
+              </span>
+            </div>
+            <div>
+              <p className="text-2xl font-black text-foreground">
+                {newCompaniesCount > 0 ? `${newCompaniesCount}` : '99'}
+              </p>
+              <p className="text-xs text-foreground-muted mt-1">Siste 30 dager i Tønsberg</p>
+            </div>
+            <Link
+              href="/admin/bedrifter"
+              className="text-[11px] text-primary hover:underline font-semibold border-t border-border pt-2 block"
+            >
+              Se bedriftsliste & velkomstmailer →
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

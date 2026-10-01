@@ -2,36 +2,67 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Eye, Pencil, Sparkles } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Sparkles, RefreshCw, FileText, CheckCircle2, Clock } from 'lucide-react';
 import { SoMeModal } from '@/components/admin/SoMeModal';
 
-const demoArticles = [
-  { id: '1', title: 'Ny kafé åpner i Nedre Langgate', category: 'Bylivet', status: 'Publisert', date: '2026-08-12' },
-  { id: '2', title: 'Gründerhuset Hi5 feirer 5 år', category: 'Næringslivet', status: 'Publisert', date: '2026-08-10' },
-  { id: '3', title: '10 grunner til å besøke Færder i sommer', category: 'Reiselivet', status: 'Publisert', date: '2026-08-08' },
-  { id: '4', title: 'Studentene inntar Tønsberg', category: 'Studentlivet', status: 'Utkast', date: '2026-08-07' },
-  { id: '5', title: 'Bondens marked — Rekordbesøk i juli', category: 'Bylivet', status: 'Publisert', date: '2026-08-05' },
-  { id: '6', title: 'Kaldnes Vest tar form', category: 'Næringslivet', status: 'Under arbeid', date: '2026-08-03' },
-];
+interface ArticleItem {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  date: string;
+  slug?: string;
+  published?: boolean;
+}
 
 export default function ArtiklerPage() {
-  const [articles, setArticles] = useState(demoArticles);
+  const [articles, setArticles] = useState<ArticleItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [activeArticle, setActiveArticle] = useState<typeof demoArticles[0] | null>(null);
+  const [activeArticle, setActiveArticle] = useState<ArticleItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('Alle');
   const [aiAlert, setAiAlert] = useState<string | null>(null);
+
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/articles');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        const mapped = json.data.map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          category: a.category || 'Bylivet',
+          status: a.published ? 'Publisert' : 'Utkast',
+          date: a.createdAt ? new Date(a.createdAt).toISOString().split('T')[0] : 'Nylig',
+          slug: a.slug,
+          published: a.published,
+        }));
+        setArticles(mapped);
+      }
+    } catch (err) {
+      console.error('Feil ved henting av artikler:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchArticles();
+  }, []);
 
   // Sanntidssynk med AI Co-Pilot / Autonom Agent
   useEffect(() => {
     const handleAction = (e: any) => {
       if (e.detail?.action === 'article_created' || e.detail?.action === 'create_article') {
         const title = e.detail?.result?.title || 'Ny AI-generert artikkel: Helgeguide';
-        const newArt = {
+        const newArt: ArticleItem = {
           id: `ai-${Date.now()}`,
           title: title,
           category: 'Bylivet',
           status: 'Utkast',
           date: new Date().toISOString().split('T')[0],
+          published: false,
         };
         setArticles((prev) => [newArt, ...prev]);
         setAiAlert(`Agenten opprettet nettopp «${title}» i CMS!`);
@@ -45,7 +76,7 @@ export default function ArtiklerPage() {
   const categories = ['Alle', 'Bylivet', 'Næringslivet', 'Reiselivet', 'Studentlivet'];
 
   const filtered = articles.filter((a) => {
-    const matchesCategory = selectedCategory === 'Alle' || a.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'Alle' || a.category.toLowerCase() === selectedCategory.toLowerCase();
     const matchesSearch =
       a.title.toLowerCase().includes(search.toLowerCase()) ||
       a.category.toLowerCase().includes(search.toLowerCase());
@@ -53,7 +84,7 @@ export default function ArtiklerPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-200">
       {activeArticle && (
         <SoMeModal
           title={activeArticle.title}
@@ -71,17 +102,29 @@ export default function ArtiklerPage() {
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Artikler & CMS</h2>
-          <p className="text-foreground-muted text-sm mt-1">{demoArticles.length} artikler totalt • Publiseringshub</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Artikler & CMS</h1>
+          <p className="text-foreground-muted text-sm mt-1">
+            {articles.length} artikler i databasen • Redaksjonell publiseringshub for Tønsberglivet
+          </p>
         </div>
-        <Link
-          href="/admin/artikler/ny"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground
-                     rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Ny artikkel
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchArticles}
+            disabled={loading}
+            className="p-2.5 rounded-xl border border-border bg-surface text-foreground hover:bg-surface-muted transition-colors"
+            title="Oppdater liste"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <Link
+            href="/admin/artikler/ny"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground
+                       rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Ny artikkel
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
@@ -97,6 +140,7 @@ export default function ArtiklerPage() {
                        focus:outline-none focus:ring-2 focus:ring-primary transition-all"
           />
         </div>
+
         {/* Kategori-piller */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {categories.map((cat) => (
@@ -115,113 +159,87 @@ export default function ArtiklerPage() {
         </div>
       </div>
 
-      {/* Mobil Visning (Native Cards) */}
-      <div className="sm:hidden space-y-3">
-        {filtered.map((article) => (
-          <div
-            key={article.id}
-            className="bg-surface rounded-2xl border border-border p-4 space-y-3 shadow-xs"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span className="px-2.5 py-0.5 text-[11px] font-bold bg-primary/10 text-primary rounded-full">
-                {article.category}
-              </span>
-              <span
-                className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full ${
-                  article.status === 'Publisert'
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                    : article.status === 'Utkast'
-                    ? 'bg-surface-muted text-foreground-muted'
-                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                }`}
-              >
-                {article.status}
-              </span>
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-foreground text-sm leading-snug">{article.title}</h3>
-              <p className="text-xs text-foreground-muted mt-1">{article.date}</p>
-            </div>
-
-            <div className="pt-2 border-t border-border flex items-center justify-between">
-              <button
-                onClick={() => setActiveArticle(article)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-colors"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                SoMe AI
-              </button>
-              <Link
-                href={`/nyheter/${article.id}`}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-foreground-muted hover:text-foreground hover:bg-surface-muted transition-colors"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                Vis
-              </Link>
-            </div>
+      {/* Artikkelliste */}
+      {loading ? (
+        <div className="p-12 text-center bg-surface rounded-2xl border border-border">
+          <RefreshCw className="w-6 h-6 text-primary animate-spin mx-auto mb-2" />
+          <p className="text-sm font-medium text-foreground">Henter artikler fra databasen...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="p-12 text-center bg-surface rounded-2xl border border-border space-y-4">
+          <FileText className="w-10 h-10 text-foreground-subtle mx-auto" />
+          <div>
+            <h3 className="text-base font-bold text-foreground">Ingen artikler funnet</h3>
+            <p className="text-xs text-foreground-muted max-w-sm mx-auto mt-1">
+              Det er ingen publiserte artikler i denne kategorien ennå. Opprett din første artikkel eller be AI Co-Pilot om å lage et utkast.
+            </p>
           </div>
-        ))}
-      </div>
-
-      {/* Desktop Tabell */}
-      <div className="hidden sm:block bg-surface rounded-2xl border border-border overflow-hidden shadow-xs">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-surface-muted/60">
-              <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Tittel</th>
-              <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Kategori</th>
-              <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Dato</th>
-              <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Status</th>
-              <th className="text-right px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Handlinger</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filtered.map((article) => (
-              <tr key={article.id} className="hover:bg-surface-muted/40 transition-colors">
-                <td className="px-6 py-4 font-medium text-foreground">{article.title}</td>
-                <td className="px-6 py-4">
-                  <span className="px-2.5 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full">
-                    {article.category}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-foreground-muted text-xs">{article.date}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2.5 py-1 text-xs font-bold rounded-full ${
-                      article.status === 'Publisert'
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : article.status === 'Utkast'
-                        ? 'bg-surface-muted text-foreground-muted'
-                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    }`}
-                  >
-                    {article.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="inline-flex items-center gap-1.5">
-                    <button
-                      onClick={() => setActiveArticle(article)}
-                      className="px-2.5 py-1.5 text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors inline-flex items-center gap-1 text-xs font-semibold"
-                      title="Generer SoMe-innlegg med AI"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" /> SoMe AI
-                    </button>
-                    <Link
-                      href={`/nyheter/${article.id}`}
-                      className="p-1.5 text-foreground-muted hover:text-foreground rounded-lg hover:bg-surface-muted transition-colors"
-                      title="Vis artikkel"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </td>
+          <Link
+            href="/admin/artikler/ny"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:bg-primary-hover transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Skriv første artikkel
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden shadow-xs">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-surface-muted/60">
+                <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Tittel</th>
+                <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Kategori</th>
+                <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Dato</th>
+                <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Status</th>
+                <th className="text-right px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">Handlinger</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filtered.map((art) => (
+                <tr key={art.id} className="hover:bg-surface-muted/40 transition-colors">
+                  <td className="px-6 py-4 font-medium text-foreground">
+                    <span className="font-semibold">{art.title}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-2.5 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full">
+                      {art.category}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-foreground-muted text-xs font-mono">
+                    {art.date}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${
+                      art.published
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                    }`}>
+                      {art.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => setActiveArticle(art)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface border border-border text-foreground hover:bg-surface-muted text-xs font-bold transition-colors"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-primary" /> SoMe AI
+                      </button>
+                      <Link
+                        href={`/nyheter/${art.slug || art.id}`}
+                        target="_blank"
+                        className="p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-muted transition-colors"
+                        title="Forhåndsvis"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

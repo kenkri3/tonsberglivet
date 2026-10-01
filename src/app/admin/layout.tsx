@@ -36,7 +36,7 @@ const adminNav = [
   { label: 'Dashboard',           href: '/admin',                   icon: LayoutDashboard },
   { label: 'Autonom Agent Hub',   href: '/admin/agent',             icon: Bot,           badge: 'live' as const },
   { label: 'Artikler',            href: '/admin/artikler',          icon: FileText },
-  { label: 'Torvleie & Byrom',    href: '/admin/booking',           icon: MapPin,        count: 5 },
+  { label: 'Torvleie & Byrom',    href: '/admin/booking',           icon: MapPin },
   { label: 'Byskjermer & Marked', href: '/admin/marketing',         icon: Tv },
   { label: 'Trafikk & Innsikt',   href: '/admin/insights',          icon: TrendingUp,    badge: 'live' as const },
   { label: 'Duett ERP & Økonomi', href: '/admin/finance',           icon: CreditCard },
@@ -57,6 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showSystemModal, setShowSystemModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [recentNotifText, setRecentNotifText] = useState<string | null>(null);
   const prevCountRef = useRef(0);
@@ -83,9 +84,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   };
 
-  // Polling for nye chat-meldinger fra innbyggere/turister
+  // Polling for nye chat-meldinger og torvleiesøknader
   useEffect(() => {
-    const checkLiveChats = async () => {
+    const checkLiveStatus = async () => {
       try {
         const res = await fetch('/api/agent/live-chat?countOnly=true');
         const data = await res.json();
@@ -101,10 +102,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       } catch {
         // Ignorer
       }
+
+      try {
+        const bRes = await fetch('/api/booking');
+        const bData = await bRes.json();
+        if (bData.success && Array.isArray(bData.data)) {
+          const pending = bData.data.filter((b: any) => b.status === 'PENDING').length;
+          setPendingBookingsCount(pending);
+        }
+      } catch {
+        // Ignorer
+      }
     };
 
-    checkLiveChats();
-    const timer = setInterval(checkLiveChats, 7000);
+    checkLiveStatus();
+    const timer = setInterval(checkLiveStatus, 10000);
     return () => clearInterval(timer);
   }, []);
 
@@ -195,7 +207,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   pathname === item.href ||
                   (item.href !== '/admin' && pathname.startsWith(item.href));
                 const isChat = item.href === '/admin/meldinger';
-                const liveCount = isChat && unreadChatCount > 0 ? unreadChatCount : (item as any).count;
+                const isBooking = item.href === '/admin/booking';
+                const liveCount = isChat && unreadChatCount > 0
+                  ? unreadChatCount
+                  : isBooking && pendingBookingsCount > 0
+                  ? pendingBookingsCount
+                  : (item as any).count;
                 const isLivePulse = (item as any).badge === 'live';
 
                 // Section divider before Bildebank (idx 7)
@@ -653,9 +670,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       : 'stroke-[1.8]'
                   }`}
                 />
-                <span className="absolute -top-1 -right-1 bg-amber-500 text-white font-black text-[8px] px-1 rounded-full border border-surface leading-tight">
-                  5
-                </span>
+                {pendingBookingsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-amber-500 text-white font-black text-[8px] px-1 rounded-full border border-surface leading-tight">
+                    {pendingBookingsCount}
+                  </span>
+                )}
               </div>
               <span className="text-[10px] tracking-tight mt-0.5">Torvleie</span>
             </Link>

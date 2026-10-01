@@ -42,10 +42,13 @@ export async function GET(request: Request) {
     const metaInstagramId = await getSetting('meta_instagram_id', '');
     const metaAccessToken = await getSetting('meta_access_token', '');
 
-    // Google Business Profile
+    // Google Business Profile & Analytics
     const googleBusinessAccountId = await getSetting('google_business_account_id', '');
     const googleBusinessLocationId = await getSetting('google_business_location_id', '');
     const googleBusinessAccessToken = await getSetting('google_business_access_token', '');
+    const ga4MeasurementId = (await getSetting('ga4_measurement_id', '')) || process.env.NEXT_PUBLIC_GA_ID || '';
+    const gscSiteUrl = (await getSetting('gsc_site_url', '')) || 'https://tonsberglivet.no';
+    const gscVerificationCode = (await getSetting('gsc_verification_code', '')) || '';
 
     const effectiveOneMin = oneMinKey || process.env['1_MIN_AI'] || process.env.ONE_MIN_AI || process.env.ONE_MIN_AI_API_KEY;
 
@@ -93,6 +96,11 @@ export async function GET(request: Request) {
         googleBusinessLocationId,
         googleBusinessAccessToken: maskSecret(googleBusinessAccessToken),
         googleBusinessConfigured: !!googleBusinessAccessToken,
+        ga4MeasurementId,
+        ga4Configured: !!ga4MeasurementId,
+        gscSiteUrl,
+        gscVerificationCode,
+        gscConfigured: !!gscVerificationCode,
       },
     });
   } catch (error: any) {
@@ -226,6 +234,17 @@ export async function POST(request: Request) {
     }
     if (googleBusinessAccessToken && !googleBusinessAccessToken.includes('••••')) {
       await setSetting('google_business_access_token', googleBusinessAccessToken.trim(), 'SOME');
+    }
+
+    // Google Analytics 4 & Search Console
+    if (body.ga4MeasurementId !== undefined) {
+      await setSetting('ga4_measurement_id', body.ga4MeasurementId.trim(), 'ANALYTICS');
+    }
+    if (body.gscSiteUrl !== undefined) {
+      await setSetting('gsc_site_url', body.gscSiteUrl.trim(), 'ANALYTICS');
+    }
+    if (body.gscVerificationCode !== undefined) {
+      await setSetting('gsc_verification_code', body.gscVerificationCode.trim(), 'ANALYTICS');
     }
 
     return NextResponse.json({ success: true, message: 'Innstillinger er lagret!' });

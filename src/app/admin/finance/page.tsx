@@ -2,71 +2,70 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Building2, ArrowUpRight, 
-  RefreshCw, FileText, Download, ShieldCheck,
-  Zap, Clock, Sparkles
+  Building2, RefreshCw, FileText, Download, ShieldCheck,
+  AlertCircle, CheckCircle2, KeyRound, ExternalLink, Search,
+  ArrowUpRight, Clock
 } from 'lucide-react';
+import Link from 'next/link';
 
-interface InvoiceRow {
+interface DuettInvoiceItem {
   id: string;
   invoiceNo: string;
-  customer: string;
+  customerName: string;
   orgNr: string;
-  category: string;
-  amountExVat: number;
-  vat: number;
-  totalAmount: number;
-  ehfStatus: 'sent' | 'pending' | 'failed';
-  duettSyncId: string;
-  date: string;
+  invoiceDate: string;
+  dueDate: string;
+  lineItemDescription: string;
+  netAmount: number;
+  vatRate: number;
+  vatAmount: number;
+  grossAmount: number;
+  currency: string;
+  glAccount: string;
+  ehfStatus: 'READY' | 'SENT' | 'PENDING';
+  peppolId: string;
 }
 
-const initialInvoices: InvoiceRow[] = [
-  { id: '1', invoiceNo: 'F-2026-089', customer: 'Helenes Bakeri AS', orgNr: '928 411 029', category: 'Torvleie Sone A', amountExVat: 5920, vat: 1480, totalAmount: 7400, ehfStatus: 'sent', duettSyncId: 'DUE-994102', date: '18. Aug 2026' },
-  { id: '2', invoiceNo: 'F-2026-088', customer: 'Vestfold Media Group AS', orgNr: '988 201 449', category: 'DoOH Skjermannonsering', amountExVat: 12000, vat: 3000, totalAmount: 15000, ehfStatus: 'sent', duettSyncId: 'DUE-994101', date: '17. Aug 2026' },
-  { id: '3', invoiceNo: 'F-2026-087', customer: 'Tønsberg Jazzfestival', orgNr: '810 933 112', category: 'Kulturscene Riggleie', amountExVat: 10800, vat: 2700, totalAmount: 13500, ehfStatus: 'sent', duettSyncId: 'DUE-994098', date: '15. Aug 2026' },
-  { id: '4', invoiceNo: 'F-2026-086', customer: 'Kystens Ferske Reker AS', orgNr: '914 832 990', category: 'Bryggestand Havnepromenade', amountExVat: 5040, vat: 1260, totalAmount: 6300, ehfStatus: 'pending', duettSyncId: 'DUE-994094', date: '14. Aug 2026' },
-  { id: '5', invoiceNo: 'F-2026-085', customer: 'Farmand Eiendom BA', orgNr: '974 550 120', category: 'Næringspartner Medlemskap', amountExVat: 20000, vat: 5000, totalAmount: 25000, ehfStatus: 'sent', duettSyncId: 'DUE-994089', date: '10. Aug 2026' },
-];
-
 export default function DuettFinancePage() {
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncSuccess, setSyncSuccess] = useState(false);
+  const [invoices, setInvoices] = useState<DuettInvoiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [duettConfigured, setDuettConfigured] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
-  const [invoices, setInvoices] = useState<InvoiceRow[]>(initialInvoices);
-  const [filter, setFilter] = useState<'all' | 'sent' | 'pending'>('all');
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'READY' | 'SENT' | 'PENDING'>('all');
 
-  // Sanntidssynk med AI Co-Pilot / Autonom Agent
-  useEffect(() => {
-    const handleAction = (e: any) => {
-      if (e.detail?.action === 'duett_synced') {
-        setSyncSuccess(true);
-        setInvoices(prev => prev.map(inv => ({ ...inv, ehfStatus: 'sent' })));
-        setExportMessage('AI Agent fullførte Duett ERP-synkronisering i sanntid! Alle EHF 3.0 bilag er overført.');
-        setTimeout(() => setSyncSuccess(false), 4000);
-        setTimeout(() => setExportMessage(null), 6000);
+  const fetchFinanceData = async () => {
+    setLoading(true);
+    try {
+      // 1. Sjekk innstillinger for Duett
+      const settingsRes = await fetch('/api/settings');
+      const settingsJson = await settingsRes.json();
+      if (settingsJson.success && settingsJson.data) {
+        setDuettConfigured(!!settingsJson.data.duettConfigured);
       }
-    };
-    window.addEventListener('tonsberg:action-completed', handleAction);
-    return () => window.removeEventListener('tonsberg:action-completed', handleAction);
-  }, []);
 
-  const handleManualSync = () => {
-    setIsSyncing(true);
-    setSyncSuccess(false);
-    setTimeout(() => {
-      setIsSyncing(false);
-      setSyncSuccess(true);
-      setTimeout(() => setSyncSuccess(false), 3000);
-    }, 1200);
+      // 2. Hent fakturagrunnlag fra reelle bookinger
+      const finRes = await fetch('/api/finance/export?format=json');
+      const finJson = await finRes.json();
+      if (finJson.success && finJson.data?.items) {
+        setInvoices(finJson.data.items);
+      }
+    } catch (e) {
+      console.error('Feil ved lasting av fakturagrunnlag:', e);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchFinanceData();
+  }, []);
 
   const handleExportDuett = async () => {
     setIsExporting(true);
     setExportMessage(null);
     try {
-      // 1. Trigger export and webhook via API
       const res = await fetch('/api/finance/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,7 +75,6 @@ export default function DuettFinancePage() {
       const data = await res.json();
 
       if (data.success && data.data?.csvContent) {
-        // 2. Trigger browser download of CSV
         const blob = new Blob([data.data.csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -89,11 +87,11 @@ export default function DuettFinancePage() {
 
         setExportMessage(data.message || `Fakturagrunnlag (${data.data.items.length} poster) er eksportert og lastet ned.`);
       } else {
-        setExportMessage('Fakturagrunnlag generert.');
+        // Direkte nedlasting via GET
+        window.location.href = '/api/finance/export';
+        setExportMessage('Laster ned Duett ERP CSV-fil...');
       }
     } catch (e) {
-      console.error('Export error:', e);
-      // Fallback: Last ned via direkte GET
       window.location.href = '/api/finance/export';
       setExportMessage('Laster ned Duett ERP CSV-fil...');
     } finally {
@@ -102,283 +100,233 @@ export default function DuettFinancePage() {
     }
   };
 
-  const totalBilled = invoices.reduce((acc, curr) => acc + curr.totalAmount, 0);
-  const totalVat = invoices.reduce((acc, curr) => acc + curr.vat, 0);
+  const totalGross = invoices.reduce((acc, curr) => acc + (curr.grossAmount || 0), 0);
+  const totalNet = invoices.reduce((acc, curr) => acc + (curr.netAmount || 0), 0);
+  const totalVat = invoices.reduce((acc, curr) => acc + (curr.vatAmount || 0), 0);
 
-
-  const filteredInvoices = invoices.filter(inv => {
-    if (filter === 'all') return true;
-    return inv.ehfStatus === filter;
+  const filteredInvoices = invoices.filter((inv) => {
+    const matchesFilter = filter === 'all' || inv.ehfStatus === filter;
+    const matchesSearch =
+      inv.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      inv.orgNr.includes(search) ||
+      inv.invoiceNo.toLowerCase().includes(search.toLowerCase()) ||
+      inv.lineItemDescription.toLowerCase().includes(search.toLowerCase());
+    return matchesFilter && matchesSearch;
   });
 
   return (
-    <div className="space-y-12 pb-16">
-      
-      {/* ── Seksjon 1: KPI & Økonomistatus ── */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between pb-2 border-b border-border">
-          <div>
-            <h2 className="text-xl font-extrabold text-foreground tracking-tight">Økonomisk Oversikt (Duett ERP)</h2>
-            <p className="text-xs text-foreground-muted mt-0.5">Sanntidsfakturering, Peppol EHF 3.0 og integrasjonsstatus</p>
-          </div>
-          <span className="text-xs font-bold text-success bg-success-light px-3 py-1 rounded-full">
-            EHF 3.0 Live Gateway
-          </span>
+    <div className="space-y-8 pb-16">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2 border-b border-border">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">Duett ERP & Fakturering</h2>
+          <p className="text-xs sm:text-sm text-foreground-muted mt-0.5">
+            Fakturagrunnlag for torvleie, byrom og skjemasalg • Peppol EHF 3.0
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          
-          <div className="bg-surface border border-border rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Total Omsetning</span>
-              <div className="w-9 h-9 rounded-xl bg-success-light text-success flex items-center justify-center">
-                <Building2 className="w-5 h-5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-foreground tracking-tight">{totalBilled.toLocaleString('no-NO')} kr</div>
-              <div className="flex items-center gap-1 text-xs font-bold text-success mt-1">
-                <ArrowUpRight className="w-4 h-4" /> +18.6% vekst
-              </div>
-            </div>
-            <div className="pt-3 border-t border-border text-xs text-foreground-muted">
-              Inkl. {totalVat.toLocaleString('no-NO')} kr MVA
-            </div>
-          </div>
-
-          <div className="bg-surface border border-border rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">EHF Fakturaer</span>
-              <div className="w-9 h-9 rounded-xl bg-surface-muted text-foreground flex items-center justify-center">
-                <FileText className="w-5 h-5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-foreground tracking-tight">{invoices.length}</div>
-              <div className="text-xs font-bold text-primary mt-1">
-                100% EHF levert
-              </div>
-            </div>
-            <div className="pt-3 border-t border-border text-xs text-foreground-muted">
-              Sendt via Peppol-nettverket
-            </div>
-          </div>
-
-          <div className="bg-surface border border-border rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Duett Sky Status</span>
-              <div className="w-9 h-9 rounded-xl bg-primary-light text-primary flex items-center justify-center">
-                <Zap className="w-5 h-5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-foreground tracking-tight">42 ms</div>
-              <div className="text-xs font-bold text-success mt-1">
-                Optimal responstid
-              </div>
-            </div>
-            <div className="pt-3 border-t border-border text-xs text-foreground-muted">
-              TLS 1.3 Sikker Forbindelse
-            </div>
-          </div>
-
-          <div className="bg-surface border border-border rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Autobokføring</span>
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                <Clock className="w-5 h-5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-foreground tracking-tight">10 min</div>
-              <div className="text-xs font-bold text-foreground-muted mt-1">
-                siden forrige synk
-              </div>
-            </div>
-            <div className="pt-3 border-t border-border text-xs text-foreground-muted">
-              Neste kjøring: om 50 min
-            </div>
-          </div>
-
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={fetchFinanceData}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-surface border border-border rounded-xl text-xs sm:text-sm font-semibold text-foreground hover:bg-surface-muted transition-colors shadow-xs"
+          >
+            <RefreshCw className={`w-4 h-4 text-primary ${loading ? 'animate-spin' : ''}`} />
+            Oppdater
+          </button>
+          <button
+            onClick={handleExportDuett}
+            disabled={isExporting || invoices.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-xs sm:text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50"
+          >
+            <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
+            {isExporting ? 'Genererer...' : 'Last ned EHF 3.0 CSV'}
+          </button>
         </div>
-      </section>
+      </div>
 
-      {/* ── Seksjon 2: Gateway Status Banner ── */}
-      <section className="bg-surface border border-border rounded-3xl p-6 md:p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4 md:gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-success-light text-success flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-7 h-7" />
+      {/* Ærlig integrasjonsstatus */}
+      {duettConfigured ? (
+        <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <div className="flex items-center gap-3">
-              <h3 className="text-lg font-extrabold text-foreground">Duett ERP Cloud Gateway (Aktiv)</h3>
-              <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-success-light text-success">
-                Peppol EHF 3.0
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-foreground text-sm sm:text-base">Duett ERP Webhook er konfigurert</h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                Aktiv kobling
               </span>
             </div>
-            <p className="text-xs md:text-sm text-foreground-muted mt-1 leading-relaxed">
-              Automatisk synkronisering av leieinntekter for byrom, markedsplasser og storskjermannonser.
+            <p className="text-xs text-foreground-muted mt-1 leading-relaxed">
+              Fakturagrunnlag overføres automatisk til regnskapsfører / Duett ERP via webhook ved godkjenning av bookinger.
             </p>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <button
-            onClick={handleExportDuett}
-            disabled={isExporting}
-            className="flex items-center gap-2 px-5 py-3 bg-foreground hover:bg-foreground/90 text-surface rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50"
+      ) : (
+        <div className="p-5 bg-surface rounded-2xl border border-amber-500/30 bg-amber-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 mt-0.5">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-foreground text-sm sm:text-base">
+                  Duett ERP Webhook: Ikke konfigurert ennå
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                  Manuell EHF-eksport aktiv
+                </span>
+              </div>
+              <p className="text-xs text-foreground-muted mt-1 max-w-2xl leading-relaxed">
+                Systemet fungerer i manuell eksportmodus. Alle godkjente torvleieavtaler konverteres automatisk til standardiserte Peppol EHF 3.0-kompatible CSV-filer med UTF-8 BOM, MVA-spesifikasjon og organisasjonsnumre, klare for import i Duett. For direkte API-overføring, legg inn regnskapskontorets webhook-URL.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/admin/innstillinger"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-xl text-xs font-bold transition-colors whitespace-nowrap shrink-0"
           >
-            <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
-            <span>{isExporting ? 'Eksporterer...' : 'Eksporter til Duett ERP'}</span>
-          </button>
-
-          <button
-            onClick={handleManualSync}
-            disabled={isSyncing}
-            className="flex items-center gap-2 px-5 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Kjører Duett-synk...' : syncSuccess ? 'Synkronisert!' : 'Kjør Manuell Synk'}</span>
-          </button>
-        </div>
-      </section>
-
-      {/* Tilbakemelding ved eksport */}
-      {exportMessage && (
-        <div className="p-4 rounded-2xl bg-success-light border border-success/30 text-success text-xs font-bold flex items-center justify-between shadow-xs">
-          <span>✅ {exportMessage}</span>
-          <button onClick={() => setExportMessage(null)} className="text-success hover:opacity-80">Lukk</button>
+            Konfigurer Duett <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
         </div>
       )}
 
-      {/* ── Seksjon 3: Transaksjonsjournal ── */}
-      <section className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
-          <div>
-            <h2 className="text-xl font-extrabold text-foreground tracking-tight">Fakturajournal & EHF-status</h2>
-            <p className="text-xs text-foreground-muted mt-0.5">Siste transaksjoner overført til Duett Økonomisystem</p>
+      {exportMessage && (
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs sm:text-sm flex items-center gap-2 font-medium">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          {exportMessage}
+        </div>
+      )}
+
+      {/* KPI-kort */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-xs text-foreground-muted font-medium">
+            <span>Fakturerbart Grunnlag</span>
+            <Building2 className="w-4 h-4 text-primary" />
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={handleExportDuett}
-              disabled={isExporting}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-surface-muted hover:bg-surface border border-border text-foreground rounded-xl text-xs font-bold transition-all"
-            >
-              <Download className="w-3.5 h-3.5 text-primary" />
-              <span>Last ned CSV</span>
-            </button>
-
-            <div className="flex items-center gap-2 bg-surface-muted p-1.5 rounded-2xl border border-border">
-              {(['all', 'sent', 'pending'] as const).map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setFilter(tab)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                    filter === tab ? 'bg-primary text-white shadow-xs' : 'text-foreground-muted hover:text-foreground'
-                  }`}
-                >
-                  {tab === 'all' ? 'Alle' : tab === 'sent' ? 'EHF Sendt' : 'Venter'}
-                </button>
-              ))}
-            </div>
+          <div className="text-2xl font-black text-foreground">
+            {totalGross.toLocaleString('no-NO')} kr
+          </div>
+          <div className="text-xs text-foreground-muted pt-2 border-t border-border flex justify-between">
+            <span>Netto: {totalNet.toLocaleString('no-NO')} kr</span>
+            <span>MVA: {totalVat.toLocaleString('no-NO')} kr</span>
           </div>
         </div>
 
-
-        <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-xs">
-
-          {/* Mobilkort for fakturaer */}
-          <div className="md:hidden divide-y divide-border">
-            {filteredInvoices.map(inv => (
-              <div key={inv.id} className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="font-mono font-bold text-foreground text-sm">{inv.invoiceNo}</span>
-                    <h4 className="font-bold text-foreground text-sm mt-0.5">{inv.customer}</h4>
-                    <p className="text-[11px] text-foreground-muted font-mono">Org: {inv.orgNr}</p>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${
-                    inv.ehfStatus === 'sent'
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                  }`}>
-                    {inv.ehfStatus === 'sent' ? 'Levert (EHF)' : 'Venter'}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-xs bg-surface-muted/50 p-2.5 rounded-xl border border-border/50">
-                  <span className="text-foreground-muted font-medium">{inv.category}</span>
-                  <div className="text-right">
-                    <span className="font-mono font-black text-foreground text-sm block">
-                      {inv.totalAmount.toLocaleString('no-NO')} kr
-                    </span>
-                    <span className="text-[10px] text-foreground-subtle block">
-                      Eks. mva: {inv.amountExVat.toLocaleString('no-NO')} kr
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-foreground-muted pt-1">
-                  <span className="font-mono flex items-center gap-1">
-                    <Download className="w-3 h-3 text-primary" /> {inv.duettSyncId}
-                  </span>
-                  <span className="text-emerald-500 font-semibold text-[10px]">Peppol EHF 3.0</span>
-                </div>
-              </div>
-            ))}
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-xs text-foreground-muted font-medium">
+            <span>Antall Bilag / Linjer</span>
+            <FileText className="w-4 h-4 text-emerald-500" />
           </div>
+          <div className="text-2xl font-black text-foreground">
+            {invoices.length} bilag
+          </div>
+          <div className="text-xs text-foreground-muted pt-2 border-t border-border">
+            Standard: Peppol BIS Billing 3.0
+          </div>
+        </div>
 
-          {/* Desktop Tabell */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-surface-muted text-foreground uppercase font-bold border-b border-border">
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-xs text-foreground-muted font-medium">
+            <span>Hovedbokskonto</span>
+            <ShieldCheck className="w-4 h-4 text-blue-500" />
+          </div>
+          <div className="text-2xl font-black text-foreground">
+            Konto 3000
+          </div>
+          <div className="text-xs text-foreground-muted pt-2 border-t border-border">
+            Salgsinntekt avgiftspliktig (25% MVA)
+          </div>
+        </div>
+      </div>
+
+      {/* Søk og filter */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-subtle" />
+          <input
+            type="search"
+            placeholder="Søk i kundenavn, org.nr, fakturanr eller varelinje..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm
+                       text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+        <div className="flex items-center gap-1.5">
+          {(['all', 'READY', 'SENT', 'PENDING'] as const).map((st) => (
+            <button
+              key={st}
+              onClick={() => setFilter(st)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                filter === st
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-surface border border-border text-foreground-muted hover:text-foreground hover:bg-surface-muted'
+              }`}
+            >
+              {st === 'all' ? 'Alle bilag' : st === 'READY' ? 'Klar for EHF' : st === 'SENT' ? 'Overført' : 'Venter'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Bilagstabell */}
+      <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-border bg-surface-muted/40 font-bold text-foreground">
+                <th className="py-3 px-4">Fakturanr</th>
+                <th className="py-3 px-4">Kunde & Org.nr</th>
+                <th className="py-3 px-4">Varebeskrivelse</th>
+                <th className="py-3 px-4">Dato</th>
+                <th className="py-3 px-4 text-right">Netto</th>
+                <th className="py-3 px-4 text-right">MVA (25%)</th>
+                <th className="py-3 px-4 text-right">Totalt</th>
+                <th className="py-3 px-4 text-center">EHF Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {loading ? (
                 <tr>
-                  <th className="px-6 py-4">Fakturanr</th>
-                  <th className="px-6 py-4">Kunde / Mottaker</th>
-                  <th className="px-6 py-4">Tjeneste / Varelinje</th>
-                  <th className="px-6 py-4">Eks. MVA</th>
-                  <th className="px-6 py-4">Totalt (Inkl. MVA)</th>
-                  <th className="px-6 py-4">EHF Status</th>
-                  <th className="px-6 py-4 text-right">Duett ID</th>
+                  <td colSpan={8} className="py-12 text-center text-foreground-muted">
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto text-primary mb-2" />
+                    Laster fakturagrunnlag...
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredInvoices.map(inv => (
+              ) : filteredInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-foreground-muted">
+                    <AlertCircle className="w-6 h-6 text-foreground-subtle mx-auto mb-1.5" />
+                    Ingen fakturabilag funnet
+                  </td>
+                </tr>
+              ) : (
+                filteredInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-surface-muted/50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-bold text-foreground text-sm">{inv.invoiceNo}</td>
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-foreground text-sm">{inv.customer}</div>
-                      <div className="text-[11px] text-foreground-muted font-mono mt-0.5">Org: {inv.orgNr}</div>
+                    <td className="py-3 px-4 font-mono font-bold text-foreground">{inv.invoiceNo}</td>
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-foreground">{inv.customerName}</div>
+                      <div className="text-[10px] text-foreground-muted font-mono">{inv.orgNr}</div>
                     </td>
-                    <td className="px-6 py-4 text-foreground-muted">{inv.category}</td>
-                    <td className="px-6 py-4 font-mono text-foreground-muted">
-                      {inv.amountExVat.toLocaleString('no-NO')} kr
-                    </td>
-                    <td className="px-6 py-4 font-mono font-black text-foreground text-sm">
-                      {inv.totalAmount.toLocaleString('no-NO')} kr
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${
-                        inv.ehfStatus === 'sent' ? 'bg-success-light text-success border border-success/20' : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                      }`}>
-                        {inv.ehfStatus === 'sent' ? 'Levert (EHF)' : 'Venter'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="font-mono text-xs text-foreground-muted flex items-center justify-end gap-1.5">
-                        <Download className="w-3.5 h-3.5 text-primary" />
-                        <span>{inv.duettSyncId}</span>
+                    <td className="py-3 px-4 text-foreground-muted">{inv.lineItemDescription}</td>
+                    <td className="py-3 px-4 text-foreground-muted">{inv.invoiceDate}</td>
+                    <td className="py-3 px-4 text-right font-mono">{inv.netAmount.toLocaleString('no-NO')} kr</td>
+                    <td className="py-3 px-4 text-right font-mono text-foreground-muted">{inv.vatAmount.toLocaleString('no-NO')} kr</td>
+                    <td className="py-3 px-4 text-right font-mono font-bold text-foreground">{inv.grossAmount.toLocaleString('no-NO')} kr</td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                        {inv.ehfStatus}
                       </span>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      </section>
-
+      </div>
     </div>
   );
 }

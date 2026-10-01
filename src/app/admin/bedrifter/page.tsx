@@ -63,22 +63,15 @@ interface NewCompanyRecord {
   sentAt?: string;
 }
 
-const demoBedrifter = [
-  { id: '1', name: 'Kafe Nansen', category: 'Mat & drikke', area: 'Tønsberg sentrum', address: 'Nedre Langgate 26', status: true, orgNr: '928 411 029' },
-  { id: '2', name: 'Farmannstredet', category: 'Shopping', area: 'Tønsberg sentrum', address: 'Jernbanegaten 1', status: true, orgNr: '974 550 120' },
-  { id: '3', name: 'Hotel Klubben', category: 'Overnatting', area: 'Tønsberg sentrum', address: 'Nedre Langgate 49', status: true, orgNr: '914 832 990' },
-  { id: '4', name: 'Haugar Kunstmuseum', category: 'Kultur', area: 'Tønsberg sentrum', address: 'Gråbrødregaten 17', status: true, orgNr: '988 201 449' },
-  { id: '5', name: 'Engø Gård', category: 'Overnatting', area: 'Færder kommune', address: 'Gamle Engøvei 25', status: true, orgNr: '984 219 400' },
-  { id: '6', name: 'Slottsfjellsmuseet', category: 'Kultur', area: 'Tønsberg sentrum', address: 'Farmannsveien 30', status: false, orgNr: '810 933 112' },
-];
-
 export default function BedrifterPage() {
   const [activeTab, setActiveTab] = useState<'register' | 'nystartede'>('nystartede');
 
   // Register Tab State
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Alle');
-  const categories = ['Alle', 'Mat & drikke', 'Shopping', 'Overnatting', 'Kultur'];
+  const [establishedCompanies, setEstablishedCompanies] = useState<any[]>([]);
+  const [loadingEstablished, setLoadingEstablished] = useState(false);
+  const categories = ['Alle', 'Servering', 'Handel', 'Overnatting', 'Kultur', 'Eiendom'];
 
   // Nystartede Tab State
   const [newCompanies, setNewCompanies] = useState<NewCompanyRecord[]>([]);
@@ -133,8 +126,24 @@ export default function BedrifterPage() {
     }
   };
 
+  const fetchEstablishedCompanies = async () => {
+    try {
+      setLoadingEstablished(true);
+      const res = await fetch('/api/brreg?limit=30');
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setEstablishedCompanies(json.data);
+      }
+    } catch (err) {
+      console.error('Feil ved henting av etablerte bedrifter:', err);
+    } finally {
+      setLoadingEstablished(false);
+    }
+  };
+
   useEffect(() => {
     fetchNewCompanies();
+    fetchEstablishedCompanies();
   }, []);
 
   const openEmailModal = (comp: NewCompanyRecord) => {
@@ -215,12 +224,16 @@ export default function BedrifterPage() {
     }
   };
 
-  const filteredDemo = demoBedrifter.filter((b) => {
-    const matchesCategory = selectedCategory === 'Alle' || b.category === selectedCategory;
+  const filteredEstablished = establishedCompanies.filter((b) => {
+    const matchesCategory = selectedCategory === 'Alle' ||
+      (b.industry && b.industry.toLowerCase().includes(selectedCategory.toLowerCase())) ||
+      (b.orgFormDesc && b.orgFormDesc.toLowerCase().includes(selectedCategory.toLowerCase()));
     const matchesSearch =
       b.name.toLowerCase().includes(search.toLowerCase()) ||
-      b.area.toLowerCase().includes(search.toLowerCase()) ||
-      b.address.toLowerCase().includes(search.toLowerCase());
+      b.orgNr.includes(search) ||
+      (b.city && b.city.toLowerCase().includes(search.toLowerCase())) ||
+      (b.address && b.address.toLowerCase().includes(search.toLowerCase())) ||
+      (b.industry && b.industry.toLowerCase().includes(search.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -297,7 +310,7 @@ export default function BedrifterPage() {
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
               activeTab === 'register' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-surface-muted text-foreground-subtle'
             }`}>
-              {demoBedrifter.length}
+              {establishedCompanies.length}
             </span>
           </button>
         </div>
@@ -574,14 +587,19 @@ export default function BedrifterPage() {
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-foreground">Lokale bedrifter i Tønsberglivet</h2>
+              <h2 className="text-xl font-bold text-foreground">Virksomhetsregister i Tønsberg</h2>
               <p className="text-foreground-muted text-sm mt-0.5">
-                {demoBedrifter.length} bedrifter i utvalg • 312 totalt i registeret
+                {filteredEstablished.length} bedrifter i utvalg • Hentet i sanntid via Brønnøysundregistrene OpenAPI
               </p>
             </div>
-            <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm">
-              <Plus className="w-4 h-4" /> Ny bedrift
-            </button>
+            <a
+              href="https://virksomhet.brreg.no/nb/oppslag/enheter"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm"
+            >
+              <ExternalLink className="w-4 h-4" /> Søk i Brreg
+            </a>
           </div>
 
           {/* Søk og filtre */}
@@ -590,7 +608,7 @@ export default function BedrifterPage() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-subtle" />
               <input
                 type="search"
-                placeholder="Søk på bedriftsnavn, gateadresse eller område..."
+                placeholder="Søk på bedriftsnavn, gateadresse eller bransje..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 focus:ring-primary transition-all"
@@ -623,7 +641,7 @@ export default function BedrifterPage() {
                     Bedrift
                   </th>
                   <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">
-                    Kategori
+                    Kategori / NACE
                   </th>
                   <th className="text-left px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">
                     Område & Adresse
@@ -632,48 +650,46 @@ export default function BedrifterPage() {
                     Org.nr
                   </th>
                   <th className="text-right px-6 py-3 font-semibold text-foreground-muted text-xs uppercase tracking-wider">
-                    Synlig i portal
+                    Kilde & Status
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredDemo.map((b) => (
-                  <tr key={b.id} className="hover:bg-surface-muted/40 transition-colors">
+                {filteredEstablished.map((b) => (
+                  <tr key={b.orgNr} className="hover:bg-surface-muted/40 transition-colors">
                     <td className="px-6 py-4 font-medium text-foreground">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                           <Building2 className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="font-semibold">{b.name}</span>
+                        <div>
+                          <span className="font-semibold block">{b.name}</span>
+                          <span className="text-[11px] text-foreground-subtle font-mono">{b.orgFormDesc || b.orgForm}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 text-xs font-semibold bg-accent/10 text-accent rounded-full">
-                        {b.category}
+                      <span className="px-2.5 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full">
+                        {b.industry}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-foreground-muted text-xs">
-                      <p className="font-medium text-foreground">{b.area}</p>
+                      <p className="font-medium text-foreground">{b.city || 'Tønsberg'}</p>
                       <p className="text-foreground-subtle text-[11px]">{b.address}</p>
                     </td>
-                    <td className="px-6 py-4 text-foreground-subtle text-xs font-mono">{b.orgNr}</td>
-                    <td className="px-6 py-4 text-right">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full ${
-                          b.status
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-surface-muted text-foreground-muted'
-                        }`}
+                    <td className="px-6 py-4 text-xs font-mono">
+                      <a
+                        href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${b.orgNr}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1"
                       >
-                        {b.status ? (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Synlig
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-3.5 h-3.5" /> Skjult
-                          </>
-                        )}
+                        {b.orgNr} <ExternalLink className="w-3 h-3 text-foreground-subtle" />
+                      </a>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Brreg Verifisert
                       </span>
                     </td>
                   </tr>

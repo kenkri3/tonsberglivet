@@ -48,12 +48,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, provider, pageId, groupId, instagramId, token, accountId, locationId } = body;
 
-    if (action === 'connect_mock_meta') {
-      await setSetting('meta_page_id', pageId || 'tonsberglivet-facebook-page-id', 'SOME');
-      await setSetting('meta_group_id', groupId || 'tonsberglivet-facebook-group-id', 'SOME');
-      await setSetting('meta_instagram_id', instagramId || 'tonsberglivet-instagram-business-id', 'SOME');
-      await setSetting('meta_access_token', 'EAAB...mock_active_meta_token', 'SOME');
-      return NextResponse.json({ success: true, message: 'Meta (Facebook & Instagram) ble koblet til!' });
+    if (action === 'save_meta_token' || action === 'connect_meta') {
+      if (!token || !token.trim()) {
+        return NextResponse.json({ success: false, error: 'Mangler gyldig Meta User/Page Access Token' }, { status: 400 });
+      }
+      if (pageId) await setSetting('meta_page_id', pageId.trim(), 'SOME');
+      if (groupId) await setSetting('meta_group_id', groupId.trim(), 'SOME');
+      if (instagramId) await setSetting('meta_instagram_id', instagramId.trim(), 'SOME');
+      await setSetting('meta_access_token', token.trim(), 'SOME');
+      return NextResponse.json({ success: true, message: 'Meta (Facebook & Instagram) API-nøkkel lagret!' });
     }
 
     if (action === 'disconnect_meta') {
@@ -61,11 +64,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'Meta-tilkobling ble koblet fra.' });
     }
 
-    if (action === 'connect_mock_google') {
-      await setSetting('google_business_account_id', accountId || 'accounts/109823478912', 'SOME');
-      await setSetting('google_business_location_id', locationId || 'locations/tonsberg-sentrum-loc', 'SOME');
-      await setSetting('google_business_access_token', 'ya29...mock_active_google_token', 'SOME');
-      return NextResponse.json({ success: true, message: 'Google Business Profile ble koblet til!' });
+    if (action === 'save_google_token' || action === 'connect_google') {
+      if (!token || !token.trim()) {
+        return NextResponse.json({ success: false, error: 'Mangler gyldig Google Business OAuth Token' }, { status: 400 });
+      }
+      if (accountId) await setSetting('google_business_account_id', accountId.trim(), 'SOME');
+      if (locationId) await setSetting('google_business_location_id', locationId.trim(), 'SOME');
+      await setSetting('google_business_access_token', token.trim(), 'SOME');
+      return NextResponse.json({ success: true, message: 'Google Business Profile OAuth-token lagret!' });
     }
 
     if (action === 'disconnect_google') {
