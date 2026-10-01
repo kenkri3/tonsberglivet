@@ -29,7 +29,7 @@ const demoNews = [
     category: 'Reiselivet', 
     date: '10. aug 2026', 
     excerpt: 'Slik får du mest ut av en helg fylt med matopplevelser, kyststier og båtliv i Norges eldste by.', 
-    imageUrl: '/images/tonsberg/brygge_kveldsstemning.jpg' 
+    imageUrl: '/images/tonsberg/brygga_full.jpg' 
   },
   { 
     id: 4, 

@@ -1,5 +1,20 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
 import { HeroSection } from '@/components/ui/HeroSection';
+import { 
+  Palette, 
+  ShoppingBag, 
+  Sparkles, 
+  UtensilsCrossed, 
+  Store, 
+  Recycle, 
+  CalendarDays, 
+  HeartHandshake, 
+  Leaf,
+  ArrowRight,
+  Lightbulb
+} from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Våre Prosjekter | Tønsberglivet',
@@ -7,43 +22,172 @@ export const metadata: Metadata = {
 };
 
 const prosjekter = [
-  { id: 1, title: 'Barn i byen', desc: 'Kunstprosjekter med barnehager for å inkludere de minste i byrommet.', status: 'Pågår' },
-  { id: 2, title: 'Bondens marked', desc: 'Lokale matprodusenter fyller Torvet med ferske og kortreiste varer.', status: 'Årlig' },
-  { id: 3, title: 'Jul i Tønsberg', desc: 'Skaper magisk julestemning med julemarked, belysning og aktiviteter i desember.', status: 'Årlig' },
-  { id: 4, title: 'Nyt Tønsberg', desc: 'Mat- og opplevelsesuker som feirer den lokale gastronomien i regionen.', status: 'Planlagt' },
-  { id: 5, title: 'Handelens dager', desc: 'Gode tilbud, yrende folkeliv og aktiviteter i byens handlegater.', status: 'Årlig' },
-  { id: 6, title: 'Gjenbruksmarked', desc: 'Fokus på bærekraft med markeder for kjøp og salg av brukte skatter.', status: 'Pågår' },
-  { id: 7, title: 'Tønsbergdagen', desc: 'Årets største handledag med tradisjoner helt tilbake til 1974.', status: 'Årlig' },
-  { id: 8, title: 'Innflytterfesten', desc: 'Velkomstarrangement for alle nye innbyggere i Tønsberg og Færder.', status: 'Planlagt' },
-  { id: 9, title: 'Høstfest på Løkken', desc: 'Feiring av høsten med markedsboder, musikk og aktiviteter for familien.', status: 'Årlig' }
+  { 
+    id: 1, 
+    title: 'Barn i byen', 
+    desc: 'Kunst- og kulturprosjekter i samarbeid med lokale barnehager og skoler for å inkludere barna aktivt i byrommet.', 
+    status: 'Pågår',
+    icon: Palette,
+    image: '/images/tonsberg/borggardsfest.png'
+  },
+  { 
+    id: 2, 
+    title: 'Bondens marked på Torvet', 
+    desc: 'Lokale matprodusenter fyller Tønsberg Torv med ferske grønnsaker, ost, bakst og kortreiste spesialiteter.', 
+    status: 'Årlig',
+    icon: ShoppingBag,
+    image: '/images/tonsberg/torvet_tonsberg.jpg'
+  },
+  { 
+    id: 3, 
+    title: 'Høstfest på Slottsfjellet', 
+    desc: 'Feiring av høsten med markedsboder, musikk, historiske innslag og aktiviteter for hele storfamilien.', 
+    status: 'Årlig',
+    icon: Leaf,
+    image: '/images/tonsberg/hostfest_slottsfjell.png'
+  },
+  { 
+    id: 4, 
+    title: 'Tønsbergdagen', 
+    desc: 'Årets største handels- og folkefest med tradisjoner helt tilbake til 1974. Yrende liv fra tidlig morgen til kveld.', 
+    status: 'Årlig',
+    icon: CalendarDays,
+    image: '/images/tonsberg/brygga_folk.jpg'
+  },
+  { 
+    id: 5, 
+    title: 'Nyt Tønsberg — Spis Ute Uka', 
+    desc: 'Mat- og opplevelsesuker som feirer den rike gastronomien i Tønsberg med spesialmenyer og felles måltider.', 
+    status: 'Gjennomført',
+    icon: UtensilsCrossed,
+    image: '/images/tonsberg/spisuteuka.jpg'
+  },
+  { 
+    id: 6, 
+    title: 'Jul i Tønsberg', 
+    desc: 'Skaper magisk førjulsstemning med glitrende lysgater, julemarked på Torvet, skøytebane og julekonserter.', 
+    status: 'Årlig',
+    icon: Sparkles,
+    image: '/images/tonsberg/brygge_kveldsstemning.jpg'
+  },
+  { 
+    id: 7, 
+    title: 'Handelens dager', 
+    desc: 'Gode sommertilbud, underholdning og aktiviteter som støtter de unike butikkene i sentrum.', 
+    status: 'Årlig',
+    icon: Store,
+  },
+  { 
+    id: 8, 
+    title: 'Gjenbruksmarked', 
+    desc: 'Bærekraftige markeder med gjenbruk av klær, vintage og redesign som samler både unge og voksne.', 
+    status: 'Pågår',
+    icon: Recycle,
+  },
+  { 
+    id: 9, 
+    title: 'Innflytterfesten', 
+    desc: 'En varm og uformell velkomstfest for alle som nylig har flyttet til Tønsberg- og Færderregionen.', 
+    status: 'Planlagt',
+    icon: HeartHandshake,
+  }
 ];
 
 export default function ProsjekterPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-background">
+    <main className="flex min-h-screen flex-col bg-background pb-20">
       <HeroSection 
         title="Våre prosjekter"
         subtitle="Tønsberglivet"
-        description="Vi jobber kontinuerlig med små og store prosjekter for å gjøre Tønsbergregionen til et enda bedre sted å bo, besøke og drive næring i."
-        backgroundGradient="linear-gradient(135deg, #1E3A5F, #1D4ED8)"
+        description="Vi initierer, støtter og gjennomfører små og store prosjekter som gjør Tønsbergregionen til et mer levende, attraktivt og samlende sted å bo, besøke og drive næring i."
+        backgroundGradient="linear-gradient(135deg, #16193d 0%, #1D4ED8 100%)"
         compact={true}
       />
 
-      <section className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {prosjekter.map((prosjekt) => (
-            <div key={prosjekt.id} className="bg-surface rounded-3xl shadow-sm border border-border p-6 sm:p-8 flex flex-col hover:shadow-md hover:-translate-y-1 transition-all">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-foreground">{prosjekt.title}</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-light text-primary">
-                  {prosjekt.status}
-                </span>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="text-xs font-bold uppercase tracking-widest text-primary block mb-2">
+            Byutvikling & Samhold
+          </span>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
+            Initiativer som skaper liv i byen
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {prosjekter.map((prosjekt) => {
+            const Icon = prosjekt.icon;
+            return (
+              <div 
+                key={prosjekt.id} 
+                className="bg-surface rounded-3xl shadow-sm border border-border/80 overflow-hidden flex flex-col hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 group"
+              >
+                {prosjekt.image && (
+                  <div className="relative aspect-[16/10] overflow-hidden bg-surface-muted">
+                    <img 
+                      src={prosjekt.image} 
+                      alt={prosjekt.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                    <span className="absolute top-3 right-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-surface/90 backdrop-blur-md text-primary shadow-sm">
+                      {prosjekt.status}
+                    </span>
+                  </div>
+                )}
+
+                <div className="p-6 sm:p-7 flex flex-col flex-1">
+                  {!prosjekt.image && (
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-surface-muted text-foreground-muted">
+                        {prosjekt.status}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 mb-2">
+                    {prosjekt.image && (
+                      <div className="w-7 h-7 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                    )}
+                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                      {prosjekt.title}
+                    </h3>
+                  </div>
+
+                  <p className="text-foreground-muted text-sm leading-relaxed flex-1 mt-2">
+                    {prosjekt.desc}
+                  </p>
+                </div>
               </div>
-              <p className="text-foreground-muted text-sm leading-relaxed flex-grow">
-                {prosjekt.desc}
-              </p>
+            );
+          })}
+        </div>
+
+        {/* CTA Banner */}
+        <div className="mt-16 bg-gradient-to-r from-primary/10 via-surface to-accent/10 rounded-3xl p-8 sm:p-12 border border-border flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+              <Lightbulb className="w-4 h-4" />
+              <span>Har du en idé?</span>
             </div>
-          ))}
+            <h3 className="text-2xl font-bold text-foreground">Vil du starte et initiativ i Tønsberg?</h3>
+            <p className="text-foreground-muted text-sm max-w-xl">
+              Tønsberglivet bistår aktører, frivillige og næringsliv med rådgivning, koordinering og synlighet for arrangementer og byromsaktiviteter.
+            </p>
+          </div>
+          <Link
+            href="/kontakt"
+            className="inline-flex items-center gap-2 px-6 py-3.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-2xl shadow-md transition-all shrink-0"
+          >
+            <span>Ta kontakt med oss</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
     </main>

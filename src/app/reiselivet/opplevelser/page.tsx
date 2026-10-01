@@ -5,16 +5,38 @@ import Link from 'next/link';
 import { HeritageSection } from '@/components/culture/HeritageSection';
 import { OceanConditionsWidget } from '@/components/weather/OceanConditionsWidget';
 
+import Image from 'next/image';
+
 export const metadata: Metadata = {
   title: 'Opplevelser, Kulturarv & Natur | Tønsberglivet',
   description: 'Utforsk Verdens Ende, Færder Nasjonalpark, Slottsfjellet og Norges eldste by.',
 };
 
 const attractions = [
-  { name: 'Verdens Ende & Vippefyret', area: 'Tjøme / Færder', desc: 'Ikonisk fyrtårn og svaberg på spissen av Tjøme med mektig utsikt mot Skagerrak og Færder fyr.' },
-  { name: 'Færder Nasjonalpark', area: 'Skjærgården', desc: 'En av Norges mest fantastiske marine nasjonalparker for padling, dykking, bading og kyststier.' },
-  { name: 'Bolærne Øyene', area: 'Nøtterøy Skjærgård', desc: 'Historiske øyer med kystfort, turstier og fergebåt fra Tønsberg Brygge.' },
-  { name: 'Moutmarka & Bekkevika', area: 'Sør-Tjøme', desc: 'Fredet kystområde med rullesteinstrender, unikt planteliv og kvelds-solnedgang.' },
+  {
+    name: 'Verdens Ende & Vippefyret',
+    area: 'Tjøme / Færder',
+    desc: 'Ikonisk fyrtårn og værbitte svaberg på spissen av Tjøme med mektig panoramautsikt mot Skagerrak og Færder fyr.',
+    image: '/images/tonsberg/sommer_tonsberg.png',
+  },
+  {
+    name: 'Færder Nasjonalpark',
+    area: 'Skjærgården',
+    desc: 'En av Norges mest fantastiske marine nasjonalparker for padling, dykking, bading og spektakulære kyststier.',
+    image: '/images/tonsberg/kajakk_faerder.jpg',
+  },
+  {
+    name: 'Bolærne Øyene',
+    area: 'Nøtterøy Skjærgård',
+    desc: 'Historiske øyer med kystfort, uberørte turstier, gjestehavn og rutebåt direkte fra Tønsberg Brygge.',
+    image: '/images/tonsberg/ostre_bolarne.jpg',
+  },
+  {
+    name: 'Moutmarka & Bekkevika',
+    area: 'Sør-Tjøme',
+    desc: 'Fredet kystområde med rullesteinstrender, unikt planteliv, spennende geologi og uforglemmelige kveldssolnedganger.',
+    image: '/images/tonsberg/brygge_kveldsstemning.jpg',
+  },
 ];
 
 export default function OpplevelserPage() {
@@ -40,19 +62,41 @@ export default function OpplevelserPage() {
         </section>
 
         {/* ── Naturattraksjoner ── */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-bold text-foreground">Kystperler & Nasjonalpark</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-bold text-foreground tracking-tight">Kystperler & Nasjonalpark</h3>
+            <span className="text-xs font-semibold text-foreground-muted">Utforsk Færder & Tønsberg</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {attractions.map((a, idx) => (
-              <div key={idx} className="bg-surface rounded-2xl border border-border p-6 space-y-3 hover:shadow-md transition-all">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-cyan-700 bg-cyan-100 dark:bg-cyan-950 px-3 py-1 rounded-full uppercase tracking-wider">
+              <div
+                key={idx}
+                className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-cyan-500/40 transition-all duration-300 flex flex-col"
+              >
+                <div className="relative h-56 w-full overflow-hidden bg-surface-muted">
+                  <Image
+                    src={a.image}
+                    alt={a.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                  <span className="absolute top-4 right-4 text-xs font-bold text-white bg-cyan-900/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-cyan-400/30">
                     {a.area}
                   </span>
-                  <Compass className="w-5 h-5 text-cyan-600" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <h4 className="font-bold text-xl text-white drop-shadow-sm">{a.name}</h4>
+                  </div>
                 </div>
-                <h4 className="font-bold text-xl text-foreground">{a.name}</h4>
-                <p className="text-sm text-foreground-muted leading-relaxed">{a.desc}</p>
+                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                  <p className="text-sm text-foreground-muted leading-relaxed">{a.desc}</p>
+                  <div className="pt-2">
+                    <span className="inline-flex items-center text-xs font-bold text-cyan-600 dark:text-cyan-400 group-hover:gap-2 gap-1.5 transition-all">
+                      Se turbeskrivelse & kart &rarr;
+                    </span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

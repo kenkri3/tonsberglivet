@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Map, Zap, CheckCircle2, PhoneCall, Building } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'Etablering & Næringsarealer | Tønsberglivet',
@@ -9,10 +10,34 @@ export const metadata: Metadata = {
 };
 
 const areas = [
-  { name: 'Tønsberg Stasjonsområde', type: 'Kollektivknutepunkt', status: 'Under utvikling', desc: 'Moderne kontorlokaler 1.5 time fra Oslo med tog.' },
-  { name: 'Foynkvartalet', type: 'Sentrumskjerne', status: 'Ledige lokaler', desc: 'Prestige-adresse i Nedre Langgate med førsteklasses arkitektur.' },
-  { name: 'Kaldnes Vest', type: 'Sjøfront & Næring', status: 'Under regulering', desc: 'Ny bydel med kombinasjon av høyteknologi, kontor og bolig.' },
-  { name: 'Statens Park', type: 'Helse & Offentlig', status: 'Etablert næringspark', desc: 'Klynge for helsebedrifter, konsulenter og statlige organisasjoner.' },
+  {
+    name: 'Tønsberg Stasjonsområde',
+    type: 'Kollektivknutepunkt',
+    status: 'Under utvikling',
+    desc: 'Moderne kontorlokaler kun 1 time og 15 minutter fra Oslo S med tog.',
+    image: '/images/tonsberg/tonsberg_panorama.jpg',
+  },
+  {
+    name: 'Foynkvartalet & Bryggekanten',
+    type: 'Sentrumskjerne',
+    status: 'Ledige lokaler',
+    desc: 'Prestige-adresse i Nedre Langgate med førsteklasses arkitektur og utsikt mot kanalen.',
+    image: '/images/tonsberg/brygga_full.jpg',
+  },
+  {
+    name: 'Kaldnes Vest & Sjøfronten',
+    type: 'Sjøfront & Næring',
+    status: 'Under regulering',
+    desc: 'Ny urban bydel med kombinasjon av høyteknologi, kontorfellesskap og sjønære boliger.',
+    image: '/images/tonsberg/kaldnes_havn.jpg',
+  },
+  {
+    name: 'Statens Park',
+    type: 'Helse & Offentlig',
+    status: 'Etablert næringspark',
+    desc: 'Regional klynge for helsebedrifter, konsulenter, rådgivere og offentlige organisasjoner.',
+    image: '/images/tonsberg/torvet_tonsberg.jpg',
+  },
 ];
 
 export default function EtableringPage() {
@@ -27,19 +52,41 @@ export default function EtableringPage() {
       />
 
       <div className="container mx-auto px-4 mt-12 space-y-12 max-w-6xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {areas.map((a, idx) => (
-            <div key={idx} className="bg-surface rounded-2xl border border-border p-6 space-y-3 hover:shadow-md transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-primary bg-primary-light px-3 py-1 rounded-full uppercase tracking-wider">
-                  {a.type}
-                </span>
-                <span className="text-xs font-semibold text-success bg-success-light px-2.5 py-0.5 rounded-full">
-                  {a.status}
-                </span>
+            <div
+              key={idx}
+              className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-blue-500/40 transition-all duration-300 flex flex-col"
+            >
+              <div className="relative h-56 w-full overflow-hidden bg-surface-muted">
+                <Image
+                  src={a.image}
+                  alt={a.name}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                  <span className="text-xs font-bold text-white bg-blue-900/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-blue-400/30">
+                    {a.type}
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-300 bg-emerald-950/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-emerald-500/30">
+                    {a.status}
+                  </span>
+                </div>
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="font-bold text-xl text-white drop-shadow-sm">{a.name}</h3>
+                </div>
               </div>
-              <h3 className="font-bold text-xl text-foreground">{a.name}</h3>
-              <p className="text-sm text-foreground-muted leading-relaxed">{a.desc}</p>
+              <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <p className="text-sm text-foreground-muted leading-relaxed">{a.desc}</p>
+                <div className="pt-2">
+                  <span className="inline-flex items-center text-xs font-bold text-primary group-hover:gap-2 gap-1.5 transition-all">
+                    Les om området og prosjektene &rarr;
+                  </span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -47,7 +94,7 @@ export default function EtableringPage() {
         <div className="bg-surface-muted border border-border rounded-3xl p-8 text-center space-y-4">
           <h3 className="text-2xl font-bold text-foreground">Trenger du rådgivning om etablering?</h3>
           <p className="text-sm text-foreground-muted max-w-lg mx-auto">
-            Ta kontakt med oss i Tønsberglivet for å bli satt i direkte kontakt med næringsavdelingen i kommune og regionale investorer.
+            Ta kontakt med oss i Tønsberglivet for å bli satt i direkte kontakt med næringsavdelingen i kommunen og regionale investorer.
           </p>
           <Link
             href="/kontakt"

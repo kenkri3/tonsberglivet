@@ -19,42 +19,81 @@ const venues = [
 
 export default function MatOgDrikkePage() {
   return (
-    <main className="min-h-screen pb-20">
+    <main className="min-h-screen pb-20 bg-background">
       <HeroSection
         title="Mat & Drikke"
         subtitle="Uteservering på Brygga & Lokale Smaker"
         description="Nyt nydelig mat fra byens beste restauranter, slapp av på koselige kaffebarer eller opplev den unike bryggestemningen i Tønsberg."
-        backgroundGradient="linear-gradient(135deg, #D97706, #F59E0B)"
+        backgroundGradient="linear-gradient(135deg, #b45309 0%, #d97706 50%, #16193d 100%)"
         compact={true}
       />
 
-      <div className="container mx-auto px-4 mt-12 space-y-12 max-w-6xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 md:mt-16 space-y-12 sm:space-y-16">
+        
+        {/* Featured Photo Banner */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-surface rounded-3xl p-6 sm:p-10 border border-border/80 shadow-md">
+          <div className="lg:col-span-7 space-y-4">
+            <span className="text-xs font-bold text-amber-600 uppercase tracking-widest block">
+              Gastronomi & Bryggeliv
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Uteservering i Norges eldste by
+            </h2>
+            <p className="text-foreground-muted text-sm sm:text-base leading-relaxed font-light">
+              Tønsberg Brygge er kjent som en av landets mest pulserende mat- og utelivsstriper. Enten du ønsker ferske reker på bryggekanten, italiensk steinovnspizza eller gourmetopplevelser i historiske omgivelser, har byen noe for enhver gane.
+            </p>
+            <div className="pt-2 flex flex-wrap gap-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface-muted text-foreground-muted">
+                <Utensils className="w-3.5 h-3.5 text-amber-500" /> Over 40 serveringssteder
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface-muted text-foreground-muted">
+                <Sun className="w-3.5 h-3.5 text-amber-500" /> Kveldssol på brygga
+              </span>
+            </div>
+          </div>
+          <div className="lg:col-span-5 relative aspect-[16/10] rounded-2xl overflow-hidden shadow-lg border border-border">
+            <img 
+              src="/images/tonsberg/mat_og_drikke_tonsberg.jpg" 
+              alt="Matopplevelser og uteservering på Tønsberg Brygge" 
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        </div>
+
+        {/* Venues Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {venues.map((v, idx) => (
-            <div key={idx} className="bg-surface rounded-2xl border border-border p-6 space-y-3 hover:shadow-md transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  {v.category}
-                </span>
-                <span className="text-xs font-semibold text-foreground-subtle">{v.area}</span>
+            <div key={idx} className="bg-surface rounded-3xl border border-border/80 p-6 sm:p-7 space-y-3 hover:shadow-xl hover:border-amber-500/30 transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-amber-600 bg-amber-500/10 px-3 py-1 rounded-full uppercase tracking-wider">
+                    {v.category}
+                  </span>
+                  <span className="text-xs font-semibold text-foreground-subtle">{v.area}</span>
+                </div>
+                <h3 className="font-bold text-xl text-foreground mb-2">{v.name}</h3>
+                <p className="text-sm text-foreground-muted leading-relaxed font-light">{v.desc}</p>
               </div>
-              <h3 className="font-bold text-lg text-foreground">{v.name}</h3>
-              <p className="text-sm text-foreground-muted leading-relaxed">{v.desc}</p>
+              <div className="pt-4 border-t border-border/40 flex items-center justify-between text-xs text-foreground-subtle">
+                <span>Sentrum / Brygga</span>
+                <span className="text-primary font-semibold">Tønsberglivet partner</span>
+              </div>
             </div>
           ))}
         </div>
 
         {/* CTA for Arrangementer */}
-        <div className="bg-gradient-to-r from-primary to-blue-700 text-white rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-          <div>
-            <h3 className="text-2xl font-bold mb-2">Hva skjer på matfronten?</h3>
-            <p className="text-blue-100 text-sm max-w-lg">
-              Sjekk arrangementskalenderen for matfestivaler, vin-smakinger og konserter i Foynhagen.
+        <div className="bg-gradient-to-r from-primary via-blue-700 to-indigo-900 text-white rounded-3xl p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="space-y-2 text-center md:text-left">
+            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Hva skjer på matfronten?</h3>
+            <p className="text-blue-100 text-sm sm:text-base max-w-xl font-light">
+              Sjekk arrangementskalenderen for Spis Ute Uka, matmarkeder, vin-smakinger og sommerens konserter i Foynhagen.
             </p>
           </div>
           <Link
             href="/eventer"
-            className="px-6 py-3.5 bg-white text-primary font-bold rounded-xl hover:bg-blue-50 transition-colors shrink-0 shadow-md"
+            className="px-8 py-4 bg-white text-slate-900 font-bold text-sm rounded-2xl hover:bg-slate-100 transition-all shrink-0 shadow-lg"
           >
             Se Arrangementer
           </Link>

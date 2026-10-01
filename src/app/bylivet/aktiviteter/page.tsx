@@ -3,16 +3,42 @@ import { HeroSection } from '@/components/ui/HeroSection';
 import { Compass, Landmark, Music, Drama, Users, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
+import Image from 'next/image';
+
 export const metadata: Metadata = {
   title: 'Kultur & Aktiviteter | Tønsberglivet',
   description: 'Opplev Slottsfjellet, Oseberg Kulturhus, Tønsberg Bibliotek og spennende byaktiviteter.',
 };
 
 const activities = [
-  { title: 'Slottsfjellet & Tårnet', desc: 'Norges største ruinepark fra middelalderen med fantastisk utsikt over hele byfjorden.', icon: Landmark },
-  { title: 'Oseberg Kulturhus', desc: 'Teater, standup, konserter og store nasjonale forestillinger midt i sentrum.', icon: Drama },
-  { title: 'Kajakk & Padling', desc: 'Padle gjennom Kanalen, rundt Kaldnes og ut mot Færder Nasjonalpark.', icon: Compass },
-  { title: 'Tønsberg Bibliotek', desc: 'Bynære kulturarrangementer, språktrening, brettspillkvelder og barneaktiviteter.', icon: Users },
+  {
+    title: 'Slottsfjellet & Tårnet',
+    desc: 'Norges største ruinepark fra middelalderen med fantastisk panoramautsikt over hele byfjorden.',
+    icon: Landmark,
+    image: '/images/tonsberg/slottsfjellet.jpg',
+    tag: 'Historisk landemerke',
+  },
+  {
+    title: 'Oseberg Kulturhus',
+    desc: 'Teater, standup, konserter og store nasjonale forestillinger på bryggekanten midt i sentrum.',
+    icon: Drama,
+    image: '/images/tonsberg/kultur_tonsberg.jpg',
+    tag: 'Scene & Konserter',
+  },
+  {
+    title: 'Kajakk & Padling',
+    desc: 'Padle gjennom Kanalen, rundt Kaldnes og ut mot den fantastiske Færder Nasjonalpark.',
+    icon: Compass,
+    image: '/images/tonsberg/kajakk_faerder.jpg',
+    tag: 'Fjordsafari',
+  },
+  {
+    title: 'Tønsberg Bibliotek & Byliv',
+    desc: 'Bynære kulturarrangementer, forfatterkvelder, språktrening, brettspill og barneaktiviteter.',
+    icon: Users,
+    image: '/images/tonsberg/fotograf_varpe_tonsberg.jpg',
+    tag: 'Kulturmøteplass',
+  },
 ];
 
 export default function AktiviteterPage() {
@@ -27,16 +53,41 @@ export default function AktiviteterPage() {
       />
 
       <div className="container mx-auto px-4 mt-12 space-y-12 max-w-6xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {activities.map((act, idx) => {
             const Icon = act.icon;
             return (
-              <div key={idx} className="bg-surface rounded-2xl border border-border p-6 space-y-3 hover:shadow-md transition-all">
-                <div className="p-3 bg-purple-100 dark:bg-purple-950 text-purple-600 rounded-xl w-fit">
-                  <Icon className="w-6 h-6" />
+              <div
+                key={idx}
+                className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-purple-500/40 transition-all duration-300 flex flex-col"
+              >
+                <div className="relative h-60 w-full overflow-hidden bg-surface-muted">
+                  <Image
+                    src={act.image}
+                    alt={act.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+                  <span className="absolute top-4 right-4 text-xs font-bold text-white bg-purple-900/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-purple-400/30">
+                    {act.tag}
+                  </span>
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3">
+                    <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl text-white">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-bold text-xl text-white drop-shadow-sm">{act.title}</h3>
+                  </div>
                 </div>
-                <h3 className="font-bold text-xl text-foreground">{act.title}</h3>
-                <p className="text-sm text-foreground-muted leading-relaxed">{act.desc}</p>
+                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                  <p className="text-sm text-foreground-muted leading-relaxed">{act.desc}</p>
+                  <div className="pt-2">
+                    <span className="inline-flex items-center text-xs font-bold text-purple-600 dark:text-purple-400 group-hover:gap-2 gap-1.5 transition-all">
+                      Les mer om opplevelsen &rarr;
+                    </span>
+                  </div>
+                </div>
               </div>
             );
           })}

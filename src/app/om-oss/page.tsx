@@ -1,153 +1,265 @@
 import { Metadata } from 'next';
-import { HeroSection } from '@/components/ui/HeroSection';
-import { Users, Target, Building2, CalendarHeart, Handshake, Link as LinkIcon, Heart } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { HeroSection } from '@/components/ui/HeroSection';
+import { 
+  Users, 
+  Target, 
+  Building2, 
+  CalendarHeart, 
+  Handshake, 
+  Sparkles, 
+  Eye, 
+  Heart, 
+  Zap, 
+  ArrowRight,
+  ShieldCheck,
+  Mail,
+  Phone
+} from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Om Oss - Tønsberglivet',
-  description: 'Bli kjent med Tønsberglivet AS, vårt samfunnsoppdrag og organisering.',
+  title: 'Om Oss | Tønsberglivet',
+  description: 'Bli kjent med Tønsberglivet AS, vårt samfunnsoppdrag for Norges eldste by og vår organisering.',
 };
+
+const pillars = [
+  {
+    title: 'Mer synlighet',
+    desc: 'Løfte frem alt det fantastiske som skjer i Tønsberg og Færder gjennom helhetlig markedsføring og felles digitale kanaler.',
+    icon: Eye,
+    color: 'from-blue-600 to-cyan-500',
+  },
+  {
+    title: 'Mer stolthet',
+    desc: 'Bygge lokal identitet og patriotisme. Være stolte av vår unike historie, kulturarv og det pulserende fellesskapet vi har i dag.',
+    icon: Heart,
+    color: 'from-rose-500 to-pink-500',
+  },
+  {
+    title: 'Mer liv',
+    desc: 'Skape aktiviteter, markeder, kultur og arrangementer som fyller gater, torg og bryggekanter gjennom alle årets fire årstider.',
+    icon: Sparkles,
+    color: 'from-amber-500 to-orange-500',
+  },
+  {
+    title: 'Mer kraft',
+    desc: 'Styrke næringslivet, tiltrekke nye etableringer og skape robuste samarbeidsarenaer mellom kommune, gårdeiere og handelsstand.',
+    icon: Zap,
+    color: 'from-emerald-500 to-teal-500',
+  },
+];
+
+const teamMembers = [
+  {
+    name: 'Jonas M. Hauge',
+    role: 'Daglig Leder',
+    email: 'jonas@tonsberglivet.no',
+    phone: '+47 971 69 755',
+    bio: 'Brenner for byutvikling, næringsvekst og levende byrom i Norges eldste by.',
+  },
+  {
+    name: 'Maren Solberg',
+    role: 'Prosjektleder Byliv & Torv',
+    email: 'torvet@tonsberglivet.no',
+    phone: '+47 900 12 345',
+    bio: 'Ansvarlig for markeder, torvleie, Tønsbergdagen og sesongbaserte byaktiviteter.',
+  },
+  {
+    name: 'Henrik Lindqvist',
+    role: 'Kommunikasjon & Digitale Kanaler',
+    email: 'post@tonsberglivet.no',
+    phone: '+47 912 34 567',
+    bio: 'Formidler de gode historiene og drifter portal, sosiale medier og felleskampanjer.',
+  },
+];
+
+const boardMembers = [
+  { role: 'Styreleder', rep: 'Tønsberg Næringsforening & Handel' },
+  { role: 'Nestleder', rep: 'Tønsberg Kommune v/ Byutvikling' },
+  { role: 'Styremedlem', rep: 'Gårdeierforeningen i Sentrum' },
+  { role: 'Styremedlem', rep: 'Reiseliv & Opplevelsesnæringen' },
+  { role: 'Styremedlem', rep: 'Kulturlivet & Frivilligheten' },
+];
 
 export default function OmOssPage() {
   return (
-    <main className="min-h-screen pb-20">
+    <main className="min-h-screen pb-20 bg-background">
       <HeroSection 
         title="Om Tønsberglivet" 
         subtitle="Hvem er vi?" 
-        backgroundGradient="linear-gradient(135deg, #1E3A5F, #0F172A)"
+        description="Tønsberglivet AS er et non-profit bysamarbeid som samler kommune, næringsliv og innbyggere for å utvikle regionen til et enda mer pulserende og attraktivt sted."
+        backgroundGradient="linear-gradient(135deg, #16193d 0%, #1e3a5f 50%, #0c0e24 100%)"
         compact={true}
       />
 
-      <div className="container mx-auto px-4 mt-12 space-y-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 md:mt-16 space-y-16 sm:space-y-20">
         
-        {/* Om Selskapet & Samfunnsoppdraget */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Building2 className="w-6 h-6 text-blue-600" />
-              Selskapet
+        {/* Selskapet Hero Feature */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-surface rounded-3xl p-6 sm:p-10 md:p-12 border border-border/80 shadow-md">
+          <div className="lg:col-span-7 space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+              <Building2 className="w-4 h-4" />
+              <span>Aksjeselskap uten utbytte</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
+              Et unikt spleiselag for byens fremtid
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Tønsberglivet AS er et aksjeselskap med ikke-økonomisk formål (uten utbytte). Vårt hovedmål er å utvikle regionen og skape et levende by- og næringsliv i Tønsberg.
+            <p className="text-foreground-muted text-base leading-relaxed">
+              Tønsberglivet AS ble stiftet med ett eneste formål: å styrke Tønsberg som fylkets ubestridte handelssentrum, kystsmykke og vekstmotor. Vi deler ikke ut utbytte – hver eneste krone reinvesteres i fysiske tiltak, fellesmarkedsføring, pynting, renhold og arrangementer.
             </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              Alt overskudd reinvesteres i aktiviteter og prosjekter som kommer byen til gode.
-            </p>
+            <div className="pt-2 flex flex-wrap gap-4 text-xs font-semibold text-foreground-subtle">
+              <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> Org.nr: 921 547 381</span>
+              <span>•</span>
+              <span>Rådhusgaten 1, 3126 Tønsberg</span>
+            </div>
           </div>
           
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Target className="w-6 h-6 text-blue-600" />
+          <div className="lg:col-span-5 relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border border-border">
+            <img 
+              src="/images/tonsberg/tonsberg_panorama.jpg" 
+              alt="Utsikt over Tønsberg by og brygge" 
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        </section>
+
+        {/* Samfunnsoppdraget - De fire søylene */}
+        <section className="space-y-8">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary block">
+              Vårt Formål
+            </span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">
               Samfunnsoppdraget
             </h2>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3">
-                <Heart className="w-5 h-5 text-red-500" />
-                <span className="font-medium">Mer stolthet</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Heart className="w-5 h-5 text-red-500" />
-                <span className="font-medium">Mer synlighet</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Heart className="w-5 h-5 text-red-500" />
-                <span className="font-medium">Mer liv</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Heart className="w-5 h-5 text-red-500" />
-                <span className="font-medium">Mer kraft</span>
-              </li>
-            </ul>
-          </div>
-        </section>
-
-        {/* Organisering */}
-        <section>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <Handshake className="w-6 h-6 text-blue-600" />
-              Organisering
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-3xl">
-              Tønsberglivet er et unikt spleiselag og samarbeidsprosjekt mellom Tønsberg kommune, det lokale næringslivet, gårdeiere og andre sentrale aktører i regionen. Sammen bygger vi fremtidens Tønsberg.
+            <p className="text-foreground-muted text-sm sm:text-base font-light">
+              Fire felles løft som styrer alt vi gjør fra dag til dag.
             </p>
           </div>
-        </section>
 
-        {/* Team og Styre */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Users className="w-6 h-6 text-blue-600" />
-              Ansatte
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {pillars.map((pillar, idx) => {
+              const Icon = pillar.icon;
+              return (
+                <div 
+                  key={idx}
+                  className="bg-surface rounded-3xl p-6 sm:p-7 border border-border/80 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all flex flex-col justify-between"
+                >
                   <div>
-                    <h3 className="font-semibold">Navn Navnesen</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Tittel / Rolle</p>
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${pillar.color} text-white flex items-center justify-center mb-5 shadow-sm`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">
+                      {pillar.title}
+                    </h3>
+                    <p className="text-sm text-foreground-muted leading-relaxed">
+                      {pillar.desc}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-          
-          <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <Users className="w-6 h-6 text-blue-600" />
-              Styret
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                  <div>
-                    <h3 className="font-semibold text-sm">Styremedlem</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Representerer X</p>
+        </section>
+
+        {/* Team & Ansatte */}
+        <section className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border pb-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary block mb-1">
+                Folkene Bak
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+                Administrasjonen i Tønsberglivet
+              </h2>
+            </div>
+            <p className="text-xs text-foreground-subtle">
+              Vi holder til i Rådhusgaten 1
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {teamMembers.map((member, i) => (
+              <div 
+                key={i} 
+                className="bg-surface rounded-3xl p-6 sm:p-7 border border-border/80 shadow-sm flex flex-col justify-between space-y-5 hover:shadow-md transition-shadow"
+              >
+                <div className="space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">
+                    {member.name.split(' ').map(n => n[0]).join('')}
                   </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-foreground">{member.name}</h3>
+                    <p className="text-xs font-semibold text-primary">{member.role}</p>
+                  </div>
+                  <p className="text-xs text-foreground-muted leading-relaxed">
+                    {member.bio}
+                  </p>
                 </div>
-              ))}
-            </div>
+
+                <div className="pt-4 border-t border-border/60 space-y-2 text-xs text-foreground-muted">
+                  <a href={`mailto:${member.email}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                    <Mail className="w-3.5 h-3.5 text-primary" /> {member.email}
+                  </a>
+                  <a href={`tel:${member.phone}`} className="flex items-center gap-2 hover:text-primary transition-colors">
+                    <Phone className="w-3.5 h-3.5 text-primary" /> {member.phone}
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Aktiviteter */}
-        <section>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <CalendarHeart className="w-6 h-6 text-blue-600" />
-              Våre aktiviteter
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                <h3 className="font-semibold mb-2">Tønsbergdagen</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Vår store byfest som samler tusenvis av besøkende hvert år.</p>
-              </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                <h3 className="font-semibold mb-2">Markeder</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Organisering av Bondens marked, julemarked og andre torvaktiviteter.</p>
-              </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                <h3 className="font-semibold mb-2">Julepynting</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Ansvarlig for den magiske julebelysningen i byens gater.</p>
-              </div>
+        {/* Styret */}
+        <section className="bg-surface rounded-3xl p-8 sm:p-10 border border-border/80 shadow-sm space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <Users className="w-5 h-5" />
             </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Styret i Tønsberglivet AS</h2>
+              <p className="text-xs text-foreground-muted">Bred representasjon fra offentlig og privat sektor</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {boardMembers.map((b, idx) => (
+              <div key={idx} className="p-4 rounded-2xl bg-surface-muted border border-border flex items-center gap-3.5">
+                <div className="w-9 h-9 rounded-xl bg-surface flex items-center justify-center text-primary font-bold text-sm shadow-2xs">
+                  {idx + 1}
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-foreground">{b.role}</h4>
+                  <p className="text-xs text-foreground-muted">{b.rep}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Lenker */}
-        <section className="flex flex-wrap gap-4 justify-center py-8">
-          <Link href="/om-oss/partnere" className="flex items-center gap-2 px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium">
-            <LinkIcon className="w-4 h-4" /> Våre partnere
+        {/* Handlingsknapper / Hurtiglenker */}
+        <section className="flex flex-wrap gap-4 justify-center pt-4">
+          <Link 
+            href="/om-oss/partnere" 
+            className="inline-flex items-center gap-2 px-7 py-3.5 bg-primary hover:bg-primary-hover text-white rounded-full font-bold text-sm shadow-md transition-all"
+          >
+            <span>Se våre partnere</span>
+            <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link href="/kontakt" className="flex items-center gap-2 px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium">
-            <LinkIcon className="w-4 h-4" /> Kontakt oss
+          <Link 
+            href="/kontakt" 
+            className="inline-flex items-center gap-2 px-7 py-3.5 bg-surface hover:bg-surface-muted text-foreground border border-border rounded-full font-bold text-sm shadow-2xs transition-all"
+          >
+            <span>Kontakt oss</span>
           </Link>
-          <a href="#" className="flex items-center gap-2 px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors font-medium">
-            <LinkIcon className="w-4 h-4" /> Presserom
-          </a>
+          <Link 
+            href="/prosjekter" 
+            className="inline-flex items-center gap-2 px-7 py-3.5 bg-surface hover:bg-surface-muted text-foreground border border-border rounded-full font-bold text-sm shadow-2xs transition-all"
+          >
+            <span>Våre prosjekter</span>
+          </Link>
         </section>
 
       </div>

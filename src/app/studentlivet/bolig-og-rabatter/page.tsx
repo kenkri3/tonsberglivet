@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { GraduationCap, Home, Percent, HeartHandshake, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'Studentbolig & Rabatter | Tønsberglivet',
@@ -9,10 +10,30 @@ export const metadata: Metadata = {
 };
 
 const studentOffers = [
-  { title: 'Studentsamskipnaden i Sørøst-Norge (SSN)', category: 'Bolig & Helse', desc: 'SSN tilbyr moderne studentboliger på Campus Vestfold / Eik og helserefusjonsordning for studenter.' },
-  { title: 'Studentrabatter i Sentrum', category: 'Handel & Kafé', desc: 'Vis gyldig studentbevis hos over 40 butikker, kaffebarer og treningssentre i Tønsberg.' },
-  { title: 'Ung Arena+ Tønsberg', category: 'Helse & Møteplass', desc: 'Lavterskel helsetilbud, rådgivning og gratis samtalepartnere for unge og studenter.' },
-  { title: 'Kollektivtransport (VKT)', desc: 'Studentrabatt på busslinjene mellom Tønsberg sentrum, Bakkenteigen / Campus Vestfold.' },
+  {
+    title: 'Studentsamskipnaden (SSN)',
+    category: 'Bolig & Velferd',
+    desc: 'SSN tilbyr moderne studentboliger på Campus Vestfold og Eik, samt generøs helserefusjonsordning for studenter.',
+    image: '/images/tonsberg/studentlivet_usn.jpg',
+  },
+  {
+    title: 'Studentrabatter i Sentrum',
+    category: 'Handel & Kafé',
+    desc: 'Vis gyldig studentbevis og få eksklusive studentrabatter hos over 40 butikker, kaffebarer og treningssentre.',
+    image: '/images/tonsberg/fotograf_varpe_tonsberg.jpg',
+  },
+  {
+    title: 'Ung Arena+ Tønsberg',
+    category: 'Helse & Møteplass',
+    desc: 'Lavterskel helsetilbud, rådgivning, karriereveiledning og sosiale kvelder for unge og studenter.',
+    image: '/images/tonsberg/student_tonsberg.jpg',
+  },
+  {
+    title: 'Kollektivtransport & Tog',
+    category: 'VKT & Vy',
+    desc: 'Svært gode bussforbindelser mellom Tønsberg sentrum, Bakkenteigen og direkte togforbindelse mot Oslo.',
+    image: '/images/tonsberg/tonsberg_panorama.jpg',
+  },
 ];
 
 export default function StudentBoligOgRabatterPage() {
@@ -27,17 +48,36 @@ export default function StudentBoligOgRabatterPage() {
       />
 
       <div className="container mx-auto px-4 mt-12 space-y-12 max-w-6xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {studentOffers.map((o, idx) => (
-            <div key={idx} className="bg-surface rounded-2xl border border-border p-6 space-y-3 hover:shadow-md transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-red-700 bg-red-100 dark:bg-red-950 px-3 py-1 rounded-full uppercase tracking-wider">
+            <div
+              key={idx}
+              className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-red-500/40 transition-all duration-300 flex flex-col"
+            >
+              <div className="relative h-56 w-full overflow-hidden bg-surface-muted">
+                <Image
+                  src={o.image}
+                  alt={o.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                <span className="absolute top-4 right-4 text-xs font-bold text-white bg-red-900/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-red-400/30">
                   {o.category}
                 </span>
-                <GraduationCap className="w-5 h-5 text-red-600" />
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h3 className="font-bold text-xl text-white drop-shadow-sm">{o.title}</h3>
+                </div>
               </div>
-              <h3 className="font-bold text-xl text-foreground">{o.title}</h3>
-              <p className="text-sm text-foreground-muted leading-relaxed">{o.desc}</p>
+              <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <p className="text-sm text-foreground-muted leading-relaxed">{o.desc}</p>
+                <div className="pt-2">
+                  <span className="inline-flex items-center text-xs font-bold text-red-600 dark:text-red-400 group-hover:gap-2 gap-1.5 transition-all">
+                    Les mer om ordningen &rarr;
+                  </span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
