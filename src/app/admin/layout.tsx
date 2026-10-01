@@ -17,6 +17,7 @@ import {
   TrendingUp,
   CreditCard,
   Sparkles,
+  Bot,
   Menu,
   X,
   ChevronLeft,
@@ -26,6 +27,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const adminNav = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { label: 'Autonom Agent Hub', href: '/admin/agent', icon: Bot, badge: 'Live AI' },
   { label: 'Artikler', href: '/admin/artikler', icon: FileText },
   { label: 'Torvleie & Byrom', href: '/admin/booking', icon: MapPin, badge: '5 nye' },
   { label: 'Byskjermer & Marked', href: '/admin/marketing', icon: Tv, badge: '4K' },
@@ -151,6 +153,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
 
             <div className="flex items-center gap-3">
+              <Link
+                href="/admin/agent"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-semibold transition-colors"
+                title="Åpne Autonom Agent Studio"
+              >
+                <Bot className="w-3.5 h-3.5" />
+                <span>AI Agent</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              </Link>
               <ThemeToggle />
               <div className="flex items-center gap-3 pl-3 border-l border-border">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-xs">
@@ -170,5 +181,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
-
-

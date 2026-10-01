@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ConsentBanner } from '@/components/ui/ConsentBanner';
+import { AgentWebWidget } from '@/components/agent/AgentWebWidget';
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -19,6 +20,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 pt-[var(--header-height)]">{children}</main>
       <Footer />
       <ConsentBanner />
+      <AgentWebWidget />
     </>
   );
 }
