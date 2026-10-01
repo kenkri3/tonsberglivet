@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { approveAndConfirmBooking } from '@/lib/email';
+import { searchCompanies } from '@/lib/brreg';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,6 +113,18 @@ const MCP_TOOLS = [
       properties: {
         sokeord: { type: 'string', description: 'Søkeord (f.eks. "pizza", "uteservering", "hotell", "kaffe")' },
         kategori: { type: 'string', description: 'Valgfri kategori' },
+      },
+    },
+  },
+  {
+    name: 'sok_bedrifter_brreg',
+    description:
+      'Søker etter bedrifter, SMB (små og mellomstore bedrifter), næringsdrivende, aksjeselskaper (AS), enkeltpersonforetak og bransjer i Tønsberg og Færder direkte i det offisielle Enhetsregisteret (Brønnøysundregistrene). Returnerer organisasjonsnummer, selskapsnavn, bransje, adresse og kildelenker.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        sokeord: { type: 'string', description: 'Bedriftsnavn, bransje eller søkeord (f.eks. "SMB", "teknologi", "bygg", "regnskap", "revisjon", "konsulent")' },
+        limit: { type: 'number', description: 'Maks antall treff (standard 6)' },
       },
     },
   },
@@ -265,6 +278,23 @@ async function executeToolCall(toolName: string, args: any) {
       }).catch(() => []);
 
       if (places.length === 0) {
+        // Fallback til Brønnøysundregistrene dersom det ikke er treff i portalens lokale database
+        const brregHits = await searchCompanies(query, undefined, 6).catch(() => []);
+        if (brregHits.length > 0) {
+          return (
+            `Ingen direkte treff i portal-katalogen for «${args.sokeord}», men fant følgende bedrifter i Brønnøysundregistrene for Tønsberg:\n\n` +
+            brregHits
+              .map(
+                (c, i) =>
+                  `${i + 1}. **${c.name}** (${c.orgForm})\n` +
+                  `   • Bransje: ${c.industry}\n` +
+                  `   • Org.nr: ${c.orgNr}\n` +
+                  `   • Adresse: ${c.address || c.city || 'Tønsberg'}\n` +
+                  `   • Kilde: https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgNr}`
+              )
+              .join('\n\n')
+          );
+        }
         return `Ingen steder funnet for søket «${args.sokeord}».`;
       }
 
@@ -279,6 +309,30 @@ async function executeToolCall(toolName: string, args: any) {
         })),
         null,
         2
+      );
+    }
+
+    case 'sok_bedrifter_brreg': {
+      const query = (args.sokeord || '').trim();
+      const limit = Number(args.limit) || 6;
+      const companies = await searchCompanies(query, undefined, limit);
+
+      if (companies.length === 0) {
+        return `Ingen registrerte bedrifter funnet i Brønnøysundregistrene for «${query}».`;
+      }
+
+      return (
+        `🏢 Registrerte bedrifter i Brønnøysundregistrene for Tønsberg:\n\n` +
+        companies
+          .map(
+            (c, i) =>
+              `${i + 1}. **${c.name}** (${c.orgForm})\n` +
+              `   • Org.nr: ${c.orgNr}\n` +
+              `   • Bransje: ${c.industry}\n` +
+              `   • Adresse: ${c.address || c.city || 'Tønsberg'}\n` +
+              `   • Kilde: https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgNr}`
+          )
+          .join('\n\n')
       );
     }
 

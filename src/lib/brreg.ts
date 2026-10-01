@@ -202,7 +202,15 @@ export async function searchCompanies(query?: string, categoryCode?: string, lim
   // 2. Query search by name or general search in Tønsberg region
   try {
     const params = new URLSearchParams();
-    if (clean) params.set('navn', clean);
+    const isGenericBusinessSearch =
+      !clean ||
+      /\b(smb|bedrift|bedrifter|selskap|selskaper|virksomhet|virksomheter|firma|firmaer)\b/i.test(clean);
+
+    if (clean && !isGenericBusinessSearch) {
+      params.set('navn', clean);
+    } else {
+      params.set('organisasjonsform', 'AS');
+    }
     params.set('kommunenummer', '3905,3911'); // Tønsberg & Færder
     if (categoryCode) params.set('naeringskode', categoryCode);
     params.set('size', String(limit));
