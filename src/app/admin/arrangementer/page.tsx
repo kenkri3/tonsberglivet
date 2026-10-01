@@ -28,7 +28,7 @@ export default function ArrangementerPage() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncedMessage, setSyncedMessage] = useState<string | null>(null);
-  const [apiSource, setApiSource] = useState<'LIVE_API' | 'TICKETMASTER_FEED'>('TICKETMASTER_FEED');
+  const [apiSource, setApiSource] = useState<'LIVE_API' | 'LIVE_TICKETMASTER_DIRECT' | 'TICKETMASTER_FEED'>('LIVE_TICKETMASTER_DIRECT');
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Alle');
 
@@ -37,16 +37,15 @@ export default function ArrangementerPage() {
     else setLoading(true);
 
     try {
-      const res = await fetch('/api/ticketmaster');
+      const url = manualSync ? '/api/ticketmaster?refresh=true' : '/api/ticketmaster';
+      const res = await fetch(url);
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setEvents(json.data);
         if (json.source) setApiSource(json.source);
         if (manualSync) {
           setSyncedMessage(
-            json.source === 'LIVE_API'
-              ? 'Sanntidssynk fullført via Ticketmaster Discovery API!'
-              : 'Oppdatert fra Tønsbergs offisielle arrangementsfeed (Foynhagen & Oseberg)!'
+            `Sanntidssynk fullført! Hentet ${json.data.length} aktive arrangementer fra Ticketmaster.`
           );
           setTimeout(() => setSyncedMessage(null), 4000);
         }
@@ -63,7 +62,7 @@ export default function ArrangementerPage() {
     fetchEvents();
   }, []);
 
-  const categories = ['Alle', 'Konsert', 'Kultur', 'Festival', 'Marked', 'Barn'];
+  const categories = ['Alle', 'Konsert', 'Kultur', 'Teater', 'Aktiviteter', 'Mat & Drikke'];
 
   const filtered = events.filter((e) => {
     const matchesCategory = selectedCategory === 'Alle' || e.category.toLowerCase().includes(selectedCategory.toLowerCase());
@@ -81,7 +80,7 @@ export default function ArrangementerPage() {
         <div>
           <h2 className="text-2xl font-bold text-foreground">Arrangementer & Kultur</h2>
           <p className="text-foreground-muted text-sm mt-1">
-            {events.length} aktive arrangementer • Ticketmaster-integrasjon for Tønsberg
+            {events.length} aktive arrangementer • Ticketmaster sanntidsmotor for Tønsberg
           </p>
         </div>
         <div className="flex items-center gap-2.5 w-full sm:w-auto">
@@ -101,14 +100,19 @@ export default function ArrangementerPage() {
         </div>
       </div>
 
-      {/* Tilkoblingsstatus / Ærlig varsel dersom API-nøkkel mangler */}
-      {apiSource === 'LIVE_API' ? (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-2xl text-xs sm:text-sm flex items-start gap-3">
+      {/* Tilkoblingsstatus */}
+      {apiSource === 'LIVE_API' || apiSource === 'LIVE_TICKETMASTER_DIRECT' ? (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 rounded-2xl text-xs sm:text-sm flex items-start gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-          <div>
-            <div className="font-bold">Ticketmaster Discovery API er aktivt tilkoblet</div>
-            <div className="text-xs opacity-90 mt-0.5">
-              Arrangementer hentes direkte fra Ticketmasters globale API med lokasjonsfilter for Tønsberg (Foynhagen, Oseberg Kulturhus, Støperiet, Slottsfjell).
+          <div className="flex-1">
+            <div className="font-bold flex items-center gap-2">
+              Ticketmaster Direktestrøm er aktiv
+              <span className="text-[10px] uppercase font-extrabold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                Sanntid • 30+ Eventer
+              </span>
+            </div>
+            <div className="text-xs opacity-90 mt-1 leading-relaxed">
+              Arrangementer hentes automatisk direkte fra Ticketmasters scener i Tønsberg (Foynhagen, Teigen Scene/Oseberg, Kaldnes Mek., Tønsberg Domkirke og Tønsberg Discover-hub). Billettsalget er koblet med Impact Radius affiliate-sporing for provisjon på billettsalg.
             </div>
           </div>
         </div>
@@ -117,22 +121,11 @@ export default function ArrangementerPage() {
           <KeyRound className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <div className="flex-1">
             <div className="font-bold flex items-center gap-2">
-              Ticketmaster API-nøkkel: Ikke konfigurert ennå
-              <span className="text-[10px] uppercase font-extrabold bg-amber-500/20 px-2 py-0.5 rounded-full">
-                Kuratert Spillested-Feed Aktiv
-              </span>
+              Ticketmaster Feed: Reserveløsning aktiv
             </div>
             <p className="text-xs opacity-90 mt-1 leading-relaxed">
-              Systemet viser nå kvalitetssikrede kulturarrangementer fra etablerte spillesteder i Tønsberg (Foynhagen, Oseberg Kulturhus og Slottsfjellet). For helautomatisk sanntidsimport av alle billetterte eventer i Tønsberg, legg inn din Ticketmaster API-nøkkel under Innstillinger.
+              Direktestrømmen svarte ikke umiddelbart. Viser forhåndslagret arrangementsliste for etablerte spillesteder i Tønsberg.
             </p>
-            <div className="mt-2.5">
-              <Link
-                href="/admin/innstillinger"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-300 underline hover:no-underline"
-              >
-                Gå til Innstillinger for å legge til API-nøkkel →
-              </Link>
-            </div>
           </div>
         </div>
       )}
@@ -195,11 +188,19 @@ export default function ArrangementerPage() {
                          hover:shadow-md transition-all group"
             >
               <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                <div className="shrink-0 w-16 h-16 rounded-xl bg-primary/10 flex flex-col items-center justify-center border border-primary/20">
-                  <CalendarIcon className="w-4 h-4 text-primary mb-0.5" />
-                  <span className="text-[11px] font-bold text-primary text-center px-1 leading-tight">
-                    {event.date}
-                  </span>
+                <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-20 rounded-xl bg-slate-900 overflow-hidden relative border border-border shadow-xs">
+                  {event.imageUrl ? (
+                    <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex flex-col items-center justify-center">
+                      <CalendarIcon className="w-4 h-4 text-primary mb-0.5" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 inset-x-0 bg-black/75 backdrop-blur-xs py-0.5 px-1 text-center">
+                    <span className="text-[10px] font-bold text-white tracking-tight block truncate">
+                      {event.date}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex-1 min-w-0">

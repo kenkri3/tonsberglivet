@@ -141,10 +141,10 @@ export default async function Home() {
                 {/* Dato-chip */}
                 <div className="absolute top-4 left-4 bg-surface/95 backdrop-blur-md rounded-2xl px-3 py-1.5 text-center shadow-lg border border-border">
                   <span className="block text-[10px] font-bold uppercase tracking-wider text-primary">
-                    {ev.date.split(' ')[1] || 'DATO'}
+                    {ev.date.split(' ')[1]?.toUpperCase() || 'DATO'}
                   </span>
                   <span className="block text-base font-extrabold text-foreground leading-none">
-                    {ev.date.split(' ')[0] || '1'}
+                    {ev.date.split(' ')[0]?.replace('.', '') || '1'}
                   </span>
                 </div>
 

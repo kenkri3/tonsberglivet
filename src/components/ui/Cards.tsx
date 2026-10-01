@@ -46,33 +46,71 @@ interface EventCardProps {
   location?: string;
   category?: string;
   href: string;
+  imageUrl?: string;
+  priceRange?: string;
 }
 
-export function EventCard({ title, date, time, location, category, href }: EventCardProps) {
+export function EventCard({ title, date, time, location, category, href, imageUrl, priceRange }: EventCardProps) {
+  const isExternal = href.startsWith('http');
   return (
-    <Link href={href} className="group block">
+    <Link
+      href={href}
+      className="group block h-full"
+      target={isExternal ? '_blank' : undefined}
+      rel={isExternal ? 'noopener noreferrer' : undefined}
+    >
       <article className="bg-surface rounded-2xl overflow-hidden border border-border
-                          hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-        {/* Dekorativ toppstripe med dato */}
-        <div className="bg-gradient-to-r from-primary to-primary-hover px-6 py-4 text-white">
-          <time className="text-2xl font-bold">{date}</time>
-          {time && <span className="ml-2 text-white/80 text-sm">{time}</span>}
-        </div>
+                          hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+        {imageUrl ? (
+          <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-900">
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute top-3 left-3 bg-surface/90 backdrop-blur-md rounded-xl px-2.5 py-1 text-center shadow-md border border-border">
+              <span className="text-xs font-bold text-foreground block leading-none">{date}</span>
+            </div>
+            {time && (
+              <div className="absolute bottom-2.5 left-3 text-white text-xs font-medium drop-shadow">
+                {time}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-primary to-primary-hover px-6 py-4 text-white">
+            <time className="text-xl font-bold">{date}</time>
+            {time && <span className="ml-2 text-white/80 text-sm">{time}</span>}
+          </div>
+        )}
 
-        <div className="p-6">
-          {category && (
-            <span className="inline-block px-3 py-1 text-xs font-medium bg-primary-light
-                           text-primary rounded-full mb-3">
-              {category}
-            </span>
-          )}
-          <h3 className="text-lg font-semibold text-foreground mb-2
-                         group-hover:text-primary transition-colors line-clamp-2">
-            {title}
-          </h3>
-          {location && (
-            <p className="text-sm text-foreground-muted">{location}</p>
-          )}
+        <div className="p-5 flex-1 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              {category && (
+                <span className="inline-block px-2.5 py-0.5 text-[11px] font-semibold bg-primary-light text-primary rounded-full">
+                  {category}
+                </span>
+              )}
+              {priceRange && (
+                <span className="text-xs font-bold text-foreground-muted">
+                  {priceRange}
+                </span>
+              )}
+            </div>
+            <h3 className="text-base font-bold text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-2">
+              {title}
+            </h3>
+            {location && (
+              <p className="text-xs text-foreground-muted line-clamp-1">{location}</p>
+            )}
+          </div>
+
+          <div className="pt-4 mt-2 border-t border-border flex items-center justify-between text-xs font-semibold text-primary">
+            <span>{isExternal ? 'Kjøp billett' : 'Les mer'}</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </div>
         </div>
       </article>
     </Link>
