@@ -39,7 +39,7 @@ export default function ReiselivetPage() {
 
             {/* Offisiell logo */}
             <div className="pt-2">
-              <ReiselivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+              <ReiselivetLogo className="h-9 md:h-11 w-auto text-amber-400 drop-shadow-md" />
             </div>
 
             <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
@@ -137,16 +137,159 @@ export default function ReiselivetPage() {
 
       {/* ── Overnatting ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="border-b border-border pb-4">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Hoteller & Overnatting</h2>
-          <p className="text-foreground-muted text-sm mt-0.5">Bo komfortabelt ved bryggekanten eller i idylliske herregårdsomgivelser</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-4">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary block mb-1">
+              Førsteklasses Opphold
+            </span>
+            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Hoteller & Overnatting</h2>
+            <p className="text-foreground-muted text-sm mt-0.5">Bo komfortabelt ved bryggekanten eller i idylliske herregårdsomgivelser</p>
+          </div>
+          <Link
+            href="/reiselivet/overnatting"
+            className="text-xs font-bold text-primary hover:underline flex items-center gap-1 shrink-0"
+          >
+            <span>Se alle overnattingssteder</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <SectionCard title="Hotel Klubben" description="Legendarisk hotell midt i hjertet av byen med fantastisk utsikt over havna." href="/reiselivet/overnatting" gradient="linear-gradient(135deg, #1D4ED8, #3B82F6)" />
-          <SectionCard title="Quality Hotel Tønsberg" description="Moderne hotell på Brygga, perfekt for både familier og forretningsreisende." href="/reiselivet/overnatting" gradient="linear-gradient(135deg, #059669, #10B981)" />
-          <SectionCard title="Engø Gård" description="En oase av ro på Tjøme, kjent for gastronomi i særklasse og unik atmosfære." href="/reiselivet/overnatting" gradient="linear-gradient(135deg, #D97706, #F59E0B)" />
-          <SectionCard title="Havna Hotell" description="Idyllisk beliggende på Tjøme med fantastiske bademuligheter og marina." href="/reiselivet/overnatting" gradient="linear-gradient(135deg, #7C3AED, #8B5CF6)" />
+          {/* Quality Hotel Tønsberg */}
+          <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+            <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+              <img
+                src="/images/tonsberg/quality_hotel_tonsberg.jpg"
+                alt="Quality Hotel Tønsberg takbasseng"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-border">
+                Takbasseng & Spa
+              </span>
+            </div>
+            <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-foreground-subtle">Tønsberg Brygge</span>
+                <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                  Quality Hotel Tønsberg
+                </h3>
+                <p className="text-xs text-foreground-muted leading-relaxed">
+                  Moderne bryggehotell med utendørs oppvarmet basseng på taket, The Sense restaurant og panoramautsikt over kanalen.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-border flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Ledige rom</span>
+                <Link
+                  href="/reiselivet/overnatting"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:translate-x-0.5 transition-transform"
+                >
+                  Les mer <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Hotel Klubben */}
+          <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+            <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+              <img
+                src="/images/tonsberg/brygge_kveldsstemning.jpg"
+                alt="Hotel Klubben ved bryggen"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border border-border">
+                Klassiker & Kultur
+              </span>
+            </div>
+            <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-foreground-subtle">Nedre Langgate</span>
+                <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                  Hotel Klubben
+                </h3>
+                <p className="text-xs text-foreground-muted leading-relaxed">
+                  Legendarisk hotell i hjertet av byen. Kjent for revyer, fantastisk beliggenhet og lun atmosfære.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-border flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Sentralt</span>
+                <Link
+                  href="/reiselivet/overnatting"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:translate-x-0.5 transition-transform"
+                >
+                  Les mer <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Engø Gård */}
+          <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+            <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+              <img
+                src="/images/tonsberg/sommer_tonsberg.png"
+                alt="Engø Gård på Tjøme"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 border border-border">
+                Eksklusiv Gourmet
+              </span>
+            </div>
+            <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-foreground-subtle">Tjøme / Færder</span>
+                <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                  Engø Gård Hotel & Restaurant
+                </h3>
+                <p className="text-xs text-foreground-muted leading-relaxed">
+                  En oase av fred og luksus på Tjøme. Stjernegastronomi, historiske herregårdsbygninger og engelsk hage.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-border flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">Michelin-anbefalt</span>
+                <Link
+                  href="/reiselivet/overnatting"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:translate-x-0.5 transition-transform"
+                >
+                  Les mer <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Havna Hotell */}
+          <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+            <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+              <img
+                src="/images/tonsberg/ostre_bolarne.jpg"
+                alt="Havna Hotell Tjøme ved skjærgården"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 border border-border">
+                Skjærgårdshotell
+              </span>
+            </div>
+            <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-foreground-subtle">Røssesund / Havna</span>
+                <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                  Havna Hotell Tjøme
+                </h3>
+                <p className="text-xs text-foreground-muted leading-relaxed">
+                  Hotell og ferieleiligheter rett ved svabergene, med egen gjestehavn, badeanlegg og utsikt mot havet.
+                </p>
+              </div>
+              <div className="pt-3 border-t border-border flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Strand & Båt</span>
+                <Link
+                  href="/reiselivet/overnatting"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:translate-x-0.5 transition-transform"
+                >
+                  Les mer <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

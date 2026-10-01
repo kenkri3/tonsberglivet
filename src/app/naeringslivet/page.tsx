@@ -19,8 +19,8 @@ export default function NaeringslivetPage() {
       <header className="relative min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <img
-            src="/images/grundergata.jpg"
-            alt="Næringslivet og Gründergata i Tønsberg"
+            src="/images/tonsberg/tonsberg_panorama.jpg"
+            alt="Næringslivet og Tønsberg havn panorama"
             className="w-full h-full object-cover object-center scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
@@ -38,7 +38,7 @@ export default function NaeringslivetPage() {
 
             {/* Offisiell logo */}
             <div className="pt-2">
-              <NaeringslivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+              <NaeringslivetLogo className="h-9 md:h-11 w-auto text-purple-400 drop-shadow-md" />
             </div>
 
             <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
@@ -85,7 +85,7 @@ export default function NaeringslivetPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl group">
           <div className="lg:col-span-6 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
             <img
-              src="/images/food.jpg"
+              src="/images/tonsberg/fotograf_varpe_tonsberg.jpg"
               alt="Matgründer på Torvet"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />

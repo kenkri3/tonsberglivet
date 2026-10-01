@@ -22,7 +22,7 @@ export default function HverdagslivetPage() {
       <header className="relative min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <img
-            src="/images/skjaergard.jpg"
+            src="/images/tonsberg/ostre_bolarne.jpg"
             alt="Bo og leve i Tønsbergregionen"
             className="w-full h-full object-cover object-center scale-105"
           />
@@ -41,7 +41,7 @@ export default function HverdagslivetPage() {
 
             {/* Offisiell logo */}
             <div className="pt-2">
-              <HverdagslivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+              <HverdagslivetLogo className="h-9 md:h-11 w-auto text-emerald-400 drop-shadow-md" />
             </div>
 
             <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
@@ -152,27 +152,27 @@ export default function HverdagslivetPage() {
           subtitle="Glimt fra nabolagene, skjærgården, parkene og kulturen i hverdagen."
           photos={[
             {
-              src: '/images/skjaergard.jpg',
-              alt: 'Natur og skjærgård i Tønsberg',
-              caption: 'Kyst & Nærmiljø',
-              location: 'Færder / Tønsberg',
+              src: '/images/tonsberg/ostre_bolarne.jpg',
+              alt: 'Natur og skjærgård i Tønsberg og Færder',
+              caption: 'Kyst & Nærmiljø i Skjærgården',
+              location: 'Østre Bolærne / Færder',
               category: 'Friluftsliv',
-              photographer: 'Visit Færder',
-            },
-            {
-              src: '/images/slottsfjellet.jpg',
-              alt: 'Middelalderparken på Slottsfjellet',
-              caption: 'Rekreasjon på Slottsfjellet',
-              location: 'Slottsfjellet',
-              category: 'Kultur & Park',
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/regnbue.jpg',
-              alt: 'Regnbue over Tønsberg by',
-              caption: 'Mangfold & Fellesskap',
+              src: '/images/tonsberg/barnas_dag.jpg',
+              alt: 'Aktiviteter for barnefamilier i Tønsberg',
+              caption: 'Barnevennlige Tønsberg',
               location: 'Tønsberg Sentrum',
-              category: 'Byliv',
+              category: 'Oppvekst & Familie',
+              photographer: 'Tønsberglivet',
+            },
+            {
+              src: '/images/tonsberg/sommer_tonsberg.png',
+              alt: 'Sommer i Tønsberg',
+              caption: 'Sommerdager i regionen',
+              location: 'Tønsberg & Færder',
+              category: 'Fellesskap',
               photographer: 'Tønsberglivet',
             },
           ]}

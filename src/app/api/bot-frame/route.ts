@@ -3,14 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  // Støtt dynamisk overstyring via query parameter, miljøvariabel AGENT_API, eller standard agent-ID
   const botKey =
     req.nextUrl.searchParams.get("bot_api") ||
     process.env.AGENT_API ||
     process.env.NEXT_PUBLIC_AGENT_API ||
     "";
 
-  const upstreamUrl = `https://agentic.botsify.com/web-bot/frame/${botKey}`;
+  const upstreamUrl = `https://agentic.botsify.com/web-bot/landing/${botKey}`;
 
   try {
     const res = await fetch(upstreamUrl, {
@@ -24,18 +23,47 @@ export async function GET(req: NextRequest) {
     });
 
     if (!res.ok) {
-      return new NextResponse(`Kunne ikke laste agent-frame: ${res.statusText}`, {
+      return new NextResponse(`Kunne ikke laste agent-grensesnitt: ${res.statusText}`, {
         status: res.status,
       });
     }
 
     let html = await res.text();
 
-    // Injiser <base href> slik at relative skript, stilsett, assets og sockets lastes feilfritt
+    // 1. Fjern Cloudflare Rocket Loader tags og normaliser type-attributter
+    html = html.replace(/<script[^>]*rocket-loader[^>]*><\/script>/gi, "");
+    html = html.replace(/type="[a-f0-9]+-text\/javascript"/gi, 'type="text/javascript"');
+    html = html.replace(/type="[a-f0-9]+-module"/gi, 'type="module"');
+    html = html.replace(/data-cf-settings="[^"]*"/gi, "");
+
+    // 2. Skjul Google Translate elementet
+    html = html.replace(/<div id="google_translate_element"[^>]*><\/div>/gi, "");
+    html = html.replace(/<script[^>]*translate\.google\.com[^>]*><\/script>/gi, "");
+
+    // 3. Omdiriger /assets/ til vår egen proxy-rute /api/bot-frame/assets/
+    html = html.replace(/src="\/assets\//gi, 'src="/api/bot-frame/assets/');
+    html = html.replace(/href="\/assets\//gi, 'href="/api/bot-frame/assets/');
+
+    // 4. Sett virtuell URL til /web-bot/landing/${botKey} slik at Vue router matcher ruten direkte
+    const routePatch = `
+      <script>
+        try {
+          if (window.location.pathname !== '/web-bot/landing/${botKey}') {
+            window.history.replaceState({}, '', '/web-bot/landing/${botKey}');
+          }
+        } catch(e) {}
+      </script>
+      <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: auto; background: transparent; }
+        .goog-te-banner-frame, #goog-gt-tt, .goog-tooltip { display: none !important; }
+        body { top: 0 !important; }
+      </style>
+    `;
+
     if (html.includes("<head>")) {
-      html = html.replace("<head>", `<head><base href="https://agentic.botsify.com/" />`);
+      html = html.replace("<head>", `<head>${routePatch}`);
     } else {
-      html = `<base href="https://agentic.botsify.com/" />` + html;
+      html = routePatch + html;
     }
 
     return new NextResponse(html, {
@@ -46,7 +74,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("Feil ved proxying av agent-frame:", error);
+    console.error("Feil ved lasting av agent-frame:", error);
     return new NextResponse(`Feil ved kontakt med AI-agenten: ${error.message}`, {
       status: 502,
     });

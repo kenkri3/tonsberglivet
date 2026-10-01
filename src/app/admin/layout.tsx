@@ -33,7 +33,6 @@ const adminNav = [
   { label: 'Byskjermer & Marked', href: '/admin/marketing', icon: Tv, badge: '4K' },
   { label: 'Trafikk & Innsikt', href: '/admin/insights', icon: TrendingUp, badge: 'Live' },
   { label: 'Duett ERP & Økonomi', href: '/admin/finance', icon: CreditCard, badge: 'EHF 3.0' },
-  { label: 'AI Copilot Studio', href: '/admin/copilot', icon: Sparkles, badge: 'Gemini' },
   { label: 'Bildebank', href: '/admin/bildebank', icon: ImageIcon },
   { label: 'Arrangementer', href: '/admin/arrangementer', icon: Calendar },
   { label: 'Bedrifter', href: '/admin/bedrifter', icon: Building2 },

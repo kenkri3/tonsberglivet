@@ -17,10 +17,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header />
-      <main className="flex-1 pt-[var(--header-height)]">{children}</main>
+      <main className="flex-1">{children}</main>
       <Footer />
       <ConsentBanner />
-      <AgentWebWidget />
     </>
   );
 }

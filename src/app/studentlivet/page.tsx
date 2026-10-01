@@ -21,7 +21,7 @@ export default function StudentlivetPage() {
       <header className="relative min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <img
-            src="/images/student.jpg"
+            src="/images/tonsberg/studentlivet_usn.jpg"
             alt="Studentlivet ved USN Campus Vestfold i Tønsberg"
             className="w-full h-full object-cover object-center scale-105"
           />
@@ -40,7 +40,7 @@ export default function StudentlivetPage() {
 
             {/* Offisiell logo */}
             <div className="pt-2">
-              <StudentlivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+              <StudentlivetLogo className="h-9 md:h-11 w-auto text-red-400 drop-shadow-md" />
             </div>
 
             <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
@@ -199,28 +199,28 @@ export default function StudentlivetPage() {
           subtitle="Bilder fra USN Campus Vestfold, student arrangementer og utelivet på Brygga."
           photos={[
             {
-              src: '/images/student.jpg',
+              src: '/images/tonsberg/studentlivet_usn.jpg',
               alt: 'Studenter på Campus Vestfold',
               caption: 'USN Campus Vestfold',
               location: 'Campus Vestfold / Bakkenteigen',
               category: 'Utdanning & Campus',
-              photographer: 'USN',
+              photographer: 'USN Arkiv',
             },
             {
-              src: '/images/brygge.jpg',
-              alt: 'Studentliv og samling på Brygga',
-              caption: 'Studentkvelder på Brygga',
+              src: '/images/tonsberg/student_tonsberg.jpg',
+              alt: 'Studentliv og samhold i Tønsberg',
+              caption: 'Studentfellesskapet i Tønsberg',
+              location: 'Tønsberg Sentrum',
+              category: 'Studentlivet',
+              photographer: 'Tønsberglivet',
+            },
+            {
+              src: '/images/tonsberg/brygge_kveldsstemning.jpg',
+              alt: 'Kveldsliv og samling på Brygga',
+              caption: 'Kveldsstemning på Brygga',
               location: 'Tønsberg Brygge',
               category: 'Sosialt & Uteliv',
-              photographer: 'Per Eide',
-            },
-            {
-              src: '/images/kultur.jpg',
-              alt: 'Konserter og studentkultur',
-              caption: 'Fadderuka & Konserter',
-              location: 'Foynhagen',
-              category: 'Kultur & Musikk',
-              photographer: 'Tønsberglivet',
+              photographer: 'Tønsberglivet Arkiv',
             },
           ]}
         />

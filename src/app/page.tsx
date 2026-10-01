@@ -22,7 +22,7 @@ export default async function Home() {
   const events = await fetchLiveTicketmasterEvents();
 
   return (
-    <main className="min-h-screen space-y-20 pb-24 overflow-x-hidden">
+    <div className="min-h-screen space-y-20 pb-24 overflow-x-hidden">
       
       {/* ── 1. CINEMATIC HERO MED OFFISIELL MERKEVARE ── */}
       <section className="relative min-h-[82vh] flex items-center justify-center overflow-hidden bg-[#16193d]">
@@ -361,49 +361,49 @@ export default async function Home() {
           subtitle="Opplev atmosfæren i Norges eldste kystby, på Brygga, Slottsfjellet og Færder-skjærgården."
           photos={[
             {
-              src: '/images/slottsfjellet.jpg',
-              alt: 'Slottsfjellstårnet i Tønsberg',
+              src: '/images/tonsberg/hostfest_slottsfjell.png',
+              alt: 'Slottsfjellstårnet og ruinene i Tønsberg',
               caption: 'Slottsfjellet & Tårnet',
               location: 'Slottsfjellet, Tønsberg',
               category: 'Middelalder & Kultur',
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/brygge.jpg',
+              src: '/images/tonsberg/brygge_kveldsstemning.jpg',
               alt: 'Tønsberg Brygge om kvelden',
               caption: 'Stemning på Tønsberg Brygge',
               location: 'Bryggekanten',
               category: 'Byliv & Mat',
-              photographer: 'Per Eide',
+              photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/skjaergard.jpg',
-              alt: 'Verdens Ende og Vippefyret',
-              caption: 'Verdens Ende & Skjærgården',
+              src: '/images/tonsberg/ostre_bolarne.jpg',
+              alt: 'Skjærgården og Færder nasjonalpark',
+              caption: 'Østre Bolærne & Skjærgården',
               location: 'Færder Nasjonalpark',
               category: 'Reiseliv & Natur',
               photographer: 'Visit Færder',
             },
             {
-              src: '/images/food.jpg',
-              alt: 'Uteservering og matkultur',
+              src: '/images/tonsberg/mat_og_drikke_tonsberg.jpg',
+              alt: 'Uteservering og matkultur på brygga',
               caption: 'Lokal mat & Uteservering',
-              location: 'Kafé Nansen / Torvet',
+              location: 'Tønsberg Brygge',
               category: 'Gastronomi',
-              photographer: 'Julie Hansen',
+              photographer: 'Fotograf Varpe',
             },
             {
-              src: '/images/shopping.jpg',
-              alt: 'Sentrumshandel og nisjebutikker',
-              caption: 'Sentrumshandel i Torvgaten',
+              src: '/images/tonsberg/torvet_tonsberg.jpg',
+              alt: 'Sentrumshandel og markeder på Torvet',
+              caption: 'Handel på Tønsberg Torv',
               location: 'Tønsberg Sentrum',
-              category: 'Shopping',
+              category: 'Shopping & Marked',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/student.jpg',
+              src: '/images/tonsberg/studentlivet_usn.jpg',
               alt: 'Studenter ved USN Campus Vestfold',
-              caption: 'Studentmiljøet i Tønsberg',
+              caption: 'Studentmiljøet ved USN',
               location: 'Campus Vestfold',
               category: 'Studentlivet',
               photographer: 'USN',
@@ -466,6 +466,6 @@ export default async function Home() {
         </div>
       </section>
 
-    </main>
+    </div>
   );
 }

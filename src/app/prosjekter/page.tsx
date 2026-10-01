@@ -20,7 +20,7 @@ const prosjekter = [
 
 export default function ProsjekterPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
+    <main className="flex min-h-screen flex-col bg-background">
       <HeroSection 
         title="Våre prosjekter"
         subtitle="Tønsberglivet"
@@ -32,14 +32,14 @@ export default function ProsjekterPage() {
       <section className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {prosjekter.map((prosjekt) => (
-            <div key={prosjekt.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col hover:shadow-md transition-shadow">
+            <div key={prosjekt.id} className="bg-surface rounded-3xl shadow-sm border border-border p-6 sm:p-8 flex flex-col hover:shadow-md hover:-translate-y-1 transition-all">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{prosjekt.title}</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                <h3 className="text-xl font-bold text-foreground">{prosjekt.title}</h3>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-light text-primary">
                   {prosjekt.status}
                 </span>
               </div>
-              <p className="text-slate-600 dark:text-slate-400 flex-grow">
+              <p className="text-foreground-muted text-sm leading-relaxed flex-grow">
                 {prosjekt.desc}
               </p>
             </div>

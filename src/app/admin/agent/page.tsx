@@ -139,6 +139,18 @@ const multiToolWorkflows: MultiToolWorkflow[] = [
     prompt:
       'Overvåk nyetableringer i Tønsberg og Færder: Bruk Brave og Tavily til å søke etter nye aksjeselskaper registrert i Brreg de siste 14 dagene under servering, detaljhandel og opplevelser. Lag en strukturert rapport med bedriftsnavn, bransje og kontaktperson slik at Tønsberglivet kan invitere dem inn i nettverket.',
   },
+  {
+    id: 'seo-content-engine',
+    title: 'Enterprise SEO & AEO Innholdsmotor',
+    tools: [
+      { name: 'Tavily', icon: '🔍', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
+      { name: 'Gemini', icon: '✨', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20' },
+    ],
+    description: 'Genererer fullverdig SEO-artikkel med Schema.org JSON-LD, Sweet-Spot indeksering, GEO-faktatetthet og oppretter artikkel direkte i CMS-databasen.',
+    backendEndpoint: 'POST /api/agent/webhook { action: "create_article" }',
+    prompt:
+      'Lag en komplett Enterprise SEO-artikkel for Tønsberglivet: Bruk Tavily til å hente ferskeste data. Generer H1 (50-60 tegn), meta description (145-158 tegn), Schema.org @graph (Article + BreadcrumbList) og toveis internlenker. Opprett artikkelen som godkjent utkast i backend via { action: "create_article", title, excerpt, content, category: "BYLIVET" }.',
+  },
 ];
 
 export default function AdminAgentPage() {
@@ -156,13 +168,16 @@ export default function AdminAgentPage() {
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Hent status fra backend
+  // Hent status fra backend og håndter lastetid
   useEffect(() => {
     fetch('/api/agent/status')
       .then((res) => res.json())
       .then((data) => setAgentStatus(data))
       .catch(() => setAgentStatus({ success: true, status: 'active', environmentConfigured: true }));
-  }, []);
+
+    const timer = setTimeout(() => setIsLoading(false), 1800);
+    return () => clearTimeout(timer);
+  }, [iframeKey]);
 
   const handleRefresh = () => {
     setIsLoading(true);

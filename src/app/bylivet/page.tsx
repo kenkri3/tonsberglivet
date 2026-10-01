@@ -39,7 +39,7 @@ export default function BylivetPage() {
 
             {/* Offisiell logo */}
             <div className="pt-2">
-              <BylivetLogo className="h-9 md:h-11 w-auto text-[#d3dafe] drop-shadow-md" />
+              <BylivetLogo className="h-9 md:h-11 w-auto text-blue-400 drop-shadow-md" />
             </div>
 
             <h1 className="text-white text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight">
@@ -113,7 +113,7 @@ export default function BylivetPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
             <div className="relative aspect-[16/10] overflow-hidden">
-              <img src="/images/grundergata.jpg" alt="Gründergata" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src="/images/tonsberg/torvet_tonsberg.jpg" alt="Nordbyen og Tønsberg Torv" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
                 Trehus & Kultur
               </span>
@@ -229,28 +229,28 @@ export default function BylivetPage() {
           subtitle="Bildeglimt fra bryggekanten, Torvet, nisjebutikker og folkelivet i sentrum."
           photos={[
             {
-              src: '/images/brygge.jpg',
-              alt: 'Tønsberg Brygge om sommeren',
-              caption: 'Bryggelivet om kvelden',
+              src: '/images/tonsberg/brygge_kveldsstemning.jpg',
+              alt: 'Tønsberg Brygge om kvelden',
+              caption: 'Stemning på Tønsberg Brygge',
               location: 'Tønsberg Brygge',
-              category: 'Uteservering',
-              photographer: 'Per Eide',
+              category: 'Uteservering & Uteliv',
+              photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/food.jpg',
-              alt: 'Mat og servering',
-              caption: 'God mat på Torvet',
-              location: 'Kafé Nansen / Torvet',
+              src: '/images/tonsberg/spisuteuka.jpg',
+              alt: 'Spis Ute Uka i Tønsberg',
+              caption: 'Spis Ute Uka & Gastronomi',
+              location: 'Tønsberg Sentrum',
               category: 'Gastronomi',
-              photographer: 'Julie Hansen',
+              photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/shopping.jpg',
-              alt: 'Nisjebutikker i Storgaten',
-              caption: 'Sentrumshandel',
-              location: 'Storgaten Tønsberg',
-              category: 'Shopping',
-              photographer: 'Tønsberglivet',
+              src: '/images/tonsberg/mat_og_drikke_tonsberg.jpg',
+              alt: 'Mat og servering langs brygga',
+              caption: 'Lokal mat & Uteservering',
+              location: 'Bryggekanten',
+              category: 'Mat & Drikke',
+              photographer: 'Fotograf Varpe',
             },
           ]}
         />

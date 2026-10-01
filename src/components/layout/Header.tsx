@@ -116,7 +116,7 @@ export function Header() {
               aria-label="Tønsberglivet — Hjem"
             >
               <div className="flex items-center">
-                <TonsberglivetLogo className="h-7 sm:h-8 md:h-9 w-auto text-[#16193d] dark:text-[#d3dafe] group-hover:opacity-85 transition-all duration-300" />
+                <TonsberglivetLogo className="h-7 sm:h-8 md:h-9 w-auto text-theme-brand group-hover:opacity-85 transition-all duration-300" />
               </div>
             </Link>
 
