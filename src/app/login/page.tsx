@@ -2,15 +2,14 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Lock, Mail, ArrowRight, ShieldCheck, LayoutDashboard, KeyRound } from 'lucide-react';
+import { Lock, Mail, ArrowRight, KeyRound } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/admin';
 
-  const [email, setEmail] = useState('cecilie@tonsberglivet.no');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,19 +115,6 @@ export default function LoginPage() {
         <Suspense fallback={<div className="text-center text-xs text-foreground-subtle py-4">Laster inn innlogging...</div>}>
           <LoginForm />
         </Suspense>
-
-        {/* Demo snarvei */}
-        <div className="pt-4 border-t border-border space-y-3 text-center">
-          <div className="flex items-center justify-center gap-1.5 text-xs text-success font-semibold bg-success-light/60 py-2 rounded-xl">
-            <ShieldCheck className="w-4 h-4" /> Direkte tilgang aktivert for utvikling
-          </div>
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-surface-muted hover:bg-border text-foreground text-xs font-semibold rounded-xl transition-colors w-full justify-center"
-          >
-            <LayoutDashboard className="w-4 h-4 text-primary" /> Gå direkte til Admin Dashboard
-          </Link>
-        </div>
       </div>
     </main>
   );

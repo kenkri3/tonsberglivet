@@ -325,26 +325,46 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
-            <div className="text-center p-6 rounded-2xl bg-surface-muted border border-border">
-              <div className="text-3xl md:text-5xl font-black text-primary mb-1">871</div>
-              <p className="text-xs md:text-sm font-semibold text-foreground-muted">Norges eldste by (e.Kr.)</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-5">
+            <div className="text-center p-4 sm:p-5 lg:p-6 rounded-2xl bg-surface-muted/60 hover:bg-surface-muted border border-border transition-colors flex flex-col items-center justify-center">
+              <div className="text-2xl sm:text-3xl xl:text-4xl font-black text-primary tracking-tight whitespace-nowrap mb-1">
+                871
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-foreground-muted">
+                Norges eldste by (e.Kr.)
+              </p>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-surface-muted border border-border">
-              <div className="text-3xl md:text-5xl font-black text-primary mb-1">33 000+</div>
-              <p className="text-xs md:text-sm font-semibold text-foreground-muted">Arbeidsplasser</p>
+            <div className="text-center p-4 sm:p-5 lg:p-6 rounded-2xl bg-surface-muted/60 hover:bg-surface-muted border border-border transition-colors flex flex-col items-center justify-center">
+              <div className="text-2xl sm:text-3xl xl:text-4xl font-black text-primary tracking-tight whitespace-nowrap mb-1">
+                33&nbsp;000+
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-foreground-muted">
+                Arbeidsplasser
+              </p>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-surface-muted border border-border">
-              <div className="text-3xl md:text-5xl font-black text-primary mb-1">7 500+</div>
-              <p className="text-xs md:text-sm font-semibold text-foreground-muted">Bedrifter</p>
+            <div className="text-center p-4 sm:p-5 lg:p-6 rounded-2xl bg-surface-muted/60 hover:bg-surface-muted border border-border transition-colors flex flex-col items-center justify-center">
+              <div className="text-2xl sm:text-3xl xl:text-4xl font-black text-primary tracking-tight whitespace-nowrap mb-1">
+                7&nbsp;500+
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-foreground-muted">
+                Bedrifter
+              </p>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-surface-muted border border-border">
-              <div className="text-3xl md:text-5xl font-black text-primary mb-1">300+</div>
-              <p className="text-xs md:text-sm font-semibold text-foreground-muted">Butikker & servering</p>
+            <div className="text-center p-4 sm:p-5 lg:p-6 rounded-2xl bg-surface-muted/60 hover:bg-surface-muted border border-border transition-colors flex flex-col items-center justify-center">
+              <div className="text-2xl sm:text-3xl xl:text-4xl font-black text-primary tracking-tight whitespace-nowrap mb-1">
+                300+
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-foreground-muted">
+                Butikker &amp; servering
+              </p>
             </div>
-            <div className="text-center p-6 rounded-2xl bg-surface-muted border border-border col-span-2 lg:col-span-1">
-              <div className="text-3xl md:text-5xl font-black text-primary mb-1">50+</div>
-              <p className="text-xs md:text-sm font-semibold text-foreground-muted">Strategiske partnere</p>
+            <div className="text-center p-4 sm:p-5 lg:p-6 rounded-2xl bg-surface-muted/60 hover:bg-surface-muted border border-border transition-colors flex flex-col items-center justify-center col-span-2 sm:col-span-1 lg:col-span-1">
+              <div className="text-2xl sm:text-3xl xl:text-4xl font-black text-primary tracking-tight whitespace-nowrap mb-1">
+                50+
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-foreground-muted">
+                Strategiske partnere
+              </p>
             </div>
           </div>
         </div>

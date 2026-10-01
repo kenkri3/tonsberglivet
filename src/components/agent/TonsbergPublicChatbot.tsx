@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   ShieldCheck,
   User,
+  RotateCcw,
 } from 'lucide-react';
 
 export interface ChatMessage {
@@ -101,6 +102,16 @@ export function TonsbergPublicChatbot() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleResetChat = () => {
+    const newSessionId = `sess-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('tonsberg_chat_session_id', newSessionId);
+    }
+    setSessionId(newSessionId);
+    setMessages([]);
+    setAiEnabled(true);
+  };
 
   // Initialiser unik sesjon-ID
   useEffect(() => {
@@ -313,7 +324,17 @@ export function TonsbergPublicChatbot() {
                 )}
                 <span>Modus: <strong>{aiEnabled ? 'AI Byvert' : 'Direkte til Admin'}</strong></span>
               </div>
-              <button
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleResetChat}
+                  className="px-2.5 py-0.5 rounded-full font-medium text-[10px] transition-all flex items-center gap-1.5 bg-slate-700/50 text-slate-200 border border-slate-600/50 hover:bg-slate-700"
+                  title="Nullstill chat og start på nytt"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Start på nytt</span>
+                </button>
+                <button
                 type="button"
                 onClick={() => setAiEnabled(!aiEnabled)}
                 className={`px-2.5 py-0.5 rounded-full font-medium text-[10px] transition-all flex items-center gap-1.5 ${
@@ -325,7 +346,8 @@ export function TonsbergPublicChatbot() {
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${aiEnabled ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                 <span>{aiEnabled ? 'AI er PÅ' : 'AI er AV (Admin)'}</span>
-              </button>
+                </button>
+              </div>
             </div>
           </div>
 

@@ -211,7 +211,7 @@ function StatCard({ icon, value, label }: { icon: React.ReactNode; value: string
   return (
     <div className="flex flex-col items-center justify-center p-8 bg-surface rounded-3xl shadow-sm border border-border text-center space-y-2">
       <div className="text-primary mb-2 [&>svg]:h-8 [&>svg]:w-8">{icon}</div>
-      <div className="text-3xl font-black text-foreground">{value}</div>
+      <div className="text-2xl sm:text-3xl font-black text-foreground whitespace-nowrap tracking-tight">{value}</div>
       <div className="text-xs text-foreground-muted font-medium">{label}</div>
     </div>
   );
