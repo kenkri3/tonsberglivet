@@ -351,7 +351,75 @@ export default function BookingHubPage() {
 
         <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-xs">
 
-          <div className="overflow-x-auto">
+          {/* Mobilkort for søknader */}
+          <div className="md:hidden divide-y divide-border">
+            {filteredRequests.map(req => (
+              <div key={req.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="font-bold text-foreground text-sm">{req.vendor}</h4>
+                    <p className="text-[11px] text-foreground-muted font-mono mt-0.5">Org: {req.orgNr}</p>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${
+                    req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
+                    req.status === 'pending' ? 'bg-primary/10 text-primary border border-primary/20' :
+                    req.status === 'invoiced' ? 'bg-surface-muted text-foreground border border-border' :
+                    'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                  }`}>
+                    {req.status === 'approved' ? 'Godkjent' : req.status === 'pending' ? 'Venter' : req.status === 'invoiced' ? 'Fakturert' : 'Avslått'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs bg-surface-muted/50 p-2.5 rounded-xl border border-border/50">
+                  <div>
+                    <span className="text-[10px] text-foreground-subtle uppercase block font-semibold">Plass & Sone</span>
+                    <span className="font-semibold text-foreground">{req.spot}</span>
+                    <span className="text-[11px] text-foreground-muted block">{req.zone}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-foreground-subtle uppercase block font-semibold">Datoer</span>
+                    <span className="font-medium text-foreground">{req.dates}</span>
+                    <span className="text-[11px] text-foreground-muted block">{req.duration}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-foreground text-sm">
+                      {req.totalAmount.toLocaleString('no-NO')} kr
+                    </span>
+                    <div className="flex items-center gap-1.5 pl-2 border-l border-border">
+                      {req.powerNeeded && <span title="Strøm"><Zap className="w-3.5 h-3.5 text-amber-500" /></span>}
+                      {req.waterNeeded && <span title="Vann"><Droplets className="w-3.5 h-3.5 text-sky-500" /></span>}
+                    </div>
+                  </div>
+
+                  {req.status === 'pending' ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleApprove(req.id)}
+                        className="px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl text-xs transition-all shadow-xs"
+                      >
+                        Godkjenn
+                      </button>
+                      <button
+                        onClick={() => handleReject(req.id)}
+                        className="p-1.5 bg-surface-muted hover:bg-rose-500/10 text-foreground-muted hover:text-rose-600 rounded-xl transition-colors"
+                        title="Avslå"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-foreground-muted font-mono">Fullført</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Tabell */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-surface-muted text-foreground uppercase font-bold border-b border-border">
                 <tr>

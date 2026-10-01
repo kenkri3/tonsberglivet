@@ -195,7 +195,49 @@ export default function MarketingPage() {
         {/* ── Tab View: Campaigns ── */}
         {activeTab === 'campaigns' && (
           <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-xs">
-            <div className="overflow-x-auto">
+            {/* Mobilkort for kampanjer */}
+            <div className="md:hidden divide-y divide-border">
+              {campaigns.map((c, i) => (
+                <div key={i} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="font-bold text-foreground text-sm">{c.name}</h4>
+                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${
+                      c.status === 'Aktiv'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                    }`}>
+                      {c.status}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {c.channels.map((ch, idx) => (
+                      <span key={idx} className="px-2 py-0.5 bg-surface-muted text-foreground-muted rounded-md text-[11px] font-medium border border-border">
+                        {ch}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 bg-surface-muted/50 p-2.5 rounded-xl border border-border/50 text-center">
+                    <div>
+                      <span className="text-[10px] text-foreground-subtle uppercase block font-semibold">Brukt</span>
+                      <span className="font-mono font-bold text-foreground text-xs">{c.spent}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-foreground-subtle uppercase block font-semibold">Rekkevidde</span>
+                      <span className="font-mono font-bold text-foreground text-xs">{c.reach}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-foreground-subtle uppercase block font-semibold">CTR</span>
+                      <span className="font-mono font-bold text-emerald-500 text-xs">{c.ctr}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Tabell */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-surface-muted text-foreground uppercase font-bold border-b border-border">
                   <tr>

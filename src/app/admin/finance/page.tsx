@@ -272,7 +272,50 @@ export default function DuettFinancePage() {
 
 
         <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-xs">
-          <div className="overflow-x-auto">
+
+          {/* Mobilkort for fakturaer */}
+          <div className="md:hidden divide-y divide-border">
+            {filteredInvoices.map(inv => (
+              <div key={inv.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="font-mono font-bold text-foreground text-sm">{inv.invoiceNo}</span>
+                    <h4 className="font-bold text-foreground text-sm mt-0.5">{inv.customer}</h4>
+                    <p className="text-[11px] text-foreground-muted font-mono">Org: {inv.orgNr}</p>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider shrink-0 ${
+                    inv.ehfStatus === 'sent'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                  }`}>
+                    {inv.ehfStatus === 'sent' ? 'Levert (EHF)' : 'Venter'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs bg-surface-muted/50 p-2.5 rounded-xl border border-border/50">
+                  <span className="text-foreground-muted font-medium">{inv.category}</span>
+                  <div className="text-right">
+                    <span className="font-mono font-black text-foreground text-sm block">
+                      {inv.totalAmount.toLocaleString('no-NO')} kr
+                    </span>
+                    <span className="text-[10px] text-foreground-subtle block">
+                      Eks. mva: {inv.amountExVat.toLocaleString('no-NO')} kr
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-foreground-muted pt-1">
+                  <span className="font-mono flex items-center gap-1">
+                    <Download className="w-3 h-3 text-primary" /> {inv.duettSyncId}
+                  </span>
+                  <span className="text-emerald-500 font-semibold text-[10px]">Peppol EHF 3.0</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Tabell */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-surface-muted text-foreground uppercase font-bold border-b border-border">
                 <tr>
