@@ -98,17 +98,8 @@ export async function POST(request: NextRequest) {
     const activeEvents = (eventsRes.data || []).slice(0, 5);
     const rt = realtimeRes.data;
 
-    // 1. Forsøk intelligent Gemini-svar med reell sanntidskontekst
-    const apiKey = await getEffectiveGeminiApiKey();
-
-    if (apiKey) {
-      try {
-        
-        let finalKey = apiKey;
-        const fallbackKey = await getSetting('gemini_api_key');
-        if (fallbackKey) finalKey = fallbackKey;
-
-        const prompt = `Du er den vennlige, lokale byverten «Tønsberg-Guiden» for Tønsberglivet (tonsberglivet.no).
+    // 1. Forsøk intelligent AI-svar (1min.AI / Gemini) med reell sanntidskontekst
+    const prompt = `Du er den vennlige, lokale byverten «Tønsberg-Guiden» for Tønsberglivet (tonsberglivet.no).
 Du hjelper turister, innbyggere og gjester med å oppleve det beste av Tønsberg og Færder.
 Du svarer alltid på varmt, hjelpsomt og innbydende norsk.
 
@@ -126,27 +117,20 @@ RETNINGSLINJER FOR FORMATERING OG SVAR:
 
 Brukerens spørsmål: "${message}"`;
 
-        const res = await fetch('https://api.1min.ai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${finalKey.trim()}`
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: prompt }]
-          })
-        });
+    try {
+      const { createOneMinChatCompletion } = await import('@/lib/onemin-client');
+      const oneMinRes = await createOneMinChatCompletion([
+        { role: 'user', content: prompt }
+      ], { model: 'gpt-4o-mini', maxTokens: 800 });
 
-        if (res.ok) {
-          const data = await res.json();
-          replyText = data.choices[0].message.content;
-        } else {
-          console.error("1min.ai API feil:", await res.text());
-        }
-      } catch (err: any) {
-        console.warn('[Public Chat API] Gemini feilet:', err?.message);
+      if (oneMinRes.success && oneMinRes.content) {
+        replyText = oneMinRes.content;
+      } else {
+        const { generateUnifiedAiResponse } = await import('@/lib/ai-config');
+        replyText = await generateUnifiedAiResponse({ prompt });
       }
+    } catch (aiErr: any) {
+      console.warn('[Public Chat API] AI-assistent feilet:', aiErr?.message);
     }
 
     // 2. Regelbasert fallback med 100% reelle data hvis AI-nøkkel mangler

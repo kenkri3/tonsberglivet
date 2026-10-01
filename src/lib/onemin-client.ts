@@ -8,13 +8,15 @@ export async function getEffectiveOneMinApiKey(): Promise<string | null> {
   const envVal =
     process.env['1_MIN_AI'] ||
     process.env['ONEMIN_API_KEY'] ||
-    process.env['ONE_MIN_AI'];
+    process.env['ONE_MIN_AI'] ||
+    process.env['ONE_MIN_AI_API_KEY'] ||
+    process.env['ONE_MIN_AI_KEY'];
 
   if (envVal && envVal.trim()) {
     return envVal.trim();
   }
 
-  const customKey = await getSetting('1_min_ai');
+  const customKey = (await getSetting('1_min_ai')) || (await getSetting('one_min_ai_key'));
   if (customKey && customKey.trim()) {
     return customKey.trim();
   }
@@ -48,9 +50,10 @@ export interface OneMinChatMessage {
 
 export interface OneMinChatOptions {
   model?:
+    | 'gpt-4o-mini'
     | 'gpt-4.1-mini'
     | 'gpt-4o'
-    | 'gpt-4o-mini'
+    | 'gpt-4.1'
     | 'o3-mini'
     | 'deepseek-flash'
     | 'deepseek-v4-pro'
@@ -65,6 +68,7 @@ export interface OneMinChatOptions {
 /**
  * Kaller 1min.AI via deres offisielle OpenAI-kompatible endepunkt:
  * https://api.1min.ai/openai/v1/chat/completions
+ * Dokumentasjon: https://docs.1min.ai/docs/api/openai-compatible
  */
 export async function createOneMinChatCompletion(
   messages: OneMinChatMessage[],
@@ -81,7 +85,7 @@ export async function createOneMinChatCompletion(
     return {
       success: false,
       content: '',
-      model: options.model || 'gpt-4.1-mini',
+      model: options.model || 'gpt-4o-mini',
       error: 'Ingen 1min.AI API-nøkkel (1_MIN_AI) funnet i Railway eller innstillinger.',
     };
   }
@@ -94,11 +98,11 @@ export async function createOneMinChatCompletion(
     ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
   }));
 
-  const targetModel = options.model || 'gpt-4.1-mini';
+  const primaryModel = options.model || 'gpt-4o-mini';
 
-  try {
+  const sendRequest = async (modelName: string) => {
     const payload: any = {
-      model: targetModel,
+      model: modelName,
       messages: sanitizedMessages,
       max_completion_tokens: options.maxTokens || 2048,
     };
@@ -121,16 +125,28 @@ export async function createOneMinChatCompletion(
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(18000),
+      signal: AbortSignal.timeout(28000),
     });
+
+    return res;
+  };
+
+  try {
+    let res = await sendRequest(primaryModel);
+
+    // Hvis primærmodell returnerer 400 (f.eks. ukjent modellnavn hos leverandør), forsøk gpt-4.1-mini
+    if (!res.ok && res.status === 400 && primaryModel !== 'gpt-4.1-mini') {
+      console.warn(`[1min.AI] Primærmodell ${primaryModel} feilet med 400, prøver gpt-4.1-mini...`);
+      res = await sendRequest('gpt-4.1-mini');
+    }
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');
       return {
         success: false,
         content: '',
-        model: targetModel,
-        error: `1min.AI status ${res.status}: ${errText.slice(0, 150)}`,
+        model: primaryModel,
+        error: `1min.AI status ${res.status}: ${errText.slice(0, 200)}`,
       };
     }
 
@@ -141,13 +157,13 @@ export async function createOneMinChatCompletion(
       success: true,
       content: choice?.message?.content || '',
       toolCalls: choice?.message?.tool_calls || undefined,
-      model: data?.model || targetModel,
+      model: data?.model || primaryModel,
     };
   } catch (err: any) {
     return {
       success: false,
       content: '',
-      model: targetModel,
+      model: primaryModel,
       error: `Feil ved kontakt med 1min.AI: ${err?.message || 'Nettverksfeil'}`,
     };
   }
@@ -162,7 +178,7 @@ export async function testOneMinAiConnection(): Promise<{ success: boolean; mess
       { role: 'system', content: 'Svar på ett ord på norsk: "Operativ".' },
       { role: 'user', content: 'Status?' },
     ],
-    { model: 'gpt-4.1-mini', maxTokens: 10 }
+    { model: 'gpt-4o-mini', maxTokens: 10 }
   );
 
   if (result.success) {

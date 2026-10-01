@@ -9,7 +9,7 @@ import { getSetting } from './settings';
  * 3. Miljøvariabel ONE_MIN_AI / ONE_MIN_AI_API_KEY
  */
 export async function getEffectiveOneMinAiKey(): Promise<string | null> {
-  const customKey = await getSetting('1_min_ai') || await getSetting('one_min_ai_key');
+  const customKey = (await getSetting('1_min_ai')) || (await getSetting('one_min_ai_key'));
   if (customKey && customKey.trim().length > 0) {
     return customKey.trim();
   }
@@ -23,8 +23,16 @@ export async function getEffectiveOneMinAiKey(): Promise<string | null> {
     return process.env.ONE_MIN_AI.trim();
   }
 
+  if (process.env.ONEMIN_API_KEY && process.env.ONEMIN_API_KEY.trim().length > 0) {
+    return process.env.ONEMIN_API_KEY.trim();
+  }
+
   if (process.env.ONE_MIN_AI_API_KEY && process.env.ONE_MIN_AI_API_KEY.trim().length > 0) {
     return process.env.ONE_MIN_AI_API_KEY.trim();
+  }
+
+  if (process.env.ONE_MIN_AI_KEY && process.env.ONE_MIN_AI_KEY.trim().length > 0) {
+    return process.env.ONE_MIN_AI_KEY.trim();
   }
 
   return null;
@@ -81,39 +89,28 @@ export async function generateUnifiedAiResponse(options: UnifiedAiOptions): Prom
   const oneMinKey = await getEffectiveOneMinAiKey();
   if (oneMinKey) {
     try {
-      // For streng GDPR og EU-personvern i offentlig sektor i Norge,
-      // benyttes fortrinnsvis Mistral Large (vertet i EU/Frankrike) eller gpt-4o-mini
-      const selectedModel = modelName || (preferEu ? 'mistral-large-2407' : 'gpt-4o-mini');
-
+      const { createOneMinChatCompletion } = await import('./onemin-client');
       const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
       if (systemInstruction) {
         messages.push({ role: 'system', content: systemInstruction });
       }
       messages.push({ role: 'user', content: prompt });
 
-      const response = await fetch('https://api.1min.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${oneMinKey}`,
-          'api-key': oneMinKey,
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages,
-          temperature,
-        }),
+      // Støttede modeller i 1min.ai OpenAI-kompatibel adapter:
+      // gpt-4o-mini, gpt-4.1-mini, mistral-large-latest
+      const targetModel = (modelName as any) || (preferEu ? 'gpt-4o-mini' : 'gpt-4o-mini');
+
+      const result = await createOneMinChatCompletion(messages, {
+        model: targetModel,
+        temperature,
+        maxTokens: 2048,
       });
 
-      if (response.ok) {
-        const json = await response.json();
-        const content = json.choices?.[0]?.message?.content;
-        if (content && typeof content === 'string' && content.trim().length > 0) {
-          return content.trim();
-        }
-      } else {
-        const errText = await response.text().catch(() => '');
-        console.warn(`[1min.AI Error ${response.status}]:`, errText);
+      if (result.success && result.content && result.content.trim().length > 0) {
+        return result.content.trim();
+      }
+      if (result.error) {
+        console.warn('[1min.AI Response Warning]:', result.error);
       }
     } catch (err) {
       console.warn('[1min.AI Fetch Warning]:', err);

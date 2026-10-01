@@ -52,11 +52,13 @@ export function SoMeModal({ title, category, excerpt, imageUrl, onClose }: SoMeM
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [publishResults, setPublishResults] = useState<Record<string, { success: boolean; message: string; simulated?: boolean }> | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     setLoading(true);
     setPublishResults(null);
     setPublishError(null);
+    setGenerationError(null);
     try {
       const res = await fetch('/api/ai/generate-some', {
         method: 'POST',
@@ -73,9 +75,12 @@ export function SoMeModal({ title, category, excerpt, imageUrl, onClose }: SoMeM
           linkedin: data.data.linkedin || '',
           newsletter: data.data.newsletter || '',
         });
+      } else {
+        setGenerationError(data.error || 'Feil ved generering av SoMe-innhold.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('SoMe generation failed:', error);
+      setGenerationError(error?.message || 'Nettverksfeil ved kontakt med AI-tjenesten.');
     } finally {
       setLoading(false);
     }
@@ -171,10 +176,18 @@ export function SoMeModal({ title, category, excerpt, imageUrl, onClose }: SoMeM
             <p className="text-sm text-foreground-muted max-w-md mx-auto">
               Trykk for å generere tilpassede innlegg for alle dine tilkoblede kanaler. Du kan redigere teksten fritt og godkjenne før sending.
             </p>
+
+            {generationError && (
+              <div className="max-w-md mx-auto p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-xs flex items-center gap-2 text-left">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{generationError}</span>
+              </div>
+            )}
+
             <button
               onClick={handleGenerate}
               disabled={loading}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {loading ? 'Genererer innlegg...' : 'Generer kanalinnhold nå'}

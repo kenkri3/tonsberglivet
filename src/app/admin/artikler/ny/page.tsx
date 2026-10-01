@@ -59,37 +59,74 @@ export default function NyArtikkelPage() {
   };
 
   const handleAiDraft = async () => {
-    if (!title) {
-      setStatusMessage({ type: 'error', text: 'Skriv inn en tittel først slik at AI-en vet hva saken gjelder!' });
+    if (!title || !title.trim()) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Vennligst skriv inn en tittel først slik at AI-en vet hva saken handler om!',
+      });
       return;
     }
 
     setAiWorking(true);
+    setStatusMessage(null);
+
     try {
-      const res = await fetch('/api/ai/generate-some', {
+      const res = await fetch('/api/ai/article-draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, category }),
+        body: JSON.stringify({
+          title: title.trim(),
+          category,
+          notes: content.trim(),
+          existingExcerpt: excerpt.trim(),
+        }),
       });
+
       const data = await res.json();
-      if (data.success && data.data) {
-        if (!excerpt) setExcerpt(data.data.newsletter || `Oppdag det nyeste innen ${category} i Tønsberg!`);
-        if (!content) setContent(`## ${title}\n\nDet skjer spennende ting i Tønsberg innen ${category.toLowerCase()}.\n\n${data.data.facebook}\n\nVelkommen til å lese mer på Tønsberglivet-portalen.`);
+
+      if (data.success) {
+        if (data.excerpt) setExcerpt(data.excerpt);
+        if (data.content) setContent(data.content);
+        setStatusMessage({
+          type: 'success',
+          text: '✨ Komplett artikkelutkast og ingress er generert av AI!',
+        });
+      } else {
+        setStatusMessage({
+          type: 'error',
+          text: data.error || 'Feil ved generering av artikkelutkast. Vennligst prøv igjen.',
+        });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('AI draft failed:', e);
+      setStatusMessage({
+        type: 'error',
+        text: 'Nettverksfeil ved kontakt med AI-tjenesten. Sjekk internettforbindelsen eller prøv på nytt.',
+      });
     } finally {
       setAiWorking(false);
     }
+  };
+
+  const handleOpenSoMe = () => {
+    if (!title || !title.trim()) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Skriv inn en artikkel-tittel før du åpner SoMe-generatoren!',
+      });
+      return;
+    }
+    setShowSoMeModal(true);
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
       {showSoMeModal && (
         <SoMeModal
-          title={title || 'Ny artikkel'}
+          title={title.trim() || 'Ny artikkel'}
           category={category}
-          excerpt={excerpt}
+          excerpt={excerpt.trim() || content.trim().slice(0, 300)}
+          imageUrl={imageUrl}
           onClose={() => setShowSoMeModal(false)}
         />
       )}
@@ -111,21 +148,19 @@ export default function NyArtikkelPage() {
             type="button"
             onClick={handleAiDraft}
             disabled={aiWorking}
-            className="px-4 py-2 bg-surface-muted hover:bg-border text-foreground text-xs font-semibold rounded-xl border border-border transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 bg-surface-muted hover:bg-border text-foreground text-xs font-semibold rounded-xl border border-border transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 shadow-xs"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
-            {aiWorking ? 'AI Skriver...' : 'AI Generer Utkast'}
+            <Sparkles className={`w-4 h-4 text-primary ${aiWorking ? 'animate-spin' : ''}`} />
+            {aiWorking ? 'AI Skriver utkast...' : 'AI Generer Utkast'}
           </button>
 
-          {title && (
-            <button
-              type="button"
-              onClick={() => setShowSoMeModal(true)}
-              className="px-4 py-2 bg-primary-light text-primary hover:bg-primary hover:text-white text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5"
-            >
-              <Sparkles className="w-4 h-4" /> SoMe-generator
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleOpenSoMe}
+            className="px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground text-xs font-semibold rounded-xl border border-primary/20 hover:border-primary transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Sparkles className="w-4 h-4" /> SoMe-generator
+          </button>
         </div>
       </div>
 
