@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
-import { getEffectiveGeminiApiKey } from '@/lib/ai-config';
+import { getSetting } from '@/lib/settings';
 
 export async function POST(request: Request) {
   try {
     const { title, text, category } = await request.json();
-    const apiKey = await getEffectiveGeminiApiKey();
+    
+    // Hent API-nøkkelen fra innstillinger (tidligere Gemini, nå AI-nøkkel)
+    let apiKey = await getSetting('gemini_api_key');
+    if (!apiKey || apiKey.trim().length === 0) {
+      apiKey = process.env.GEMINI_API_KEY;
+    }
 
     if (!title) {
       return NextResponse.json({ success: false, error: 'Tittel er påkrevd' }, { status: 400 });
@@ -14,18 +18,17 @@ export async function POST(request: Request) {
     if (!apiKey) {
       return NextResponse.json({
         success: false,
-        error: 'Ingen aktiv Gemini API-nøkkel funnet. Legg inn egen nøkkel under Admin > Innstillinger (BYOK).',
+        error: 'Ingen aktiv API-nøkkel funnet. Legg inn nøkkel under Admin > Innstillinger.',
       }, { status: 400 });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
     const prompt = `Du er kommunikasjonsansvarlig for Tønsberglivet AS.
 Generer 6 sosiale medier-innlegg basert på følgende sak:
 Tittel: "${title}"
 Kategori: "${category || 'Bylivet'}"
 Innhold: "${text || ''}"
 
-Returner et JSON-objekt med nøklene:
+Returner KUN et gyldig JSON-objekt (uten markdown) med nøklene:
 - "facebook": En folkelig, engasjerende Facebook-post for Tønsberglivets offisielle side med emojier og oppfordring til å besøke nettsiden.
 - "facebookGroup": En uformell, fellesskapsorientert post tilpasset en lokal Facebook-gruppe med engasjerende spørsmål og dialog.
 - "instagram": En visuell, stemningsfull Instagram-tekst med relevante lokale emneknagger (#tønsberg #tonsberglivet #slottsfjellet osv.).
@@ -33,12 +36,27 @@ Returner et JSON-objekt med nøklene:
 - "linkedin": En profesjonell vinkling rettet mot næringsliv, byutvikling og samarbeidspartnere.
 - "newsletter": Et kort avsnitt tilpasset et ukentlig nyhetsbrev.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
+    const response = await fetch('https://api.1min.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey.trim()}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini', // 1min.ai usually routes compatible models
+        messages: [{ role: 'user', content: prompt }]
+      })
     });
 
-    const outputText = response.text || '';
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('1min.ai API error:', err);
+      throw new Error(`API returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    const outputText = data.choices[0].message.content || '';
+
     let parsedData;
     try {
       parsedData = JSON.parse(outputText.replace(/```json|```/g, '').trim());

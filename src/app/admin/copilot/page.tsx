@@ -284,7 +284,7 @@ export default function CopilotStudioPage() {
           <div className="mt-2 text-2xl font-black text-foreground">
             {audit.checklist.factDensity.valid ? 'Aktiv (Høy)' : 'Middels'}
           </div>
-          <p className="text-[11px] text-foreground-muted mt-1">ChatGPT, Perplexity & Gemini</p>
+          <p className="text-[11px] text-foreground-muted mt-1">ChatGPT, Perplexity & 1min.ai</p>
         </div>
       </div>
 

@@ -96,8 +96,8 @@ export default function NaeringslivetPage() {
 
           <div className="lg:col-span-6 p-8 lg:p-12 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <span className="text-xs font-bold text-primary flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> Nyetablering på Tønsberg Torv
+              <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                Nyetablering på Tønsberg Torv
               </span>
 
               <h3 className="text-2xl lg:text-3xl font-extrabold text-foreground leading-snug group-hover:text-primary transition-colors">

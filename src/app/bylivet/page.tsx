@@ -136,8 +136,8 @@ export default function BylivetPage() {
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
             <div className="relative aspect-[16/10] overflow-hidden">
               <img src="/images/regnbue.jpg" alt="Festival og Mangfold" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-primary" /> Sommer
+              <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
+                Festival & Folkeliv
               </span>
             </div>
             <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">

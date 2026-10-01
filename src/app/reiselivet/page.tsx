@@ -109,8 +109,8 @@ export default function ReiselivetPage() {
 
           <div className="lg:col-span-5 p-8 lg:p-12 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <span className="text-xs font-bold text-primary flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> Kyst- og øyparadis
+              <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                Kyst- og øyparadis
               </span>
 
               <h3 className="text-2xl lg:text-3xl font-extrabold text-foreground leading-snug group-hover:text-primary transition-colors">

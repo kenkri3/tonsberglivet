@@ -138,9 +138,8 @@ export function FiveLivesShowcase() {
       {/* Seksjonstittel */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Merkevaren Tønsberglivet</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-muted border border-border text-foreground-muted text-[11px] font-semibold uppercase tracking-wider mb-2">
+            <span>Fem dimensjoner • Ett fellesskap</span>
           </div>
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground">
             De fem livene i Tønsberg

@@ -48,25 +48,24 @@ export default async function Home() {
               <TonsberglivetLogo className="h-10 sm:h-12 md:h-14 w-auto text-[#d3dafe] drop-shadow-md" />
             </div>
 
-            {/* Pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 text-xs font-bold shadow-lg">
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Norges eldste by • Grunnlagt 871 e.Kr.</span>
+            {/* Subtil merkevare-etikett */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-slate-200 border border-white/20 text-[11px] font-semibold tracking-[0.2em] uppercase">
+              <span>Grunnlagt 871 e.Kr. • Norges eldste by</span>
             </div>
 
             {/* Tittel med Playfair Display serif aksent */}
             <h1 className="text-white text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.02]">
               Livet, slik det <br />
-              <span className="font-serif italic font-normal text-amber-300">skal leves.</span>
+              <span className="font-serif italic font-normal text-amber-200/95">skal leves.</span>
             </h1>
 
             {/* Ingress */}
-            <p className="text-base sm:text-lg md:text-xl text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow">
-              Tønsberglivet er et samarbeid mellom aktører som vil bidra til mer synlighet, mer stolthet, mer liv og mer kraft i hele regionen.
+            <p className="text-base sm:text-lg md:text-xl text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow-sm">
+              Tønsberglivet er fellesskapet som samler og styrker Norges eldste by — for mer synlighet, mer stolthet, mer liv og mer kraft.
             </p>
 
             {/* Handlinger */}
-            <div className="flex flex-wrap items-center gap-4 pt-4">
+            <div className="flex flex-wrap items-center gap-3.5 pt-4">
               <Link
                 href="/bylivet"
                 className="px-8 py-4 bg-primary hover:bg-primary-hover text-white rounded-full font-bold text-sm shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 group"
@@ -76,7 +75,7 @@ export default async function Home() {
               </Link>
               <Link
                 href="/eventer"
-                className="px-8 py-4 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white rounded-full font-bold text-sm transition-all flex items-center gap-2"
+                className="px-8 py-4 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/25 text-white rounded-full font-medium text-sm transition-all flex items-center gap-2"
               >
                 <Calendar className="w-4 h-4 text-amber-300" />
                 <span>Hva skjer i kveld?</span>
@@ -97,24 +96,24 @@ export default async function Home() {
         <FiveLivesShowcase />
       </section>
 
-      {/* ── 4. LIVE ARRANGEMENTER FRA TICKETMASTER ── */}
+      {/* ── 4. ARRANGEMENTER I TØNSBERG ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
-              <Ticket className="w-3.5 h-3.5" />
-              <span>Ticketmaster Live API</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-muted border border-border text-foreground-muted text-xs font-semibold uppercase tracking-wider mb-2">
+              <Calendar className="w-3.5 h-3.5 text-primary" />
+              <span>Kultur & Konsertkalender</span>
             </div>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground">
               Hva skjer i Tønsberg?
             </h2>
             <p className="text-foreground-muted text-base mt-2 font-light max-w-xl">
-              Sanntids arrangementskalender fra Foynhagen, Oseberg Kulturhus, Tønsberg og Færder Bibliotek og Slottsfjellet.
+              Ferske oppdateringer fra Foynhagen, Oseberg Kulturhus, Tønsberg og Færder Bibliotek og Slottsfjellet.
             </p>
           </div>
           <Link
             href="/eventer"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-surface border border-border text-foreground hover:bg-surface-muted rounded-2xl text-sm font-bold shadow-xs transition-colors shrink-0"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-surface border border-border text-foreground hover:bg-surface-muted rounded-2xl text-sm font-semibold shadow-2xs transition-colors shrink-0"
           >
             <span>Se alle arrangementer</span>
             <ArrowRight className="w-4 h-4 text-primary" />
@@ -151,12 +150,9 @@ export default async function Home() {
 
                 {/* Sted */}
                 <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white text-xs">
-                  <span className="flex items-center gap-1 font-semibold truncate drop-shadow">
+                  <span className="flex items-center gap-1.5 font-medium truncate drop-shadow">
                     <MapPin className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                     {ev.venueName || ev.location}
-                  </span>
-                  <span className="text-[10px] font-mono bg-primary/90 px-2 py-0.5 rounded-full shrink-0">
-                    Live
                   </span>
                 </div>
               </div>

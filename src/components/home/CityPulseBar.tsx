@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Calendar, ArrowRight, Train, Waves, Car, Wind,
-  CheckCircle, Radio
+  UtensilsCrossed, ShoppingBag, Landmark, Compass, Gift, Building2
 } from 'lucide-react';
 
 export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
@@ -21,7 +21,6 @@ export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
   });
 
   useEffect(() => {
-    // Parallel fetch of live Tønsberg pulse APIs
     Promise.allSettled([
       fetch('/api/entur?stop=tog').then((r) => r.json()),
       fetch('/api/ocean').then((r) => r.json()),
@@ -44,7 +43,7 @@ export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
       if (trafficRes.status === 'fulfilled' && trafficRes.value.success) {
         updates.bridgeStatus = trafficRes.value.data?.kanalbrua?.isCarPassable
           ? 'Kanalbrua: Åpen'
-          : 'Kanalbrua: Broåpning';
+          : 'Kanalbrua: Åpning pågår';
       }
 
       if (airRes.status === 'fulfilled' && airRes.value.success) {
@@ -56,97 +55,98 @@ export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
   }, []);
 
   const quickCategories = [
-    { label: 'Uteservering & Mat', href: '/bylivet/mat-og-drikke', icon: '🍽️' },
-    { label: 'Sentrumsshopping', href: '/bylivet/shopping', icon: '🛍️' },
-    { label: 'Slottsfjellet', href: '/reiselivet/opplevelser', icon: '🏰' },
-    { label: 'Verdens Ende', href: '/reiselivet/opplevelser', icon: '🌊' },
-    { label: 'Kollektiv & Avganger', href: '/bylivet', icon: '🚆' },
-    { label: 'Sentrumsgavekort', href: '/bylivet/gavekort', icon: '🎁' },
-    { label: 'Bedrifter & Brreg', href: '/naeringslivet/bedrifter', icon: '🏢' },
+    { label: 'Spisesteder & Brygga', href: '/bylivet/mat-og-drikke', icon: UtensilsCrossed },
+    { label: 'Sentrumsshopping', href: '/bylivet/shopping', icon: ShoppingBag },
+    { label: 'Slottsfjellet', href: '/reiselivet/opplevelser', icon: Landmark },
+    { label: 'Verdens Ende', href: '/reiselivet/opplevelser', icon: Compass },
+    { label: 'Tog & Kollektiv', href: '/bylivet', icon: Train },
+    { label: 'Sentrumsgavekort', href: '/bylivet/gavekort', icon: Gift },
+    { label: 'Næringsliv', href: '/naeringslivet/bedrifter', icon: Building2 },
   ];
 
   return (
-    <div className="bg-surface/95 dark:bg-slate-900/95 backdrop-blur-xl border border-border rounded-3xl p-4 sm:p-5 shadow-xl space-y-3">
-      {/* ── Topprad: Puls-indikator og Sanntids API-chips ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-border/60 pb-3">
-        {/* Venstre status-indikator */}
+    <div className="bg-surface/98 backdrop-blur-2xl border border-border/80 rounded-3xl p-4 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.35)] space-y-3.5">
+      {/* ── Top Bar: Bypulsen Sanntid ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-border/60 pb-3.5">
+        
+        {/* Puls Header */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="relative flex items-center justify-center">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping absolute" />
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 relative" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-foreground">
-              <span>Tønsberg Pulsen</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">
-                Live API
-              </span>
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-foreground">
+              Bypulsen akkurat nå
+            </span>
           </div>
         </div>
 
-        {/* Midt: Live API Sensor Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none text-[11px] font-semibold text-foreground-muted">
+        {/* Live Status Indicators (Sleek monochromatic styling) */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none text-[12px] font-medium text-foreground-muted">
           <Link
             href="/bylivet"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 hover:border-emerald-500 shrink-0 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
             title="Entur sanntid tog"
           >
-            <Train className="w-3.5 h-3.5 text-emerald-600" />
+            <Train className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>{pulseData.nextTrain}</span>
           </Link>
 
           <Link
             href="/bylivet"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 hover:border-blue-500 shrink-0 transition-colors"
-            title="Statens vegvesen Datex status"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
+            title="Kanalbrua status"
           >
-            <Car className="w-3.5 h-3.5 text-blue-600" />
+            <Car className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>{pulseData.bridgeStatus}</span>
           </Link>
 
           <Link
             href="/reiselivet/opplevelser"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20 hover:border-cyan-500 shrink-0 transition-colors"
-            title="MET Norway sjøtemperatur"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
+            title="Sjø- og badevannstemperatur"
           >
-            <Waves className="w-3.5 h-3.5 text-cyan-600" />
+            <Waves className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>Badevann {pulseData.waterTemp}°C</span>
           </Link>
 
           <Link
             href="/hverdagslivet"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 hover:border-purple-500 shrink-0 transition-colors"
-            title="NILU luftkvalitet"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
+            title="Luftkvalitet"
           >
-            <Wind className="w-3.5 h-3.5 text-purple-600" />
+            <Wind className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>{pulseData.airLabel}</span>
           </Link>
         </div>
 
-        {/* Høyre: Arrangementskalender-snarvei */}
+        {/* Arrangement-knapp */}
         <Link
           href="/eventer"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary-hover transition-colors shrink-0 shadow-xs self-start lg:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary text-white rounded-full text-xs font-semibold hover:bg-primary-hover transition-colors shrink-0 shadow-xs self-start lg:self-auto"
         >
           <Calendar className="w-3.5 h-3.5" />
           <span>Hva skjer i dag?</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
 
-      {/* ── Bunndel: Hurtigsnarveier ── */}
+      {/* ── Bottom Bar: Curated Quick Navigation ── */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {quickCategories.map((cat, idx) => (
-          <Link
-            key={idx}
-            href={cat.href}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-surface-muted hover:bg-primary hover:text-white text-xs font-semibold text-foreground transition-all shrink-0 border border-border/60 hover:border-primary shadow-2xs hover:scale-105"
-          >
-            <span>{cat.icon}</span>
-            <span>{cat.label}</span>
-          </Link>
-        ))}
+        {quickCategories.map((cat, idx) => {
+          const Icon = cat.icon;
+          return (
+            <Link
+              key={idx}
+              href={cat.href}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-surface-muted/60 hover:bg-surface hover:text-primary text-foreground text-xs font-medium border border-border/60 hover:border-primary/30 transition-all shrink-0 group"
+            >
+              <Icon className="w-3.5 h-3.5 text-foreground-subtle group-hover:text-primary transition-colors shrink-0" />
+              <span>{cat.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

@@ -26,26 +26,27 @@ import {
   Keyboard,
   RotateCcw,
   CheckCircle2,
+  Bell,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { TonsbergAgentChat } from '@/components/admin/TonsbergAgentChat';
 
 const adminNav = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Autonom Agent Hub', href: '/admin/agent', icon: Bot, badge: 'Live AI' },
-  { label: 'Artikler', href: '/admin/artikler', icon: FileText },
-  { label: 'Torvleie & Byrom', href: '/admin/booking', icon: MapPin, badge: '5 nye' },
-  { label: 'Byskjermer & Marked', href: '/admin/marketing', icon: Tv, badge: '4K' },
-  { label: 'Trafikk & Innsikt', href: '/admin/insights', icon: TrendingUp, badge: 'Live' },
-  { label: 'Duett ERP & Økonomi', href: '/admin/finance', icon: CreditCard, badge: 'EHF 3.0' },
-  { label: 'Bildebank', href: '/admin/bildebank', icon: ImageIcon },
-  { label: 'Arrangementer', href: '/admin/arrangementer', icon: Calendar },
-  { label: 'Bedrifter', href: '/admin/bedrifter', icon: Building2 },
-  { label: 'Partnere', href: '/admin/partnere', icon: Users },
-  { label: 'Prosjekter', href: '/admin/prosjekter', icon: FolderOpen },
-  { label: 'Meldinger', href: '/admin/meldinger', icon: MessageSquare },
-  { label: 'Innstillinger', href: '/admin/innstillinger', icon: Settings },
+  { label: 'Dashboard',           href: '/admin',                   icon: LayoutDashboard },
+  { label: 'Autonom Agent Hub',   href: '/admin/agent',             icon: Bot,           badge: 'live' as const },
+  { label: 'Artikler',            href: '/admin/artikler',          icon: FileText },
+  { label: 'Torvleie & Byrom',    href: '/admin/booking',           icon: MapPin,        count: 5 },
+  { label: 'Byskjermer & Marked', href: '/admin/marketing',         icon: Tv },
+  { label: 'Trafikk & Innsikt',   href: '/admin/insights',          icon: TrendingUp,    badge: 'live' as const },
+  { label: 'Duett ERP & Økonomi', href: '/admin/finance',           icon: CreditCard },
+  { label: 'Bildebank',           href: '/admin/bildebank',         icon: ImageIcon },
+  { label: 'Arrangementer',       href: '/admin/arrangementer',     icon: Calendar },
+  { label: 'Bedrifter',           href: '/admin/bedrifter',         icon: Building2 },
+  { label: 'Partnere',            href: '/admin/partnere',          icon: Users },
+  { label: 'Prosjekter',          href: '/admin/prosjekter',        icon: FolderOpen },
+  { label: 'Meldinger',           href: '/admin/meldinger',         icon: MessageSquare },
+  { label: 'Innstillinger',       href: '/admin/innstillinger',     icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -55,6 +56,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
   const [showSystemModal, setShowSystemModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [recentNotifText, setRecentNotifText] = useState<string | null>(null);
+  const prevCountRef = useRef(0);
+
+  // Syntetisk lydsignal ved nye meldinger (Web Audio API uten eksterne filer)
+  const playChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    } catch {
+      // Ignorer hvis lyd ikke er tillatt av nettleseren
+    }
+  };
+
+  // Polling for nye chat-meldinger fra innbyggere/turister
+  useEffect(() => {
+    const checkLiveChats = async () => {
+      try {
+        const res = await fetch('/api/agent/live-chat?countOnly=true');
+        const data = await res.json();
+        if (data.success && typeof data.unreadCount === 'number') {
+          if (data.unreadCount > prevCountRef.current && prevCountRef.current !== 0) {
+            playChime();
+            setRecentNotifText('Ny henvendelse mottatt i Tønsberg-Guiden!');
+            setTimeout(() => setRecentNotifText(null), 7000);
+          }
+          prevCountRef.current = data.unreadCount;
+          setUnreadChatCount(data.unreadCount);
+        }
+      } catch {
+        // Ignorer
+      }
+    };
+
+    checkLiveChats();
+    const timer = setInterval(checkLiveChats, 7000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Bestem aktiv modul basert på url
   const currentModule = pathname.includes('/admin/artikler')
@@ -80,6 +132,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
       if (e.key === 'Escape') {
         setHeaderMenuOpen(false);
+        setShowNotifDropdown(false);
         setShowSystemModal(false);
         setShowShortcutsModal(false);
       }
@@ -90,11 +143,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Lukk header-meny ved klikk utenfor
   useEffect(() => {
-    if (!headerMenuOpen) return;
-    const handleClickOutside = () => setHeaderMenuOpen(false);
+    if (!headerMenuOpen && !showNotifDropdown) return;
+    const handleClickOutside = () => {
+      setHeaderMenuOpen(false);
+      setShowNotifDropdown(false);
+    };
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [headerMenuOpen]);
+  }, [headerMenuOpen, showNotifDropdown]);
 
   const isFullAgentPage = pathname === '/admin/agent';
 
@@ -132,39 +188,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Navigasjon */}
-          <nav className="flex-1 overflow-y-auto py-4 px-3">
-            <ul className="space-y-1">
-              {adminNav.map((item) => {
+          <nav className="flex-1 overflow-y-auto py-3 px-3">
+            <ul className="space-y-0.5">
+              {adminNav.map((item, idx) => {
                 const isActive =
                   pathname === item.href ||
                   (item.href !== '/admin' && pathname.startsWith(item.href));
+                const isChat = item.href === '/admin/meldinger';
+                const liveCount = isChat && unreadChatCount > 0 ? unreadChatCount : (item as any).count;
+                const isLivePulse = (item as any).badge === 'live';
+
+                // Section divider before Bildebank (idx 7)
+                const showDivider = idx === 7;
+
                 return (
                   <li key={item.href}>
+                    {showDivider && (
+                      <div className="my-3 mx-1 border-t border-border/60" />
+                    )}
                     <Link
                       href={item.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold
-                                  transition-all duration-200 ${
+                      className={`group flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium
+                                  transition-all duration-150 ${
                                     isActive
                                       ? 'bg-primary text-primary-foreground shadow-sm'
                                       : 'text-foreground-muted hover:text-foreground hover:bg-surface-muted'
                                   }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <item.icon className="w-4 h-4 shrink-0" />
-                        <span>{item.label}</span>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <item.icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-primary-foreground' : 'text-foreground-subtle group-hover:text-foreground'}`} />
+                        <span className="truncate">{item.label}</span>
                       </div>
-                      {item.badge && (
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider ${
-                            isActive
-                              ? 'bg-white/20 text-white'
-                              : 'bg-surface-muted text-primary border border-border'
-                          }`}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
+
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        {/* Live pulse dot */}
+                        {isLivePulse && (
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'bg-white' : 'bg-emerald-500'} animate-pulse`} />
+                        )}
+                        {/* Numeric count bubble */}
+                        {liveCount != null && liveCount > 0 && (
+                          <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center leading-none ${
+                            isChat && unreadChatCount > 0
+                              ? 'bg-amber-500 text-white'
+                              : isActive
+                              ? 'bg-white/25 text-white'
+                              : 'bg-primary/10 text-primary'
+                          }`}>
+                            {liveCount}
+                          </span>
+                        )}
+                      </div>
                     </Link>
                   </li>
                 );
@@ -243,6 +317,79 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <span>Agent Studio Aktiv</span>
                 </div>
               )}
+
+              {/* Notifikasjons-bjelle for nye henvendelser / live chat */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowNotifDropdown(!showNotifDropdown);
+                  }}
+                  className={`relative p-2 rounded-xl border transition-colors ${
+                    unreadChatCount > 0
+                      ? 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                      : 'border-border text-foreground-muted hover:text-foreground hover:bg-surface-muted'
+                  }`}
+                  title="Systemvarsler og chathenvendelser"
+                  aria-label="Systemvarsler"
+                >
+                  <Bell className="w-4 h-4" />
+                  {unreadChatCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse shadow-xs">
+                      {unreadChatCount}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifDropdown && (
+                  <div
+                    className="absolute right-0 top-12 w-72 bg-surface border border-border rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="px-3.5 py-1.5 border-b border-border flex items-center justify-between text-[11px] font-bold text-foreground-muted uppercase tracking-wider">
+                      <span>Varsler</span>
+                      {unreadChatCount > 0 && (
+                        <span className="text-[10px] font-bold text-amber-500">
+                          {unreadChatCount} nye
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-2 space-y-1">
+                      {unreadChatCount > 0 ? (
+                        <Link
+                          href="/admin/meldinger"
+                          onClick={() => setShowNotifDropdown(false)}
+                          className="w-full text-left p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-foreground flex items-start gap-2.5 transition-colors border border-amber-500/20"
+                        >
+                          <span className="w-2 h-2 rounded-full bg-amber-500 mt-1 shrink-0 animate-ping" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-foreground">
+                              {unreadChatCount} {unreadChatCount === 1 ? 'ny henvendelse' : 'nye henvendelser'} i chatten
+                            </p>
+                            <p className="text-[11px] text-foreground-muted truncate">
+                              En innbygger eller turist venter på svar i Tønsberg-Guiden.
+                            </p>
+                          </div>
+                        </Link>
+                      ) : (
+                        <div className="p-3 text-center text-xs text-foreground-muted">
+                          Ingen nye varsler akkurat nå.
+                        </div>
+                      )}
+
+                      <Link
+                        href="/admin/meldinger"
+                        onClick={() => setShowNotifDropdown(false)}
+                        className="w-full text-center block py-1.5 text-[11px] font-semibold text-primary hover:underline"
+                      >
+                        Gå til alle meldinger →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Tre-prikker Meny (...) for sekundære funksjoner for å unngå rot */}
               <div className="relative">
@@ -328,6 +475,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Side-om-side layout: Hovedinnhold + Integrert Co-Pilot */}
         <div className="flex-1 flex min-w-0 relative">
+          {/* Flytende varsel-toast for nye innbygger-henvendelser */}
+          {recentNotifText && (
+            <div className="fixed top-20 right-6 z-50 bg-amber-500 text-white px-4 py-3 rounded-2xl shadow-2xl border border-white/20 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping shrink-0" />
+              <div>
+                <p className="font-bold text-xs">{recentNotifText}</p>
+                <Link
+                  href="/admin/meldinger"
+                  onClick={() => setRecentNotifText(null)}
+                  className="text-[11px] underline font-semibold text-white/90 hover:text-white"
+                >
+                  Gå til innboksen for å svare brukeren →
+                </Link>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRecentNotifText(null)}
+                className="p-1 hover:bg-white/20 rounded-lg text-white ml-2"
+                aria-label="Lukk varsel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Hovedarbeidsflate for aktiv side */}
           <main className={`flex-1 min-w-0 ${isFullAgentPage ? 'p-2 sm:p-4 lg:p-8 pb-16 lg:pb-8' : 'p-4 lg:p-8 pb-28 lg:pb-8'}`}>{children}</main>
 

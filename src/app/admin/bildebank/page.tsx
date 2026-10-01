@@ -195,7 +195,7 @@ export default function ImageBankPage() {
               <div className="p-4 bg-surface-muted rounded-2xl border border-border space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-primary" /> Google AI Vision-analyse
+                    <Sparkles className="w-4 h-4 text-primary" /> AI Bildeanalyse
                   </span>
                   <button
                     type="button"

@@ -11,32 +11,27 @@ interface SectionCardProps {
 
 export function SectionCard({ title, description, href, gradient, icon }: SectionCardProps) {
   return (
-    <Link href={href} className="group block">
+    <Link href={href} className="group block h-full">
       <div
-        className="relative overflow-hidden rounded-2xl p-8 h-full min-h-[220px]
-                    flex flex-col justify-end transition-all duration-300
-                    hover:shadow-xl hover:-translate-y-1"
-        style={{ background: gradient }}
+        className="relative overflow-hidden rounded-3xl p-7 sm:p-8 h-full min-h-[220px]
+                    flex flex-col justify-between transition-all duration-300
+                    bg-surface border border-border/80 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1"
       >
-        {/* Dekorativt mønster */}
-        <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            <circle cx="80" cy="20" r="40" fill="white" />
-          </svg>
+        <div>
+          {icon && (
+            <div className="w-12 h-12 rounded-2xl bg-surface-muted border border-border/60 flex items-center justify-center mb-6 text-foreground group-hover:text-primary group-hover:scale-105 transition-all">
+              {icon}
+            </div>
+          )}
+
+          <h3 className="text-xl sm:text-2xl font-extrabold text-foreground mb-2 group-hover:text-primary transition-colors">
+            {title}
+          </h3>
+          <p className="text-foreground-muted text-sm leading-relaxed font-light">{description}</p>
         </div>
 
-        {icon && (
-          <div className="mb-4 text-white/80">{icon}</div>
-        )}
-
-        <h3 className="text-xl md:text-2xl font-bold text-white mb-2 group-hover:translate-x-1 transition-transform">
-          {title}
-        </h3>
-        <p className="text-white/75 text-sm leading-relaxed mb-4">{description}</p>
-
-        <div className="flex items-center gap-2 text-white/90 text-sm font-medium
-                        group-hover:gap-3 transition-all">
-          Utforsk
+        <div className="pt-6 flex items-center gap-2 text-xs font-semibold text-primary group-hover:gap-3 transition-all">
+          <span>Utforsk</span>
           <ArrowRight className="w-4 h-4" />
         </div>
       </div>

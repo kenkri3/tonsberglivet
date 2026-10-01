@@ -83,29 +83,32 @@ export function Header() {
   return (
     <>
       {/* Top Notification / Utility Bar */}
-      <div className="bg-slate-900 text-slate-300 text-xs py-1.5 px-4 border-b border-slate-800 hidden md:block">
+      <div className="bg-slate-950 text-slate-300 text-xs py-2 px-4 border-b border-white/10 hidden md:block">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-amber-400 font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              Norges eldste kystby • 1155 års levende historie
+            <span className="text-xs tracking-wide text-slate-300 font-medium">
+              Norges eldste kystby <span className="text-slate-600 mx-1.5">•</span> 1155 års levende historie
             </span>
           </div>
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-4 text-xs font-light">
             <Link href="/eventer" className="hover:text-white transition-colors">
               Hva skjer i byen?
             </Link>
-            <span className="text-slate-600">|</span>
+            <span className="text-slate-700">|</span>
             <Link href="/bylivet/torvleie" className="hover:text-white transition-colors">
               Leie plass på Torvet
             </Link>
-            <span className="text-slate-600">|</span>
+            <span className="text-slate-700">|</span>
+            <Link href="/om-oss/partnere" className="hover:text-white transition-colors">
+              Næring & partnere
+            </Link>
+            <span className="text-slate-700">|</span>
             <Link
               href="/admin"
-              className="inline-flex items-center gap-1 text-amber-300 hover:text-amber-200 font-semibold"
+              className="text-slate-400 hover:text-amber-300 transition-colors"
+              title="Intern administrasjon"
             >
-              <LayoutDashboard className="w-3 h-3" />
-              Tønsberg OS Admin
+              Logg inn
             </Link>
           </div>
         </div>
@@ -194,13 +197,13 @@ export function Header() {
             </nav>
 
             {/* Høyre side — verktøy */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <WeatherWidget />
 
               {/* Søk-knapp med Cmd+K badge */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-full border border-border bg-surface hover:bg-surface-muted text-xs font-medium text-foreground-muted transition-all shadow-xs"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-full border border-border bg-surface hover:bg-surface-muted text-xs font-medium text-foreground-muted transition-all shadow-2xs"
                 aria-label="Søk i portalen"
               >
                 <Search className="w-4 h-4 text-foreground-subtle" />
@@ -211,16 +214,6 @@ export function Header() {
               </button>
 
               <ThemeToggle />
-
-              {/* Admin Hub — Direkteknapp til backend */}
-              <Link
-                href="/admin"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-primary bg-primary-light hover:bg-primary hover:text-white rounded-xl transition-all shadow-xs"
-                title="Gå direkte til Tønsberg OS Admin"
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                Admin OS
-              </Link>
 
               {/* Mobilmeny-knapp */}
               <button

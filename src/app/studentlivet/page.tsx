@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { 
   GraduationCap, Home, HeartPulse, Ticket, Briefcase, 
-  BookOpen, Coffee, PartyPopper, ChevronRight, ArrowRight, Sparkles
+  BookOpen, Coffee, PartyPopper, ChevronRight, ArrowRight
 } from 'lucide-react';
 import { StudentlivetLogo } from '@/components/brand/BrandLogos';
 import { PublicTransportWidget } from '@/components/transit/PublicTransportWidget';

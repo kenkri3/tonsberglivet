@@ -819,7 +819,7 @@ export function TonsbergAgentChat({
               <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
                 <div className="flex items-center gap-2.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="font-semibold text-foreground">Google Gemini 2.5</span>
+                  <span className="font-semibold text-foreground">AI-modell (1min.ai)</span>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Aktiv</span>
               </div>

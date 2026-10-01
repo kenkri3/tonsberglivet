@@ -48,15 +48,8 @@ export function HeroSection({
         />
       )}
 
-      {/* Dekorativ form */}
-      <div className="absolute -bottom-1 left-0 right-0">
-        <svg viewBox="0 0 1440 80" fill="none" className="w-full">
-          <path
-            d="M0 80V40C360 70 720 10 1080 40C1260 55 1380 70 1440 75V80H0Z"
-            className="fill-background"
-          />
-        </svg>
-      </div>
+      {/* Ren overgang til innhold */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">

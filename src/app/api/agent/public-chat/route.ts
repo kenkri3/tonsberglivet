@@ -1,29 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEffectiveGeminiApiKey } from '@/lib/ai-config';
-import { GoogleGenAI } from '@google/genai';
-import { toolGetRealEvents, toolGetRealtimeStatus, toolSearchBusinesses } from '@/lib/agent-tools';
+import { getSetting } from '@/lib/settings';
+import { toolGetRealEvents, toolGetRealtimeStatus } from '@/lib/agent-tools';
 import { logVisitorQuestion } from '@/lib/chatbot-logger';
-import { prisma } from '@/lib/prisma';
-import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import {
+  getGlobalAiChatbotStatus,
+  getOrCreateChatSession,
+  addVisitorMessage,
+  addAssistantMessage,
+} from '@/lib/live-chat';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  // Rate limiting for offentlig KI-chat: maks 20 spørsmål per 10 minutter per IP
-  const ip = getClientIp(request);
-  const rateLimit = checkRateLimit(`public_chat_${ip}`, 20, 600);
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { success: false, error: `Du har stilt mange spørsmål på kort tid. Vennligst vent ${rateLimit.resetSeconds} sekunder.` },
-      { status: 429 }
-    );
-  }
-
   try {
     const body = await request.json().catch(() => ({}));
     const message = (body.message || '').trim();
     const contactName = body.name?.trim();
     const contactEmail = body.email?.trim();
+    const sessionId = (body.sessionId || `session-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`).trim();
+    const visitorPrefersAi = body.aiEnabled !== false;
 
     if (!message) {
       return NextResponse.json(
@@ -49,20 +45,49 @@ export async function POST(request: NextRequest) {
       topic = 'PARKERING';
     }
 
-    // Logg henvendelsen inn i visitor pulse og eventuell lead-fangst
-    const leadCaptured = !!(contactEmail || contactName);
+    // Registrer meldingen i den persistente live chat-sesjonen
+    await addVisitorMessage(sessionId, message, topic, {
+      name: contactName,
+      email: contactEmail,
+    });
+
+    // Logg henvendelsen for puls og statistikk
     await logVisitorQuestion(
       message,
       topic,
       true,
-      leadCaptured ? { name: contactName, email: contactEmail } : undefined
+      contactEmail || contactName ? { name: contactName, email: contactEmail } : undefined
     );
+
+    // Sjekk om AI er aktivert globalt, for sesjonen og av brukeren
+    const globalAiEnabled = await getGlobalAiChatbotStatus();
+    const session = await getOrCreateChatSession(sessionId);
+    const shouldRunAi = globalAiEnabled && session.aiEnabled && visitorPrefersAi;
+
+    // Hvis AI er slått av: Gi beskjed om at henvendelsen er mottatt av administrasjonen
+    if (!shouldRunAi) {
+      const humanNotice =
+        'Takk for meldingen din! 📬\n\n' +
+        'AI-assistenten er for øyeblikket slått av for denne henvendelsen. ' +
+        'Meldingen din er sendt direkte til administrasjonen i Tønsberglivet.\n\n' +
+        'En rådgiver (f.eks. Cecilie) vil lese meldingen og svare deg her i chatten så raskt som mulig!';
+
+      await addAssistantMessage(sessionId, humanNotice);
+
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        aiEnabled: false,
+        reply: humanNotice,
+        quickReplies: [
+          { title: '📞 Kontaktinfo', payload: 'Hvordan kontakter jeg Tønsberglivet?' },
+          { title: '🏛️ Om Tønsberglivet', payload: 'Hva er Tønsberglivet?' },
+        ],
+      });
+    }
 
     let replyText = '';
     const quickReplies: Array<{ title: string; payload: string }> = [];
-
-    // 1. Forsøk intelligent Gemini-svar med reell sanntidskontekst
-    const apiKey = await getEffectiveGeminiApiKey();
 
     // Hent reelle data for kontekst
     const [eventsRes, realtimeRes] = await Promise.all([
@@ -73,9 +98,15 @@ export async function POST(request: NextRequest) {
     const activeEvents = (eventsRes.data || []).slice(0, 5);
     const rt = realtimeRes.data;
 
+    // 1. Forsøk intelligent Gemini-svar med reell sanntidskontekst
+    const apiKey = await getEffectiveGeminiApiKey();
+
     if (apiKey) {
       try {
-        const ai = new GoogleGenAI({ apiKey });
+        
+        let finalKey = apiKey;
+        const fallbackKey = await getSetting('gemini_api_key');
+        if (fallbackKey) finalKey = fallbackKey;
 
         const prompt = `Du er den vennlige, lokale byverten «Tønsberg-Guiden» for Tønsberglivet (tonsberglivet.no).
 Du hjelper turister, innbyggere og gjester med å oppleve det beste av Tønsberg og Færder.
@@ -87,20 +118,31 @@ REELLE SANNTIDSDATA FRA TØNSBERG AKKURAT NÅ:
 - Togavganger: ${JSON.stringify(rt?.togAvganger || 'Ikke tilgjengelig')}
 - Luftkvalitet: ${rt?.luftkvalitet || 'God'}
 
-RETNINGSLINJER:
-1. Gi konkrete tips om Tønsberg (Brygga, Slottsfjellet, Foynhagen, Haugar, Tønsberg Torv, Ringshaugstranda).
-2. Hvis noen spør om å leie stand på Torvet, forklar at de kan søke om torvleie på tonsberglivet.no eller legge igjen kontaktinfo her.
-3. Vær kortfattet, lettlest og engasjerende med emojier.
+RETNINGSLINJER FOR FORMATERING OG SVAR:
+1. Skriv ren, oversiktlig tekst. Bruk kulepunkter (•) for lister.
+2. Ikke overdriv bruken av markdown-stjerner. Fremhev kun viktige navn med fet skrift.
+3. Hvis noen spør om å leie stand på Torvet, forklar at de kan søke om torvleie på tonsberglivet.no eller legge igjen kontaktinfo her.
+4. Vær kortfattet, lettlest og engasjerende med emojier.
 
 Brukerens spørsmål: "${message}"`;
 
-        const res = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: prompt,
+        const res = await fetch('https://api.1min.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${finalKey.trim()}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }]
+          })
         });
 
-        if (res && res.text) {
-          replyText = res.text;
+        if (res.ok) {
+          const data = await res.json();
+          replyText = data.choices[0].message.content;
+        } else {
+          console.error("1min.ai API feil:", await res.text());
         }
       } catch (err: any) {
         console.warn('[Public Chat API] Gemini feilet:', err?.message);
@@ -159,8 +201,13 @@ Brukerens spørsmål: "${message}"`;
       quickReplies.push({ title: '🌊 Badetemperatur', payload: 'Hva er vanntemperaturen?' });
     }
 
+    // Lagre assistentens svar i live-chat-sesjonen
+    await addAssistantMessage(sessionId, replyText, quickReplies.slice(0, 4));
+
     return NextResponse.json({
       success: true,
+      sessionId,
+      aiEnabled: true,
       reply: replyText,
       quickReplies: quickReplies.slice(0, 4),
     });
