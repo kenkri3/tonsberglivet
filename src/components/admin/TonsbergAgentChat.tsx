@@ -549,13 +549,11 @@ export function TonsbergAgentChat({
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
                 placeholder="Skriv en instruks eller oppgave til agenten..."
-                className="flex-1 bg-transparent px-3 py-1.5 text-xs sm:text-sm text-foreground placeholder:text-foreground-muted/60 outline-none"
+                style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+                className="flex-1 bg-transparent px-3 py-1.5 text-xs sm:text-sm text-foreground placeholder:text-foreground-muted/60 border-0 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 shadow-none ring-0"
               />
 
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-surface-muted text-[10px] font-bold text-foreground-muted border border-border">
-                  Flash 2.5
-                </span>
 
                 <button
                   type="button"
@@ -765,7 +763,8 @@ export function TonsbergAgentChat({
                 onChange={(e) => setInputVal(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Spør agenten eller gi en instruks..."
-                className="flex-1 max-h-[140px] resize-none bg-transparent py-1.5 px-1 text-xs sm:text-sm text-foreground placeholder:text-foreground-muted/60 outline-none leading-relaxed"
+                style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+                className="flex-1 max-h-[140px] resize-none bg-transparent py-1.5 px-2 text-xs sm:text-sm text-foreground placeholder:text-foreground-muted/60 border-0 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 shadow-none ring-0 leading-relaxed"
               />
 
               <button

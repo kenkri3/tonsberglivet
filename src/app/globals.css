@@ -175,6 +175,17 @@ html {
   border-radius: var(--radius-sm);
 }
 
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
 /* --- Tekstmarkering --- */
 ::selection {
   background: var(--primary-light);
