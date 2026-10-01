@@ -90,41 +90,48 @@ interface NewsCardProps {
   date: string;
   category?: string;
   href: string;
+  imageUrl?: string;
 }
 
-export function NewsCard({ title, excerpt, date, category, href }: NewsCardProps) {
+export function NewsCard({ title, excerpt, date, category, href, imageUrl }: NewsCardProps) {
   return (
-    <Link href={href} className="group block">
-      <article className="bg-surface rounded-2xl overflow-hidden border border-border
-                          hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 h-full
+    <Link href={href} className="group block h-full">
+      <article className="bg-surface rounded-2xl overflow-hidden border border-border/80
+                          hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 h-full
                           flex flex-col">
-        {/* Bildeplassholder */}
-        <div className="aspect-[16/9] bg-gradient-to-br from-primary/10 to-accent/10
-                        flex items-center justify-center">
-          <span className="text-foreground-subtle text-sm">Bilde</span>
+        {/* Nyhetsbilde eller dekorativ gradient */}
+        <div className="relative aspect-[16/10] overflow-hidden bg-surface-muted">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-surface-muted to-accent/20 flex items-center justify-center">
+              <span className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">Tønsberglivet</span>
+            </div>
+          )}
+          {category && (
+            <span className="absolute top-3 left-3 px-3 py-1 text-xs font-bold bg-surface/90 backdrop-blur-md text-primary rounded-full shadow-sm">
+              {category}
+            </span>
+          )}
         </div>
 
-        <div className="p-6 flex flex-col flex-1">
-          <div className="flex items-center gap-3 mb-3">
-            {category && (
-              <span className="px-3 py-1 text-xs font-medium bg-primary-light text-primary rounded-full">
-                {category}
-              </span>
-            )}
-            <time className="text-xs text-foreground-subtle">{date}</time>
-          </div>
+        <div className="p-5 sm:p-6 flex flex-col flex-1">
+          <time className="text-xs font-medium text-foreground-subtle mb-2.5 block">{date}</time>
 
-          <h3 className="text-lg font-semibold text-foreground mb-2
-                         group-hover:text-primary transition-colors line-clamp-2">
+          <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2 leading-snug">
             {title}
           </h3>
-          <p className="text-sm text-foreground-muted leading-relaxed line-clamp-3 flex-1">
+          <p className="text-sm text-foreground-muted leading-relaxed line-clamp-3 flex-1 mb-4">
             {excerpt}
           </p>
 
-          <div className="flex items-center gap-2 mt-4 text-primary text-sm font-medium
-                          group-hover:gap-3 transition-all">
-            Les mer
+          <div className="flex items-center gap-2 text-primary text-sm font-semibold group-hover:gap-3 transition-all pt-2 border-t border-border/40">
+            Les hele saken
             <ArrowRight className="w-4 h-4" />
           </div>
         </div>

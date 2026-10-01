@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Bot,
   Sparkles,
   RefreshCw,
-  ExternalLink,
   Maximize2,
   Minimize2,
   Copy,
   Check,
-  CheckCircle2,
   Calendar,
   MapPin,
   Building2,
@@ -18,17 +16,13 @@ import {
   ArrowRight,
   Info,
   Tv,
-  MessageCircle,
-  HelpCircle,
-  Clock,
   Send,
   Zap,
-  Layers,
-  Globe,
-  Search,
   Database,
   Cpu,
+  RotateCcw,
 } from 'lucide-react';
+import { TonsbergAgentChat } from '@/components/admin/TonsbergAgentChat';
 
 interface PromptTemplate {
   category: string;
@@ -87,6 +81,14 @@ const promptTemplates: PromptTemplate[] = [
     prompt:
       'Lag 3 SoMe-versjoner for Tønsberglivets kanaler: 1) Engasjerende Facebook-post med emojier, 2) Visuell Instagram-post med hashtags (#tonsberglivet #tbglivet), og 3) Profesjonell LinkedIn-oppdatering rettet mot næringsliv.',
     description: 'Konverterer nyheter til ferdige poster for sosiale medier.',
+  },
+  {
+    category: 'Næringslivet & Hi5',
+    title: 'Næringsportrett & Tech-miljø',
+    icon: Building2,
+    prompt:
+      'Skriv et næringsportrett om innovasjonsmiljøet på Gründerhuset Hi5 og fordelene ved å etablere bedrift i Tønsberg.',
+    description: 'Fremhever gründervirksomhet og innovasjonsmiljø i Tønsberg.',
   },
 ];
 
@@ -155,9 +157,7 @@ const multiToolWorkflows: MultiToolWorkflow[] = [
 
 export default function AdminAgentPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [iframeKey, setIframeKey] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'prompts' | 'workflows'>('workflows');
+  const [activeTab, setActiveTab] = useState<'workflows' | 'prompts'>('workflows');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [agentStatus, setAgentStatus] = useState<{
     success: boolean;
@@ -166,28 +166,47 @@ export default function AdminAgentPage() {
     maskedBotId?: string;
   } | null>(null);
 
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // Hent status fra backend og håndter lastetid
+  // Hent status fra backend
   useEffect(() => {
     fetch('/api/agent/status')
       .then((res) => res.json())
       .then((data) => setAgentStatus(data))
       .catch(() => setAgentStatus({ success: true, status: 'active', environmentConfigured: true }));
+  }, []);
 
-    const timer = setTimeout(() => setIsLoading(false), 1800);
-    return () => clearTimeout(timer);
-  }, [iframeKey]);
+  const handleRunWorkflow = (prompt: string, id: string) => {
+    try {
+      navigator.clipboard.writeText(prompt);
+    } catch {
+      // Ignorer clipboard-feil hvis utilgjengelig
+    }
+    setCopiedId(id);
 
-  const handleRefresh = () => {
-    setIsLoading(true);
-    setIframeKey((prev) => prev + 1);
+    // Send direkte inn i TønsbergAgentChat-komponenten via egendefinert hendelse
+    window.dispatchEvent(
+      new CustomEvent('tonsberg:agent-prompt', { detail: { prompt } })
+    );
+
+    // På mindre mobile skjermer: scroll mykt opp til chattefeltet
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      document.getElementById('agent-chat-container')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const handleCopy = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2500);
+  const handleQuickStatus = () => {
+    window.dispatchEvent(
+      new CustomEvent('tonsberg:agent-prompt', {
+        detail: {
+          prompt:
+            'Hei! Gi meg en rask 360-graders statusoversikt over Tønsberglivet i dag: ventende torvleiesøknader, nye arrangementer og nylig publisert innhold.',
+        },
+      })
+    );
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      document.getElementById('agent-chat-container')?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -208,7 +227,7 @@ export default function AdminAgentPage() {
                 </span>
               </div>
               <p className="text-sm text-foreground-muted mt-1">
-                Sentral styring for Tønsberglivets digitale byvert, booking-assistanse og automatiserte henvendelser.
+                Sentral styring for Tønsberglivets digitale byvert, database-assistanse og automatiserte henvendelser.
               </p>
             </div>
           </div>
@@ -216,12 +235,12 @@ export default function AdminAgentPage() {
           {/* Verktøyknapper */}
           <div className="flex items-center gap-2 self-start sm:self-center">
             <button
-              onClick={handleRefresh}
-              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-surface-muted hover:bg-surface-muted/80 text-foreground border border-border transition-colors"
-              title="Start agent-sesjon på nytt"
+              onClick={handleQuickStatus}
+              className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs"
+              title="Kjør en rask 360° statusoversikt"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span className="hidden md:inline">Oppdater</span>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Dagens status</span>
             </button>
 
             <button
@@ -232,26 +251,15 @@ export default function AdminAgentPage() {
               {isFullscreen ? (
                 <>
                   <Minimize2 className="w-3.5 h-3.5" />
-                  <span className="hidden md:inline">Lukk fullskjerm</span>
+                  <span className="hidden sm:inline">Lukk fullskjerm</span>
                 </>
               ) : (
                 <>
                   <Maximize2 className="w-3.5 h-3.5" />
-                  <span className="hidden md:inline">Fullskjerm</span>
+                  <span className="hidden sm:inline">Fullskjerm</span>
                 </>
               )}
             </button>
-
-            <a
-              href="/api/bot-frame"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs"
-              title="Åpne i separat fane"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Åpne i ny fane</span>
-            </a>
           </div>
         </div>
 
@@ -275,18 +283,19 @@ export default function AdminAgentPage() {
           </span>
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             <Database className="w-3 h-3" />
-            <span>Tønsberg Backend Webhooks</span>
+            <span>Tønsberg PostgreSQL Webhooks</span>
           </span>
         </div>
       </div>
 
       {/* Hovedarbeidsområde */}
       <div className={`grid gap-6 ${isFullscreen ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-12'}`}>
-        {/* Venstre/Midt: Iframe Agent Visning */}
+        {/* Venstre/Midt: Native Agent Chat Visning (ksmester-stil) */}
         <div
+          id="agent-chat-container"
           className={`${
             isFullscreen
-              ? 'col-span-1 fixed inset-4 z-50 bg-background/95 backdrop-blur-xl p-4 rounded-3xl border border-border shadow-2xl flex flex-col'
+              ? 'col-span-1 fixed inset-2 sm:inset-4 z-50 bg-background/95 backdrop-blur-xl p-2 sm:p-4 rounded-2xl sm:rounded-3xl border border-border shadow-2xl flex flex-col'
               : 'lg:col-span-7 xl:col-span-8'
           }`}
         >
@@ -305,27 +314,9 @@ export default function AdminAgentPage() {
             </div>
           )}
 
-          <div className="relative w-full rounded-2xl overflow-hidden border border-border bg-surface shadow-sm h-[560px] sm:h-[660px] lg:h-[820px] flex flex-col">
-            {/* Lasteindikator */}
-            {isLoading && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface/90 backdrop-blur-xs transition-opacity">
-                <div className="w-10 h-10 border-3 border-primary/20 border-t-primary rounded-full animate-spin mb-3" />
-                <p className="text-xs font-semibold text-foreground">Kobler til Tønsberglivet Agent...</p>
-                <p className="text-[11px] text-foreground-muted mt-1">Laster sikkert iframe-grensesnitt</p>
-              </div>
-            )}
-
-            {/* Iframe */}
-            <iframe
-              key={iframeKey}
-              ref={iframeRef}
-              src="/api/bot-frame"
-              title="Tønsberglivet Autonom Agent"
-              className="w-full flex-1 border-0 bg-transparent"
-              onLoad={() => setIsLoading(false)}
-              allow="microphone; camera; clipboard-write"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
-            />
+          {/* 100% Native Chat Interface */}
+          <div className="relative w-full rounded-2xl overflow-hidden border border-border bg-surface shadow-xs h-[640px] sm:h-[720px] lg:h-[820px] flex flex-col">
+            <TonsbergAgentChat className="w-full h-full" userName="Cecilie" />
           </div>
         </div>
 
@@ -390,23 +381,23 @@ export default function AdminAgentPage() {
                           </div>
 
                           <button
-                            onClick={() => handleCopy(wf.prompt, wf.id)}
-                            className={`p-1.5 rounded-lg border text-xs font-medium flex items-center gap-1 shrink-0 transition-all ${
+                            onClick={() => handleRunWorkflow(wf.prompt, wf.id)}
+                            className={`p-1.5 px-2.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 shrink-0 transition-all ${
                               isCopied
                                 ? 'bg-emerald-500 text-white border-emerald-600'
-                                : 'bg-surface text-foreground-muted hover:text-foreground border-border hover:bg-surface-muted'
+                                : 'bg-primary/10 text-primary hover:bg-primary hover:text-white border-primary/20'
                             }`}
-                            title="Kopier arbeidsflyt-instruks"
+                            title="Kjør denne arbeidsflyten i chat"
                           >
                             {isCopied ? (
                               <>
                                 <Check className="w-3.5 h-3.5" />
-                                <span className="text-[10px]">Kopiert</span>
+                                <span className="text-[10px] font-semibold">Startet</span>
                               </>
                             ) : (
                               <>
-                                <Copy className="w-3.5 h-3.5" />
-                                <span className="text-[10px]">Kjør flyt</span>
+                                <Zap className="w-3.5 h-3.5" />
+                                <span className="text-[10px] font-semibold">Kjør i chat</span>
                               </>
                             )}
                           </button>
@@ -451,23 +442,23 @@ export default function AdminAgentPage() {
                             <span className="text-xs font-bold text-foreground">{item.title}</span>
                           </div>
                           <button
-                            onClick={() => handleCopy(item.prompt, promptId)}
-                            className={`p-1.5 rounded-lg border text-xs font-medium flex items-center gap-1 transition-all ${
+                            onClick={() => handleRunWorkflow(item.prompt, promptId)}
+                            className={`p-1.5 px-2.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-all ${
                               isCopied
                                 ? 'bg-emerald-500 text-white border-emerald-600'
                                 : 'bg-surface text-foreground-muted hover:text-foreground border-border hover:bg-surface-muted'
                             }`}
-                            title="Kopier instruks til utklippstavle"
+                            title="Send denne oppgaven til agenten"
                           >
                             {isCopied ? (
                               <>
                                 <Check className="w-3.5 h-3.5" />
-                                <span className="text-[10px]">Kopiert</span>
+                                <span className="text-[10px] font-semibold">Startet</span>
                               </>
                             ) : (
                               <>
-                                <Copy className="w-3.5 h-3.5" />
-                                <span className="text-[10px]">Kopier</span>
+                                <Send className="w-3.5 h-3.5" />
+                                <span className="text-[10px] font-semibold">Send</span>
                               </>
                             )}
                           </button>
@@ -493,13 +484,13 @@ export default function AdminAgentPage() {
                 <div className="flex items-center justify-between p-2 rounded-lg bg-surface-muted/50 border border-border">
                   <span className="text-foreground-muted">Miljøvariabel (AGENT_API):</span>
                   <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    {agentStatus?.environmentConfigured ? 'Aktiv (Railway)' : 'Aktiv (Standard)'}
+                    {agentStatus?.environmentConfigured ? 'Aktiv (Konfigurert)' : 'Aktiv (Standard)'}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between p-2 rounded-lg bg-surface-muted/50 border border-border">
-                  <span className="text-foreground-muted">Iframe-proxy:</span>
-                  <span className="font-mono font-bold text-foreground">/api/bot-frame (SAMEORIGIN)</span>
+                  <span className="text-foreground-muted">Arkitektur:</span>
+                  <span className="font-mono font-bold text-foreground">Headless Converse & Native Chat</span>
                 </div>
 
                 <div className="flex items-center justify-between p-2 rounded-lg bg-surface-muted/50 border border-border">
@@ -511,9 +502,9 @@ export default function AdminAgentPage() {
               <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-600 dark:text-blue-400">
                 <div className="flex items-center gap-1.5 font-bold mb-1">
                   <Info className="w-3.5 h-3.5" />
-                  <span>Automatisert hverdag:</span>
+                  <span>100% Native Chat:</span>
                 </div>
-                Når agenten finner eller oppdaterer informasjon via Apify eller Tavily, lagres dataene direkte i Tønsberglivets PostgreSQL-database via backend-webhooken.
+                Agenten kjører direkte i grensesnittet uten eksterne iframes eller tredjeparts widgets. Ved feil eller forsinkelse kobler den automatisk over til Gemini 2.5 Flash med full tilgang til Tønsberglivets data.
               </div>
             </div>
           </div>

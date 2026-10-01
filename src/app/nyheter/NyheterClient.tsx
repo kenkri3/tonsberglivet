@@ -7,12 +7,54 @@ import { NewsCard } from '@/components/ui/Cards';
 const categories = ['Alle', 'Bylivet', 'Hverdagslivet', 'Næringslivet', 'Reiselivet'];
 
 const demoNews = [
-  { id: 1, title: 'Ny festival kommer til Tønsberg', category: 'Bylivet', date: '15. aug 2026', excerpt: 'En helt ny musikkfestival vil finne sted på brygga neste sommer.', imageAlt: 'Festival på brygga' },
-  { id: 2, title: 'Ny bedrift åpner i sentrum', category: 'Næringslivet', date: '12. aug 2026', excerpt: 'Spennende tech-startup etablerer seg midt i byen.', imageAlt: 'Kontorlokaler' },
-  { id: 3, title: 'Tips for en perfekt helg', category: 'Reiselivet', date: '10. aug 2026', excerpt: 'Slik får du mest ut av en weekend-tur til Norges eldste by.', imageAlt: 'Tønsberg sentrum' },
-  { id: 4, title: 'Høstmarked på torvet', category: 'Hverdagslivet', date: '05. aug 2026', excerpt: 'Gjør deg klar for årets store høstmarked med lokale råvarer.', imageAlt: 'Torvet med boder' },
-  { id: 5, title: 'Samarbeid for grønnere by', category: 'Næringslivet', date: '01. aug 2026', excerpt: 'Lokale bedrifter går sammen om nytt bærekraftsprosjekt.', imageAlt: 'Grønn park' },
-  { id: 6, title: 'Gatekunst i nye farger', category: 'Bylivet', date: '28. jul 2026', excerpt: 'Nye veggmalerier pryder bybildet takket være lokale kunstnere.', imageAlt: 'Gatekunst' },
+  { 
+    id: 1, 
+    title: 'Ny festival og storsatsing på Brygga', 
+    category: 'Bylivet', 
+    date: '15. aug 2026', 
+    excerpt: 'En spektakulær musikk- og kulturfestival inntar Tønsberg brygge med kjente artister og fantastisk stemning.', 
+    imageUrl: '/images/tonsberg/slottsfjell_festival.png' 
+  },
+  { 
+    id: 2, 
+    title: 'Ny kreativ tech-bedrift etablerer seg i sentrum', 
+    category: 'Næringslivet', 
+    date: '12. aug 2026', 
+    excerpt: 'Spennende kompetansebedrift velger Tønsberg framfor Oslo for sine 40 ansatte.', 
+    imageUrl: '/images/tonsberg/fotograf_varpe_tonsberg.jpg' 
+  },
+  { 
+    id: 3, 
+    title: 'Tips til den perfekte helgen ved kysten', 
+    category: 'Reiselivet', 
+    date: '10. aug 2026', 
+    excerpt: 'Slik får du mest ut av en helg fylt med matopplevelser, kyststier og båtliv i Norges eldste by.', 
+    imageUrl: '/images/tonsberg/brygge_kveldsstemning.jpg' 
+  },
+  { 
+    id: 4, 
+    title: 'Bondens marked og høstfest på Torvet', 
+    category: 'Hverdagslivet', 
+    date: '05. aug 2026', 
+    excerpt: 'Gjør deg klar for årets store høstmarked med ferske lokale råvarer fra hele Vestfold.', 
+    imageUrl: '/images/tonsberg/torvet_tonsberg.jpg' 
+  },
+  { 
+    id: 5, 
+    title: 'Grønt løft: Felles bærekraftsprosjekt i havneområdet', 
+    category: 'Næringslivet', 
+    date: '01. aug 2026', 
+    excerpt: 'Bedrifter og Tønsberg kommune går sammen for nullutslipp og renere bykjerne.', 
+    imageUrl: '/images/tonsberg/sommer_tonsberg.png' 
+  },
+  { 
+    id: 6, 
+    title: 'Kultursommer i Tønsberg med nye arrangementer', 
+    category: 'Bylivet', 
+    date: '28. jul 2026', 
+    excerpt: 'Gallerier, utstillinger og utendørsscener skaper en levende kulturarena for hele familien.', 
+    imageUrl: '/images/tonsberg/kultur_tonsberg.jpg' 
+  },
 ];
 
 export default function NyheterClient() {
@@ -37,7 +79,11 @@ export default function NyheterClient() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                activeCategory === cat 
+                  ? 'bg-primary text-white shadow-md' 
+                  : 'bg-surface-muted text-foreground-muted hover:text-foreground hover:bg-border'
+              }`}
             >
               {cat}
             </button>
@@ -53,6 +99,7 @@ export default function NyheterClient() {
               category={news.category}
               excerpt={news.excerpt}
               href={`/nyheter/${news.id}`}
+              imageUrl={news.imageUrl}
             />
           ))}
         </div>
