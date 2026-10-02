@@ -30,7 +30,7 @@ export default async function Home() {
         {/* Bakgrunnsbilde med cinematic dybde */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/tonsberg-brygge-og-havn-relative-m.jpg"
+            src="/images/tonsberg/tonsberg-brygge-og-havn-absolute-i.jpg"
             alt="Tønsberg Brygge og Havn"
             fill
             priority
@@ -220,7 +220,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl hover:shadow-2xl transition-all group">
           <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
             <Image
-              src="/images/tonsberg/slottsfjellet.jpg"
+              src="/images/tonsberg/slottsfjellet-luftfoto-festomraadet.jpg"
               alt="Slottsfjellet Tønsberg"
               fill
               sizes="(max-width: 1024px) 100vw, 60vw"
@@ -393,7 +393,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/tonsberg-brygge-om-kvelden-slottsf.jpg',
+              src: '/images/tonsberg/tonsberg-brygge-om-kvelden-stemnin.jpg',
               alt: 'Tønsberg Brygge om kvelden',
               caption: 'Stemning på Tønsberg Brygge',
               location: 'Bryggekanten',
@@ -433,7 +433,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/barn-som-lager-kunst-i-tonsberg-ho.jpg',
+              src: '/images/tonsberg/barn-som-lager-kunst-i-tonsberg-ba.jpg',
               alt: 'Barn som lager kunst i Tønsberg',
               caption: 'Barn i byen',
               location: 'Tønsberg Sentrum',

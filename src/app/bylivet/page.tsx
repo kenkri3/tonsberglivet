@@ -21,7 +21,7 @@ export default function BylivetPage() {
       <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/tonsberg-brygge-om-kvelden-min-h-s.jpg"
+            src="/images/tonsberg/tonsberg-brygge-om-kvelden-absolut.jpg"
             alt="Tønsberg Brygge om kvelden"
             fill
             priority
@@ -88,7 +88,9 @@ export default function BylivetPage() {
 
       {/* ── Bypuls & Sanntidsdata (Entur, Kanalbrua & MET Sjøforhold) ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* items-start: la hvert kort beholde sin naturlige høyde i stedet for å
+            strekkes til kolonnen med mest innhold (ga et stort tomt kort). */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <PublicTransportWidget />
           <div className="space-y-8">
             <TrafficWidget />
@@ -241,7 +243,7 @@ export default function BylivetPage() {
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/spis-ute-uka-i-tonsberg-stemning-p.jpg',
+              src: '/images/tonsberg/spis-ute-uka-i-tonsberg-spis-ute-u.jpg',
               alt: 'Spis Ute Uka i Tønsberg',
               caption: 'Spis Ute Uka & Gastronomi',
               location: 'Tønsberg Sentrum',
@@ -249,7 +251,7 @@ export default function BylivetPage() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/mat-og-servering-langs-brygga-spis.jpg',
+              src: '/images/tonsberg/mat-og-servering-langs-brygga-loka.jpg',
               alt: 'Mat og servering langs brygga',
               caption: 'Lokal mat & Uteservering',
               location: 'Bryggekanten',

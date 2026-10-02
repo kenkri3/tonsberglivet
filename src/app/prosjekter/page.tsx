@@ -104,7 +104,7 @@ export default function ProsjekterPage() {
         subtitle="Tønsberglivet"
         description="Vi initierer, støtter og gjennomfører små og store prosjekter som gjør Tønsbergregionen til et mer levende, attraktivt og samlende sted å bo, besøke og drive næring i."
         backgroundGradient="linear-gradient(135deg, #16193d 0%, #1D4ED8 100%)"
-        backgroundImage="/images/tonsberg/vaare-prosjekter-tonsberglivet-fol.jpg"
+        backgroundImage="/images/tonsberg/tonsbergprisen-utdeling.jpg"
         imageAlt="Folkefest i Tønsberg"
         priority
         compact={true}

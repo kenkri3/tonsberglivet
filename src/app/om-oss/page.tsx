@@ -120,7 +120,7 @@ export default function OmOssPage() {
           
           <div className="lg:col-span-5 relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border border-border">
             <Image 
-              src="/images/tonsberg/utsikt-over-tonsberg-by-og-brygge-.jpg" 
+              src="/images/tonsberg/utsikt-over-tonsberg-by-og-brygge.jpg" 
               alt="Utsikt over Tønsberg by og brygge" 
               fill
               sizes="(max-width: 1024px) 100vw, 40vw"

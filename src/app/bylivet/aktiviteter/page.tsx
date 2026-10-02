@@ -15,14 +15,14 @@ const activities = [
     title: 'Slottsfjellet & Tårnet',
     desc: 'Norges største ruinepark fra middelalderen med fantastisk panoramautsikt over hele byfjorden.',
     icon: Landmark,
-    image: '/images/tonsberg/slottsfjellet-taarnet.jpg',
+    image: '/images/tonsberg/slottsfjellet-taarnet-paa-aasen.jpg',
     tag: 'Historisk landemerke',
   },
   {
     title: 'Oseberg Kulturhus',
     desc: 'Teater, standup, konserter og store nasjonale forestillinger på bryggekanten midt i sentrum.',
     icon: Drama,
-    image: '/images/tonsberg/oseberg-kulturhus.jpg',
+    image: '/images/tonsberg/oseberg-kulturhus-scene-konserter.jpg',
     tag: 'Scene & Konserter',
   },
   {
@@ -36,7 +36,7 @@ const activities = [
     title: 'Tønsberg Bibliotek & Byliv',
     desc: 'Bynære kulturarrangementer, forfatterkvelder, språktrening, brettspill og barneaktiviteter.',
     icon: Users,
-    image: '/images/tonsberg/tonsberg-bibliotek-byliv.jpg',
+    image: '/images/tonsberg/tonsberg-bibliotek-byliv-kulturmot.jpg',
     tag: 'Kulturmøteplass',
   },
   {
@@ -50,7 +50,7 @@ const activities = [
     title: 'Barnas Tønsberg',
     desc: 'Kunstprosjekter, verksteder og familieaktiviteter som setter farger på hele byen.',
     icon: Music,
-    image: '/images/tonsberg/barnas-tonsberg-kunstprosjekter-ve.jpg',
+    image: '/images/tonsberg/barnas-tonsberg-paa-torvet.jpg',
     tag: 'For hele familien',
   },
 ];

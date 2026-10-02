@@ -24,7 +24,7 @@ export default function BedrifterPage() {
         subtitle="7 500+ Bedrifter & 33 000 Arbeidsplasser"
         description="Tønsberg er næringshovedstaden i Vestfold med et drivende næringsliv innen helse, finans, IT og gründerånd. Søk i offisielle registerdata fra Brønnøysundregistrene nedenfor."
         backgroundGradient="linear-gradient(135deg, #7C3AED, #8B5CF6)"
-        backgroundImage="/images/tonsberg/bedriftene-i-tonsberg-7-500-bedrif.jpg"
+        backgroundImage="/images/tonsberg/arbeidsliv-verneutstyr.jpg"
         imageAlt="Næringsbygg i Tønsberg"
         priority
         compact={true}

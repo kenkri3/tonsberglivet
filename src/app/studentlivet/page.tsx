@@ -154,7 +154,9 @@ export default function StudentlivetPage() {
 
       {/* ── Studentbuss til Campus & Deltidsjobber (Entur & NAV Live) ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* items-start: kortene beholder sin naturlige høyde i stedet for å
+            strekkes til det høyeste og få et stort tomt felt. */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           <PublicTransportWidget initialStop="bakkenteigen" />
           <NavJobsWidget
             initialOnlyStudent={true}
@@ -219,7 +221,7 @@ export default function StudentlivetPage() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/kveldsliv-og-samling-paa-brygga-st.jpg',
+              src: '/images/tonsberg/kveldsliv-og-samling-paa-brygga-kv.jpg',
               alt: 'Kveldsliv og samling på Brygga',
               caption: 'Kveldsstemning på Brygga',
               location: 'Tønsberg Brygge',

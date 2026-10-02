@@ -21,7 +21,7 @@ export default function ReiselivetPage() {
       <header className="relative min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/slottsfjellet-og-reiselivet-i-tons.jpg"
+            src="/images/tonsberg/reiselivet-storgaten-vinter.jpg"
             alt="Slottsfjellet og Reiselivet i Tønsberg"
             fill
             sizes="(max-width: 768px) 100vw, 50vw"

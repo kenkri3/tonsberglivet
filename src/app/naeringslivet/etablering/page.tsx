@@ -15,7 +15,7 @@ const areas = [
     type: 'Kollektivknutepunkt',
     status: 'Under utvikling',
     desc: 'Moderne kontorlokaler kun 1 time og 15 minutter fra Oslo S med tog.',
-    image: '/images/tonsberg/tonsberg-stasjonsomraade-foynkvart.jpg',
+    image: '/images/tonsberg/naeringsareal-under-utbygging.jpg',
   },
   {
     name: 'Foynkvartalet & Bryggekanten',

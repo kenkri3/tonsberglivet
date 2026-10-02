@@ -155,7 +155,7 @@ async function handleDailySync(request: Request) {
           ? `${topConcert.venueName} • ${topConcert.date} kl. ${topConcert.time}`
           : 'Opplev Norges eldste kystby',
         durationSeconds: 20,
-        imageUrl: topConcert?.imageUrl || '/images/tonsberg/kultursommer-i-tonsberg.jpg',
+        imageUrl: topConcert?.imageUrl || '/images/tonsberg/foynhagen-utendoersscene.jpg',
         eventDate: topConcert?.date,
       },
       {

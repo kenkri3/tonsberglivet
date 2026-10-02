@@ -23,7 +23,7 @@ export default function HverdagslivetPage() {
       <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/bo-og-leve-i-tonsbergregionen-min-.jpg"
+            src="/images/tonsberg/bo-og-leve-i-tonsbergregionen-abso.jpg"
             alt="Bo og leve i Tønsbergregionen"
             fill
             priority
@@ -174,7 +174,7 @@ export default function HverdagslivetPage() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/sommer-i-tonsberg-barnevennlige-to.jpg',
+              src: '/images/tonsberg/sommer-i-tonsberg-sommerdager-i-re.jpg',
               alt: 'Sommer i Tønsberg',
               caption: 'Sommerdager i regionen',
               location: 'Tønsberg & Færder',
