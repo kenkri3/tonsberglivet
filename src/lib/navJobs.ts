@@ -152,23 +152,35 @@ function invalidatePublicToken(): void {
   publicTokenCache = null;
 }
 
-async function resolveFeedToken(): Promise<string | null> {
-  // 1. Egen token fra miljøet (anbefalt i produksjon).
-  const envToken = process.env.NAV_FEED_TOKEN?.trim();
-  if (envToken) return envToken;
+interface ResolvedToken {
+  value: string;
+  /** PRIVATE = NAV_FEED_TOKEN eller lagret innstilling. PUBLIC = NAVs testtoken. */
+  source: 'PRIVATE' | 'PUBLIC';
+}
 
-  // 2. Egen token lagret i Innstillinger.
-  try {
-    const stored = (await getSetting(SETTING_TOKEN))?.trim();
-    if (stored) return stored;
-  } catch {
-    // Innstillinger er valgfritt – fall videre til det offentlige tokenet.
+/**
+ * Henter et gyldig token. `allowPrivate=false` tvinger fram det offentlige
+ * tokenet, som brukes som reserve dersom et privat token blir avvist.
+ */
+async function resolveFeedToken(allowPrivate = true): Promise<ResolvedToken | null> {
+  if (allowPrivate) {
+    // 1. Egen token fra miljøet (anbefalt i produksjon).
+    const envToken = process.env.NAV_FEED_TOKEN?.trim();
+    if (envToken) return { value: envToken, source: 'PRIVATE' };
+
+    // 2. Egen token lagret i Innstillinger.
+    try {
+      const stored = (await getSetting(SETTING_TOKEN))?.trim();
+      if (stored) return { value: stored, source: 'PRIVATE' };
+    } catch {
+      // Innstillinger er valgfritt – fall videre til det offentlige tokenet.
+    }
   }
 
   // 3. NAVs offentlige token, ment for eksperimenter. Fungerer i dag, men kan
   //    rotere. Be om et privat token på nav.team.arbeidsplassen@nav.no for drift.
   if (publicTokenCache && Date.now() - publicTokenCache.fetchedAt < PUBLIC_TOKEN_TTL_MS) {
-    return publicTokenCache.value;
+    return { value: publicTokenCache.value, source: 'PUBLIC' };
   }
 
   try {
@@ -188,7 +200,7 @@ async function resolveFeedToken(): Promise<string | null> {
       return null;
     }
     publicTokenCache = { value: match[0], fetchedAt: Date.now() };
-    return match[0];
+    return { value: match[0], source: 'PUBLIC' };
   } catch (err) {
     console.warn('Kunne ikke hente NAV publicToken:', err);
     return null;
@@ -196,16 +208,23 @@ async function resolveFeedToken(): Promise<string | null> {
 }
 
 /**
- * Henter fra feeden med Bearer-token. Ved 401 (typisk fordi det offentlige
- * tokenet nettopp roterte) forkaster vi tokenet og prøver nøyaktig én gang til.
+ * Henter fra feeden med Bearer-token.
+ *
+ * Ved 401 skiller vi på hvor tokenet kom fra:
+ * - Offentlig token har rotert → forkast cachen og prøv én gang til.
+ * - Privat token avvist (tilbakekalt eller utløpt) → fall tilbake til det
+ *   offentlige, så widgeten ikke blir stående permanent død av en utdatert
+ *   hemmelighet. Uten dette ville et feilkonfigurert NAV_FEED_TOKEN aldri
+ *   reparere seg selv.
  */
 async function navFetch(
   urlOrPath: string,
   init: RequestInit = {},
-  retryOn401 = true,
-  timeoutMs: number = REQUEST_TIMEOUT_MS
+  tokenMode: 'AUTO' | 'PUBLIC_ONLY' = 'AUTO',
+  timeoutMs: number = REQUEST_TIMEOUT_MS,
+  retryOn401 = true
 ): Promise<Response | null> {
-  const token = await resolveFeedToken();
+  const token = await resolveFeedToken(tokenMode === 'AUTO');
   if (!token) return null;
 
   const url = urlOrPath.startsWith('http') ? urlOrPath : `${NAV_FEED_HOST}${urlOrPath}`;
@@ -215,7 +234,7 @@ async function navFetch(
     headers: {
       Accept: 'application/json',
       'User-Agent': NAV_USER_AGENT,
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token.value}`,
       ...(init.headers || {}),
     },
     cache: 'no-store',
@@ -223,8 +242,16 @@ async function navFetch(
   });
 
   if (res.status === 401 && retryOn401) {
-    invalidatePublicToken();
-    return navFetch(urlOrPath, init, false, timeoutMs);
+    if (token.source === 'PUBLIC') {
+      // Offentlig token har rotert – hent et nytt og prøv én gang til.
+      invalidatePublicToken();
+      return navFetch(urlOrPath, init, tokenMode, timeoutMs, false);
+    }
+    // Privat token ble avvist. Fall tilbake til det offentlige testtokenet.
+    console.warn(
+      'NAV avviste det private tokenet (NAV_FEED_TOKEN/Innstillinger) – faller tilbake til det offentlige testtokenet.'
+    );
+    return navFetch(urlOrPath, init, 'PUBLIC_ONLY', timeoutMs, false);
   }
 
   return res;
@@ -254,13 +281,17 @@ interface FeedWalkResult {
 /**
  * Går gjennom feed-sider og plukker ut endringer for våre kommuner.
  *
- * `startCursor` lar en avbrutt backfill fortsette der den slapp, slik at en
+ * `resumeCursor` lar en avbrutt backfill fortsette der den slapp, slik at en
  * full 182-dagers gjennomgang kan deles over flere cron-kjøringer i stedet for
- * å måtte fullføre i én lang HTTP-forespørsel.
+ * å måtte fullføre i én lang HTTP-forespørsel. `entryUrl` er bare et vanlig
+ * startpunkt (feed-roten eller en bestemt side) og gir ikke rett til å starte
+ * backfillen på nytt ved 404 – det ville i praksis blitt en historisk
+ * fullgjennomgang fra 2023 midt i en nettleserforespørsel.
  */
 async function walkFeed(options: {
   since: Date | null;
-  startCursor?: string | null;
+  entryUrl?: string | null;
+  resumeCursor?: string | null;
   maxPages: number;
   onProgress?: (page: number, matches: number) => void;
   /**
@@ -269,17 +300,20 @@ async function walkFeed(options: {
    */
   searchTimeoutMs?: number;
 }): Promise<FeedWalkResult> {
-  const { since, startCursor = null, maxPages, onProgress } = options;
+  const { since, maxPages, onProgress } = options;
+  const resumeCursor = options.resumeCursor ?? null;
   const searchTimeoutMs = options.searchTimeoutMs ?? FEED_SEARCH_TIMEOUT_MS;
+  /** Bare en lagret kursor gir rett til å starte backfillen på nytt ved 404. */
+  const restartable = Boolean(resumeCursor);
 
   const matches = new Map<string, NavFeedEntry>();
   const inactive = new Set<string>();
   let pagesFetched = 0;
-  let cursor: string | null = startCursor;
+  let cursor: string | null = resumeCursor;
   let lastModified: string | null = null;
   let completed = false;
 
-  let url = cursor || NAV_FEED_PATH;
+  let url = resumeCursor || options.entryUrl || NAV_FEED_PATH;
   // If-Modified-Since gjelder bare første side; resten følger next_url.
   let headers: Record<string, string> = since ? { 'If-Modified-Since': rfc1123(since) } : {};
 
@@ -290,7 +324,7 @@ async function walkFeed(options: {
 
     let res: Response | null;
     try {
-      res = await navFetch(url, { headers }, true, timeoutMs);
+      res = await navFetch(url, { headers }, 'AUTO', timeoutMs);
     } catch (err) {
       console.warn('NAV stillingsfeed feilet under sidehenting:', err);
       break;
@@ -299,10 +333,12 @@ async function walkFeed(options: {
     if (!res) break;
 
     if (res.status === 404 || res.status === 410) {
-      // Kursor-siden har utløpt. Start backfillen på nytt fra `since`.
-      if (cursor) {
+      // Kursor-siden har utløpt. Bare en lagret backfill-kursor gir rett til å
+      // starte på nytt – ellers ville en live-forespørsel plutselig gjort en
+      // historisk fullgjennomgang fra 2023.
+      if (restartable) {
         console.warn('NAV feed-kursor er utløpt – starter backfill på nytt.');
-        return walkFeed({ ...options, startCursor: null });
+        return walkFeed({ ...options, resumeCursor: null });
       }
       console.warn(`NAV stillingsfeed svarte HTTP ${res.status}.`);
       break;
@@ -524,6 +560,8 @@ async function hasVacancyTable(): Promise<boolean> {
  * dato eller ISO med og uten offset. Vi viser derfor teksten rått når den ikke
  * er en dato, og formaterer den pent når den faktisk er det – og faller tilbake
  * på `expires`, som alltid er ISO-8601 med offset.
+ *
+ * Mangler begge, sier vi det. Vi dikter aldri opp en frist.
  */
 function formatDeadline(raw: string | null, expires: Date | null): string {
   if (raw) {
@@ -531,7 +569,7 @@ function formatDeadline(raw: string | null, expires: Date | null): string {
     if (parsed) return parsed.toLocaleDateString('no-NO');
     return raw; // f.eks. «Snarest»
   }
-  return expires ? expires.toLocaleDateString('no-NO') : 'Snarest';
+  return expires ? expires.toLocaleDateString('no-NO') : 'Ikke oppgitt';
 }
 
 function toApiShape(row: StoredVacancy | any): JobVacancy {
@@ -542,10 +580,11 @@ function toApiShape(row: StoredVacancy | any): JobVacancy {
     id: row.id,
     title: row.title,
     employer: row.employer,
-    location: row.city || row.municipality || 'Tønsberg',
-    municipality: row.municipality || 'TØNSBERG',
-    engagementType: row.engagementType || 'Fast',
-    extent: row.extent || 'Heltid',
+    // Ingen oppdiktede stedsnavn: mangler begge, viser vi ingenting.
+    location: row.city || row.municipality || '',
+    municipality: row.municipality || '',
+    engagementType: row.engagementType || 'Ikke oppgitt',
+    extent: row.extent || 'Ikke oppgitt',
     applicationDeadline: formatDeadline(row.applicationDeadline ?? null, expires),
     published: published ? published.toLocaleDateString('no-NO') : 'Nylig',
     link: row.link,
@@ -635,7 +674,7 @@ export async function syncNavVacancies(options: NavSyncOptions = {}): Promise<Na
       : new Date(Date.now() - DELTA_OVERLAP_DAYS * 86_400_000);
   }
 
-  const walk = await walkFeed({ since, startCursor: cursor, maxPages });
+  const walk = await walkFeed({ since, resumeCursor: cursor, maxPages });
 
   // 1. Inaktive annonser skal bort umiddelbart (vilkårene punkt 1).
   let removed = 0;
@@ -655,9 +694,21 @@ export async function syncNavVacancies(options: NavSyncOptions = {}): Promise<Na
   const details = await mapWithConcurrency(uuids, 6, (uuid) => fetchAdDetail(uuid));
 
   let stored = 0;
+  // Annonser som rakk å bli inaktive mens vi gikk gjennom feeden. Uten denne
+  // sjekken ville de blitt lagret som aktive og først ryddet ved neste kjøring –
+  // vilkårene krever at de forsvinner så snart de blir inaktive.
+  const becameInactive = new Set<string>();
+
   for (let i = 0; i < uuids.length; i++) {
     const uuid = uuids[i];
     const detail = details[i];
+
+    // Status i detaljen er ferskere enn feed-elementet vi plukket opp.
+    if (detail?.status && detail.status.toUpperCase() !== 'ACTIVE') {
+      becameInactive.add(uuid);
+      continue;
+    }
+
     const ad = detail?.ad_content;
     if (!ad) continue;
 
@@ -675,6 +726,17 @@ export async function syncNavVacancies(options: NavSyncOptions = {}): Promise<Na
       stored++;
     } catch (err) {
       console.warn(`Kunne ikke lagre stilling ${uuid}:`, err);
+    }
+  }
+
+  if (becameInactive.size > 0) {
+    try {
+      const result = await (prisma as any).jobVacancy.deleteMany({
+        where: { id: { in: [...becameInactive] } },
+      });
+      removed += result.count;
+    } catch (err) {
+      console.warn('Kunne ikke slette stillinger som ble inaktive under synken:', err);
     }
   }
 
@@ -813,7 +875,7 @@ async function collectFromPage(
 ): Promise<JobsResult | null> {
   const walk = await walkFeed({
     since,
-    startCursor: pageUrl === NAV_FEED_PATH ? null : pageUrl,
+    entryUrl: pageUrl,
     maxPages,
     searchTimeoutMs,
   });
@@ -895,6 +957,14 @@ async function fetchJobsFromFeed(onlyStudent: boolean, safeLimit: number): Promi
     if (last) return finish(last);
   } catch (err) {
     console.warn('NAV siste feed-side feilet:', err);
+  }
+
+  // 3. Begge veier feilet. NAV svarer 504 på søkeoppslaget i perioder, og da er
+  //    et litt gammelt, men ekte, svar mye bedre enn å blinke «ikke
+  //    tilgjengelig» for brukeren. Vi viser derfor forrige vellykkede resultat.
+  if (liveCache && liveCache.key === cacheKey) {
+    console.warn('NAV svarte ikke – viser forrige vellykkede stillingsuttrekk.');
+    return liveCache.result;
   }
 
   return { jobs: [], source: 'UNAVAILABLE', isLive: false, note: UNAVAILABLE_NOTE };

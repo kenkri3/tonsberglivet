@@ -15,6 +15,12 @@ const MILJODIREKTORATET_NOTE =
   'Miljødirektoratets åpne luftmåle-API (api-luftmalinger.miljodirektoratet.no) svarte ikke med en brukbar ' +
   'Tønsberg-måling. Vi viser derfor ingen luftkvalitetstall i stedet for å gjette. Se luftkvalitet.miljodirektoratet.no.';
 
+/**
+ * Hvor gammel den nyeste målingen kan være før vi slutter å kalle den «live».
+ * Målingene er timebaserte, så noen timers slakk tåler vi.
+ */
+const STALE_AFTER_MS = 6 * 3_600_000;
+
 export type AirQualitySource = 'LIVE' | 'UNAVAILABLE';
 
 export interface AirQualityData {
@@ -81,6 +87,9 @@ interface MiljoRow {
   index?: number;
   color?: string;
   toTime?: string;
+  /** API-ets egne kvalitetsflagg. */
+  isValid?: boolean;
+  isVisible?: boolean;
 }
 
 interface UsableRow extends MiljoRow {
@@ -97,7 +106,11 @@ function isUsableRow(row: MiljoRow): row is UsableRow {
     typeof row?.index === 'number' &&
     Number.isInteger(row.index) &&
     row.index >= 1 &&
-    row.index <= 4
+    row.index <= 4 &&
+    // API-et flagger selv rader som er ugyldige eller skjult i visningen.
+    // En slik rad skal ikke få styre hvilket nivå vi viser.
+    row.isValid !== false &&
+    row.isVisible !== false
   );
 }
 
@@ -167,6 +180,15 @@ export async function fetchLiveAirQuality(): Promise<AirQualityResult> {
       .map((row) => row.toTime)
       .filter((toTime): toTime is string => typeof toTime === 'string' && !Number.isNaN(Date.parse(toTime)))
       .sort((a, b) => Date.parse(b) - Date.parse(a))[0];
+
+    // En gammel måling skal ikke vises under «live»-merket. Målingene er
+    // timebaserte, så noen timer slakk tåler vi før vi heller sier fra.
+    if (!newestToTime || Date.now() - Date.parse(newestToTime) > STALE_AFTER_MS) {
+      console.warn(
+        `Miljødirektoratet Luftkvalitet: nyeste måling er ${newestToTime ?? 'ukjent'} – for gammel til å vises som live.`
+      );
+      return unavailable;
+    }
 
     // Manglende komponent gir null – ikke 0 µg/m³, som ville sett ut som en måling.
     const toWhole = (row: UsableRow | undefined) => (row ? Math.round(row.value) : null);

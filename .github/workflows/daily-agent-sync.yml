@@ -11,6 +11,16 @@ jobs:
     name: Synkroniser arrangementer og valider agent
     runs-on: ubuntu-latest
 
+    # Uten dette kan to kjøringer overlappe, lese samme kursor og gå gjennom
+    # samme feed-område. Det gir duplikatarbeid og unødig last mot NAV, som
+    # svarer 504 når det blir for mange samtidige oppslag.
+    concurrency:
+      group: daily-agent-sync
+      cancel-in-progress: false
+
+    # Backfillen deles over flere kall, så jobben trenger rom – men ikke ubegrenset.
+    timeout-minutes: 45
+
     # Ligger på jobbnivå fordi et stegs `if:` ikke kan lese stegnivå-`env`.
     # Med env på stegnivå var `if: env.PRODUCTION_URL != ''` alltid usann, og
     # hele synkroniseringen ble stille hoppet over.
@@ -48,11 +58,12 @@ jobs:
         if: env.PRODUCTION_URL != ''
         run: |
           # NAV-feeden er en endringsstrøm. Første kjøring gjør en backfill over
-          # 182 dager; den deles over flere kall og fortsetter fra en lagret
-          # kursor. Vi kjører til den er ferdig, men aldri mer enn 12 runder.
+          # 182 dager (~376 sider); den deles over flere kall og fortsetter fra en
+          # lagret kursor. 50 sider per runde holder hvert kall godt innenfor
+          # --max-time, og 12 runder dekker 600 sider – mer enn nok.
           for i in $(seq 1 12); do
-            RESPONSE=$(curl -s --max-time 900 -X POST \
-              "$PRODUCTION_URL/api/cron/nav-jobs?key=$CRON_SECRET&pages=100")
+            RESPONSE=$(curl -s --max-time 600 -X POST \
+              "$PRODUCTION_URL/api/cron/nav-jobs?key=$CRON_SECRET&pages=50")
             echo "Runde $i: $RESPONSE"
 
             COMPLETE=$(echo "$RESPONSE" | jq -r '.data.backfillComplete // false')
