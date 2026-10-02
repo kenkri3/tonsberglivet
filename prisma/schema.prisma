@@ -389,3 +389,44 @@ model SystemSetting {
 
   @@index([category])
 }
+
+// ═══════════════════════════════
+// STILLINGER FRA NAV ARBEIDSPLASSEN
+// ═══════════════════════════════
+
+/**
+ * Speil av aktive stillingsannonser for Tønsberg og Færder.
+ *
+ * NAVs stillingsfeed (pam-stilling-feed) er en endringsstrøm for hele landet,
+ * ikke et søk. Vi henter derfor endringene, filtrerer på kommune her, og
+ * lagrer resultatet lokalt. Vilkårene krever at en annonse fjernes fra vår
+ * liste så snart den blir inaktiv hos NAV – derfor slettes raden ved INACTIVE.
+ */
+model JobVacancy {
+  id                  String    @id // NAVs uuid for annonsen
+  title               String
+  employer            String
+  municipality        String
+  city                String?
+  engagementType      String?
+  extent              String?
+  /** Rå verdi fra NAV. Kan være «Snarest» eller tom – ikke bruk som dato. */
+  applicationDeadline String?
+  published           DateTime?
+  /** Alltid ISO-8601 med offset. Brukes til sortering og utløp. */
+  expires             DateTime?
+  link                String
+  applicationUrl      String?
+  isStudentFriendly   Boolean   @default(false)
+  descriptionSnippet  String?   @db.Text
+  sector              String?
+  navStatus           String    @default("ACTIVE")
+  navUpdatedAt        DateTime?
+  lastSyncedAt        DateTime  @default(now())
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([navStatus, municipality])
+  @@index([expires])
+  @@map("job_vacancies")
+}

@@ -57,9 +57,17 @@ export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
         updates.bridgeStatus = passable ? 'Kanalbrua: Åpen' : 'Kanalbrua: Åpning pågår';
       }
 
-      // NILU: kun når målingen er levende.
+      // Miljødirektoratet: kun når målingen er levende. Nivåene kommer fra
+      // API-ets egen indeks (LITE/MODERAT/HØY/SVÆRT HØY), ikke fra NILU lenger.
       if (airRes.status === 'fulfilled' && airRes.value?.isLive) {
-        updates.airLabel = `Luft: ${airRes.value.data?.index === 'LAV' ? 'God' : 'Moderat'}`;
+        const level = airRes.value.data?.index;
+        const label =
+          level === 'LITE' ? 'God'
+          : level === 'MODERAT' ? 'Moderat'
+          : level === 'HØY' ? 'Høy'
+          : level === 'SVÆRT HØY' ? 'Svært høy'
+          : null;
+        if (label) updates.airLabel = `Luft: ${label}`;
       }
 
       setPulseData(updates);
@@ -147,7 +155,7 @@ export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
             <Link
               href="/hverdagslivet"
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
-              title="Luftkvalitet (NILU)"
+              title="Luftkvalitet (Miljødirektoratet)"
             >
               <Wind className="w-3.5 h-3.5 text-primary shrink-0" />
               <span>{pulseData.airLabel}</span>

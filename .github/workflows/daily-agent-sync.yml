@@ -11,6 +11,13 @@ jobs:
     name: Synkroniser arrangementer og valider agent
     runs-on: ubuntu-latest
 
+    # Ligger på jobbnivå fordi et stegs `if:` ikke kan lese stegnivå-`env`.
+    # Med env på stegnivå var `if: env.PRODUCTION_URL != ''` alltid usann, og
+    # hele synkroniseringen ble stille hoppet over.
+    env:
+      PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
     steps:
       - name: Sjekk ut kildekode
         uses: actions/checkout@v4
@@ -32,10 +39,31 @@ jobs:
 
       - name: Trigger daglig nattlig synkronisering (hvis produksjons-URL er konfigurert)
         if: env.PRODUCTION_URL != ''
-        env:
-          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           echo "Kaller nattlig synkroniserings-endepunkt for Tønsberglivet..."
-          curl -s -X POST "${{ secrets.PRODUCTION_URL }}/api/cron/daily-sync?key=${{ secrets.CRON_SECRET }}" \
+          curl -s --max-time 900 -X POST "$PRODUCTION_URL/api/cron/daily-sync?key=$CRON_SECRET" \
             -H "Content-Type: application/json"
+
+      - name: Synkroniser stillinger fra NAV Arbeidsplassen
+        if: env.PRODUCTION_URL != ''
+        run: |
+          # NAV-feeden er en endringsstrøm. Første kjøring gjør en backfill over
+          # 182 dager; den deles over flere kall og fortsetter fra en lagret
+          # kursor. Vi kjører til den er ferdig, men aldri mer enn 12 runder.
+          for i in $(seq 1 12); do
+            RESPONSE=$(curl -s --max-time 900 -X POST \
+              "$PRODUCTION_URL/api/cron/nav-jobs?key=$CRON_SECRET&pages=100")
+            echo "Runde $i: $RESPONSE"
+
+            COMPLETE=$(echo "$RESPONSE" | jq -r '.data.backfillComplete // false')
+            if [ "$COMPLETE" = "true" ]; then
+              echo "Backfill fullført."
+              break
+            fi
+
+            if [ "$(echo "$RESPONSE" | jq -r '.success // false')" != "true" ]; then
+              echo "Synken feilet – avbryter."
+              exit 1
+            fi
+          done
+

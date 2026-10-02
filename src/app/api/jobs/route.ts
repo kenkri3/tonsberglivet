@@ -21,7 +21,10 @@ export async function GET(request: Request) {
       isLive: result.isLive,
       note: result.note,
       data: result.jobs,
-      count: result.jobs.length
+      count: result.jobs.length,
+      // Hvor tallene kom fra, og hvor mange aktive stillinger vi kjenner totalt.
+      origin: result.origin,
+      totalActive: result.totalActive
     });
   } catch (error: any) {
     return NextResponse.json(

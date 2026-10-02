@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const result = await fetchLiveAirQuality();
     return NextResponse.json({
-      // success gjenspeiler om NILU faktisk svarte med en Tønsberg-måling.
+      // success gjenspeiler om Miljødirektoratet faktisk svarte med en Tønsberg-måling.
       // Ingen oppdiktede måletall returneres lenger.
       success: result.provenance.isLive,
       source: result.provenance.source,

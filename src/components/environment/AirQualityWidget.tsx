@@ -4,6 +4,34 @@ import { useState, useEffect } from 'react';
 import { Wind, ShieldCheck, Heart, Sparkles } from 'lucide-react';
 import type { AirQualityData } from '@/lib/airquality';
 
+/** Én målt komponent. Manglende måling vises som «–», aldri som 0 µg/m³. */
+function Measurement({ title, value }: { title: string; value: number | null }) {
+  const measured = value !== null;
+
+  return (
+    <div className="p-5 rounded-2xl bg-surface-muted border border-border space-y-1 flex flex-col">
+      {/* Fast høyde på etiketten slik at tallene står på linje selv når ett
+          stoffnavn (Nitrogendioksid (NO2)) bryter over to linjer. */}
+      <span className="text-xs font-bold uppercase text-foreground-muted min-h-[2rem] leading-snug">
+        {title}
+      </span>
+      <div className="text-2xl font-black text-foreground leading-none tabular-nums">
+        {measured ? (
+          <span className="flex items-baseline gap-1">
+            <span>{value}</span>
+            <span className="text-sm font-bold">µg/m³</span>
+          </span>
+        ) : (
+          '–'
+        )}
+      </div>
+      <p className={`text-[11px] font-semibold pt-1 ${measured ? 'text-emerald-600' : 'text-foreground-muted'}`}>
+        {measured ? 'Målt verdi fra Miljødirektoratet' : 'Ikke målt i denne rapporten'}
+      </p>
+    </div>
+  );
+}
+
 export function AirQualityWidget() {
   const [data, setData] = useState<AirQualityData | null>(null);
   const [unavailableNote, setUnavailableNote] = useState<string | null>(null);
@@ -32,7 +60,7 @@ export function AirQualityWidget() {
       <div className="bg-surface rounded-3xl border border-border p-6 md:p-8 space-y-4 shadow-sm">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
           <Wind className="w-3.5 h-3.5" />
-          <span>NILU & Miljødirektoratet: ikke tilgjengelig</span>
+          <span>Miljødirektoratet: ikke tilgjengelig</span>
         </div>
         <h3 className="text-2xl md:text-3xl font-extrabold text-foreground">
           Luftkvalitet i Tønsberg
@@ -60,13 +88,14 @@ export function AirQualityWidget() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
             <Wind className="w-3.5 h-3.5 text-emerald-500" />
-            <span>NILU & Miljødirektoratet (live)</span>
+            <span>Miljødirektoratet (live)</span>
           </div>
           <h3 className="text-2xl md:text-3xl font-extrabold text-foreground">
             Luftkvalitet i Tønsberg
           </h3>
           <p className="text-foreground-muted text-sm mt-1">
-            Måling fra {data.station} – oppdatert kl. {data.updatedAt}.
+            Måling fra {data.station}
+            {data.updatedAt ? ` – oppdatert kl. ${data.updatedAt}.` : '.'}
           </p>
         </div>
 
@@ -77,23 +106,9 @@ export function AirQualityWidget() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-surface-muted border border-border space-y-1">
-          <span className="text-xs font-bold uppercase text-foreground-muted">Svevestøv (PM10)</span>
-          <div className="text-2xl font-black text-foreground">{data.pm10} µg/m³</div>
-          <p className="text-[11px] text-emerald-600 font-semibold">Målt verdi fra NILU</p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-surface-muted border border-border space-y-1">
-          <span className="text-xs font-bold uppercase text-foreground-muted">Finstøv (PM2.5)</span>
-          <div className="text-2xl font-black text-foreground">{data.pm25} µg/m³</div>
-          <p className="text-[11px] text-emerald-600 font-semibold">Målt verdi fra NILU</p>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-surface-muted border border-border space-y-1">
-          <span className="text-xs font-bold uppercase text-foreground-muted">Nitrogendioksid (NO2)</span>
-          <div className="text-2xl font-black text-foreground">{data.no2} µg/m³</div>
-          <p className="text-[11px] text-emerald-600 font-semibold">Målt verdi fra NILU</p>
-        </div>
+        <Measurement title="Svevestøv (PM10)" value={data.pm10} />
+        <Measurement title="Finstøv (PM2.5)" value={data.pm25} />
+        <Measurement title="Nitrogendioksid (NO2)" value={data.no2} />
       </div>
 
       <div className="p-4 rounded-2xl bg-surface-muted/60 border border-border flex items-center gap-3 text-xs text-foreground-muted">
