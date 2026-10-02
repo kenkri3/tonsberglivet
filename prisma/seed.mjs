@@ -32,7 +32,7 @@ const FOLDERS = [
 const IMAGES = [
   {
     "url": "/images/tonsberg/hva-skjer-i-tonsberg-arrangementer.jpg",
-    "filename": "Hva skjer i tonsberg arrangementer",
+    "filename": "Konsertscene i Tønsberg",
     "alt": "Konsertscene i Tønsberg",
     "width": 1600,
     "height": 1067,
@@ -47,7 +47,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/barista-som-lager-kaffe-paa-kaf-i-.jpg",
-    "filename": "Barista som lager kaffe paa kaf i",
+    "filename": "Barista som lager kaffe på kafé i Tønsberg",
     "alt": "Barista som lager kaffe på kafé i Tønsberg",
     "width": 1200,
     "height": 675,
@@ -62,7 +62,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/barista-som-lager-kaffe-paa-kaf-i--2.jpg",
-    "filename": "Barista som lager kaffe paa kaf i",
+    "filename": "Barista som lager kaffe på kafé i Tønsberg – Barista som lager kaffe paa kaf i",
     "alt": "Barista som lager kaffe på kafé i Tønsberg",
     "width": 1200,
     "height": 675,
@@ -77,7 +77,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/barista-som-lager-kaffe-paa-kaf-i--3.jpg",
-    "filename": "Barista som lager kaffe paa kaf i",
+    "filename": "Barista som lager kaffe på kafé i Tønsberg – Barista som lager kaffe paa kaf i",
     "alt": "Barista som lager kaffe på kafé i Tønsberg",
     "width": 1080,
     "height": 1080,
@@ -92,7 +92,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/barista-som-lager-kaffe-paa-kaf-i--4.jpg",
-    "filename": "Barista som lager kaffe paa kaf i",
+    "filename": "Barista som lager kaffe på kafé i Tønsberg – Barista som lager kaffe paa kaf i",
     "alt": "Barista som lager kaffe på kafé i Tønsberg",
     "width": 980,
     "height": 980,
@@ -122,7 +122,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/byen-kledd-i-regnbuens-farger-i-to.jpg",
-    "filename": "Byen kledd i regnbuens farger i to",
+    "filename": "Byen kledd i regnbuens farger i Tønsberg",
     "alt": "Byen kledd i regnbuens farger i Tønsberg",
     "width": 1600,
     "height": 1200,
@@ -136,23 +136,8 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/bylivet-i-tonsberg-i-bilder-bildeg.jpg",
-    "filename": "Bylivet i tonsberg i bilder bildeg",
-    "alt": "Tønsberg Brygge om kvelden",
-    "width": 1600,
-    "height": 867,
-    "sizeBytes": 169030,
-    "format": "jpg",
-    "folder": "Bylivet",
-    "tags": [
-      "Tønsberg",
-      "Bylivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
     "url": "/images/tonsberg/familie-som-spiser-uteservering-pa.jpg",
-    "filename": "Familie som spiser uteservering pa",
+    "filename": "Familie som spiser uteservering på Tønsberg Brygge",
     "alt": "Familie som spiser uteservering på Tønsberg Brygge",
     "width": 1200,
     "height": 675,
@@ -182,7 +167,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/folkefest-i-tonsberg-relative-aspe.jpg",
-    "filename": "Folkefest i tonsberg relative aspe",
+    "filename": "Folkefest i Tønsberg – Folkefest i tonsberg relative aspe",
     "alt": "Folkefest i Tønsberg",
     "width": 1200,
     "height": 675,
@@ -196,8 +181,23 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
+    "url": "/images/tonsberg/shopping-i-tonsberg-unike-nisjebut.jpg",
+    "filename": "Folkeliv og handel i Tønsberg sentrum",
+    "alt": "Folkeliv og handel i Tønsberg sentrum",
+    "width": 1600,
+    "height": 667,
+    "sizeBytes": 135816,
+    "format": "jpg",
+    "folder": "Bylivet",
+    "tags": [
+      "Tønsberg",
+      "Bylivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
     "url": "/images/tonsberg/gate-med-lys-og-folk-i-tonsberg-se.jpg",
-    "filename": "Gate med lys og folk i tonsberg se",
+    "filename": "Gate med lys og folk i Tønsberg sentrum",
     "alt": "Gate med lys og folk i Tønsberg sentrum",
     "width": 972,
     "height": 702,
@@ -212,7 +212,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/gateliv-i-tonsberg-sentrum-grid-gr.jpg",
-    "filename": "Gateliv i tonsberg sentrum grid gr",
+    "filename": "Gateliv i Tønsberg sentrum",
     "alt": "Gateliv i Tønsberg sentrum",
     "width": 1600,
     "height": 883,
@@ -241,12 +241,12 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/kultur-aktiviteter-historie-teater.jpg",
-    "filename": "Kultur aktiviteter historie teater",
-    "alt": "Vikingodden i Tønsberg",
-    "width": 1600,
-    "height": 1068,
-    "sizeBytes": 310043,
+    "url": "/images/tonsberg/mat-drikke-uteservering-paa-brygga.jpg",
+    "filename": "Kveldssol over brygga i Tønsberg",
+    "alt": "Kveldssol over brygga i Tønsberg",
+    "width": 1290,
+    "height": 943,
+    "sizeBytes": 139177,
     "format": "jpg",
     "folder": "Bylivet",
     "tags": [
@@ -272,7 +272,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/lokalproduserte-varer-til-salgs-pa.jpg",
-    "filename": "Lokalproduserte varer til salgs pa",
+    "filename": "Lokalproduserte varer til salgs på torvet",
     "alt": "Lokalproduserte varer til salgs på torvet",
     "width": 1366,
     "height": 1370,
@@ -286,8 +286,23 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
+    "url": "/images/tonsberg/markedsboder-med-klaer-og-haandver-4.jpg",
+    "filename": "Markedsboder med klær og håndverk i Tønsberg",
+    "alt": "Markedsboder med klær og håndverk i Tønsberg",
+    "width": 1600,
+    "height": 1067,
+    "sizeBytes": 247724,
+    "format": "jpg",
+    "folder": "Bylivet",
+    "tags": [
+      "Tønsberg",
+      "Bylivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
     "url": "/images/tonsberg/markedsboder-med-klaer-og-haandver.jpg",
-    "filename": "Markedsboder med klaer og haandver",
+    "filename": "Markedsboder med klær og håndverk i Tønsberg sentrum",
     "alt": "Markedsboder med klær og håndverk i Tønsberg sentrum",
     "width": 1080,
     "height": 1080,
@@ -302,7 +317,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/markedsboder-med-klaer-og-haandver-2.jpg",
-    "filename": "Markedsboder med klaer og haandver",
+    "filename": "Markedsboder med klær og håndverk i Tønsberg sentrum – Markedsboder med klaer og haandver",
     "alt": "Markedsboder med klær og håndverk i Tønsberg sentrum",
     "width": 1600,
     "height": 1067,
@@ -317,7 +332,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/markedsboder-med-klaer-og-haandver-3.jpg",
-    "filename": "Markedsboder med klaer og haandver",
+    "filename": "Markedsboder med klær og håndverk i Tønsberg sentrum – Markedsboder med klaer og haandver",
     "alt": "Markedsboder med klær og håndverk i Tønsberg sentrum",
     "width": 1200,
     "height": 675,
@@ -331,23 +346,8 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/markedsboder-med-klaer-og-haandver-4.jpg",
-    "filename": "Markedsboder med klaer og haandver",
-    "alt": "Markedsboder med klær og håndverk i Tønsberg",
-    "width": 1600,
-    "height": 1067,
-    "sizeBytes": 247724,
-    "format": "jpg",
-    "folder": "Bylivet",
-    "tags": [
-      "Tønsberg",
-      "Bylivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
     "url": "/images/tonsberg/markedsboder-paa-tonsberg-torv-gri.jpg",
-    "filename": "Markedsboder paa tonsberg torv gri",
+    "filename": "Markedsboder på Tønsberg Torv",
     "alt": "Markedsboder på Tønsberg Torv",
     "width": 1512,
     "height": 1080,
@@ -361,23 +361,8 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/mat-drikke-uteservering-paa-brygga.jpg",
-    "filename": "Mat drikke uteservering paa brygga",
-    "alt": "Kveldssol over brygga i Tønsberg",
-    "width": 1290,
-    "height": 943,
-    "sizeBytes": 139177,
-    "format": "jpg",
-    "folder": "Bylivet",
-    "tags": [
-      "Tønsberg",
-      "Bylivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
     "url": "/images/tonsberg/mat-og-servering-langs-brygga-spis.jpg",
-    "filename": "Mat og servering langs brygga spis",
+    "filename": "Mat og servering langs brygga",
     "alt": "Mat og servering langs brygga",
     "width": 1600,
     "height": 1067,
@@ -436,36 +421,6 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/sentrumsgavekortet-gaven-som-glede.jpg",
-    "filename": "Sentrumsgavekortet gaven som glede",
-    "alt": "Stemning i gatebildet i Tønsberg sentrum",
-    "width": 1600,
-    "height": 1034,
-    "sizeBytes": 138676,
-    "format": "jpg",
-    "folder": "Bylivet",
-    "tags": [
-      "Tønsberg",
-      "Bylivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
-    "url": "/images/tonsberg/shopping-i-tonsberg-unike-nisjebut.jpg",
-    "filename": "Shopping i tonsberg unike nisjebut",
-    "alt": "Folkeliv og handel i Tønsberg sentrum",
-    "width": 1600,
-    "height": 667,
-    "sizeBytes": 135816,
-    "format": "jpg",
-    "folder": "Bylivet",
-    "tags": [
-      "Tønsberg",
-      "Bylivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
     "url": "/images/tonsberg/slottsfjellet-taarnet.jpg",
     "filename": "Slottsfjellet taarnet",
     "alt": "Slottsfjellet taarnet – Tønsberg",
@@ -482,11 +437,26 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/spis-ute-uka-i-tonsberg-stemning-p.jpg",
-    "filename": "Spis ute uka i tonsberg stemning p",
+    "filename": "Spis Ute Uka i Tønsberg",
     "alt": "Spis Ute Uka i Tønsberg",
     "width": 1200,
     "height": 900,
     "sizeBytes": 138280,
+    "format": "jpg",
+    "folder": "Bylivet",
+    "tags": [
+      "Tønsberg",
+      "Bylivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/sentrumsgavekortet-gaven-som-glede.jpg",
+    "filename": "Stemning i gatebildet i Tønsberg sentrum",
+    "alt": "Stemning i gatebildet i Tønsberg sentrum",
+    "width": 1600,
+    "height": 1034,
+    "sizeBytes": 138676,
     "format": "jpg",
     "folder": "Bylivet",
     "tags": [
@@ -502,21 +472,6 @@ const IMAGES = [
     "width": 1600,
     "height": 1067,
     "sizeBytes": 172895,
-    "format": "jpg",
-    "folder": "Bylivet",
-    "tags": [
-      "Tønsberg",
-      "Bylivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
-    "url": "/images/tonsberg/tonsberg-brygge-om-kvelden-min-h-s.jpg",
-    "filename": "Tonsberg brygge om kvelden min h s",
-    "alt": "Tønsberg Brygge om kvelden",
-    "width": 1600,
-    "height": 533,
-    "sizeBytes": 129679,
     "format": "jpg",
     "folder": "Bylivet",
     "tags": [
@@ -542,7 +497,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/torvleie-tonsberg-torv-torvhandler.jpg",
-    "filename": "Torvleie tonsberg torv torvhandler",
+    "filename": "Torvhandler som selger lokal mat på Tønsberg Torv",
     "alt": "Torvhandler som selger lokal mat på Tønsberg Torv",
     "width": 1536,
     "height": 2048,
@@ -556,8 +511,53 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
+    "url": "/images/tonsberg/tonsberg-brygge-om-kvelden-min-h-s.jpg",
+    "filename": "Tønsberg Brygge om kvelden",
+    "alt": "Tønsberg Brygge om kvelden",
+    "width": 1600,
+    "height": 533,
+    "sizeBytes": 129679,
+    "format": "jpg",
+    "folder": "Bylivet",
+    "tags": [
+      "Tønsberg",
+      "Bylivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/bylivet-i-tonsberg-i-bilder-bildeg.jpg",
+    "filename": "Tønsberg Brygge om kvelden – Bylivet i tonsberg i bilder bildeg",
+    "alt": "Tønsberg Brygge om kvelden",
+    "width": 1600,
+    "height": 867,
+    "sizeBytes": 169030,
+    "format": "jpg",
+    "folder": "Bylivet",
+    "tags": [
+      "Tønsberg",
+      "Bylivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/kultur-aktiviteter-historie-teater.jpg",
+    "filename": "Vikingodden i Tønsberg",
+    "alt": "Vikingodden i Tønsberg",
+    "width": 1600,
+    "height": 1068,
+    "sizeBytes": 310043,
+    "format": "jpg",
+    "folder": "Bylivet",
+    "tags": [
+      "Tønsberg",
+      "Bylivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
     "url": "/images/tonsberg/barn-som-lager-kunst-i-tonsberg-ho.jpg",
-    "filename": "Barn som lager kunst i tonsberg ho",
+    "filename": "Barn som lager kunst i Tønsberg",
     "alt": "Barn som lager kunst i Tønsberg",
     "width": 1255,
     "height": 810,
@@ -632,7 +632,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/gate-med-lys-og-folk-i-tonsberg-se-2.jpg",
-    "filename": "Gate med lys og folk i tonsberg se",
+    "filename": "Gate med lys og folk i Tønsberg sentrum – Gate med lys og folk i tonsberg se",
     "alt": "Gate med lys og folk i Tønsberg sentrum",
     "width": 1600,
     "height": 930,
@@ -662,7 +662,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/generelt-heritage-2.jpg",
-    "filename": "Generelt heritage",
+    "filename": "Generelt heritage – Generelt heritage",
     "alt": "Generelt heritage – Tønsberg",
     "width": 1600,
     "height": 900,
@@ -677,7 +677,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/generelt-heritage-3.jpg",
-    "filename": "Generelt heritage",
+    "filename": "Generelt heritage – Generelt heritage",
     "alt": "Generelt heritage – Tønsberg",
     "width": 1570,
     "height": 960,
@@ -697,21 +697,6 @@ const IMAGES = [
     "width": 1533,
     "height": 697,
     "sizeBytes": 93473,
-    "format": "jpg",
-    "folder": "Generelt",
-    "tags": [
-      "Tønsberg",
-      "Generelt"
-    ],
-    "location": "Tønsberg"
-  },
-  {
-    "url": "/images/tonsberg/hero-aerial.jpg",
-    "filename": "Hero aerial",
-    "alt": "Tønsberg sett fra luften med brygge, kanal og byfjord",
-    "width": 1376,
-    "height": 768,
-    "sizeBytes": 208523,
     "format": "jpg",
     "folder": "Generelt",
     "tags": [
@@ -767,7 +752,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/lokalproduserte-varer-fra-marked-i.jpg",
-    "filename": "Lokalproduserte varer fra marked i",
+    "filename": "Lokalproduserte varer fra marked i Tønsberg",
     "alt": "Lokalproduserte varer fra marked i Tønsberg",
     "width": 1050,
     "height": 675,
@@ -887,7 +872,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/skjaergaarden-og-faerder-nasjonalp.jpg",
-    "filename": "Skjaergaarden og faerder nasjonalp",
+    "filename": "Skjærgården og Færder nasjonalpark",
     "alt": "Skjærgården og Færder nasjonalpark",
     "width": 1200,
     "height": 675,
@@ -902,7 +887,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/slottsfjellet.jpg",
-    "filename": "Slottsfjellet",
+    "filename": "Slottsfjellet Tønsberg",
     "alt": "Slottsfjellet Tønsberg",
     "width": 1376,
     "height": 768,
@@ -917,7 +902,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/slottsfjellstaarnet-og-ruinene-i-t.jpg",
-    "filename": "Slottsfjellstaarnet og ruinene i t",
+    "filename": "Slottsfjellstårnet og ruinene i Tønsberg",
     "alt": "Slottsfjellstårnet og ruinene i Tønsberg",
     "width": 1080,
     "height": 720,
@@ -932,7 +917,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/student-park.jpg",
-    "filename": "Student park",
+    "filename": "Studenter ved USN Campus Vestfold",
     "alt": "Studenter ved USN Campus Vestfold",
     "width": 1584,
     "height": 1280,
@@ -962,7 +947,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/tonsberg-brygge-og-havn-relative-m.jpg",
-    "filename": "Tonsberg brygge og havn relative m",
+    "filename": "Tønsberg Brygge og Havn",
     "alt": "Tønsberg Brygge og Havn",
     "width": 1600,
     "height": 900,
@@ -977,7 +962,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/tonsberg-brygge-om-kvelden-slottsf.jpg",
-    "filename": "Tonsberg brygge om kvelden slottsf",
+    "filename": "Tønsberg Brygge om kvelden – Tonsberg brygge om kvelden slottsf",
     "alt": "Tønsberg Brygge om kvelden",
     "width": 1290,
     "height": 2087,
@@ -991,8 +976,23 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
+    "url": "/images/tonsberg/hero-aerial.jpg",
+    "filename": "Tønsberg sett fra luften med brygge, kanal og byfjord",
+    "alt": "Tønsberg sett fra luften med brygge, kanal og byfjord",
+    "width": 1376,
+    "height": 768,
+    "sizeBytes": 208523,
+    "format": "jpg",
+    "folder": "Generelt",
+    "tags": [
+      "Tønsberg",
+      "Generelt"
+    ],
+    "location": "Tønsberg"
+  },
+  {
     "url": "/images/tonsberg/uteservering-og-matkultur-paa-bryg.jpg",
-    "filename": "Uteservering og matkultur paa bryg",
+    "filename": "Uteservering og matkultur på brygga",
     "alt": "Uteservering og matkultur på brygga",
     "width": 1200,
     "height": 675,
@@ -1007,7 +1007,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/aktiviteter-for-barnefamilier-i-to.jpg",
-    "filename": "Aktiviteter for barnefamilier i to",
+    "filename": "Aktiviteter for barnefamilier i Tønsberg",
     "alt": "Aktiviteter for barnefamilier i Tønsberg",
     "width": 1138,
     "height": 731,
@@ -1022,7 +1022,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/bo-og-leve-i-tonsbergregionen-min-.jpg",
-    "filename": "Bo og leve i tonsbergregionen min",
+    "filename": "Bo og leve i Tønsbergregionen",
     "alt": "Bo og leve i Tønsbergregionen",
     "width": 1440,
     "height": 1795,
@@ -1037,7 +1037,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/hverdagslivet-i-tonsberg-i-bilder-.jpg",
-    "filename": "Hverdagslivet i tonsberg i bilder",
+    "filename": "Nabolag og gatemiljø i Tønsberg",
     "alt": "Nabolag og gatemiljø i Tønsberg",
     "width": 1600,
     "height": 900,
@@ -1052,7 +1052,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/sommer-i-tonsberg-barnevennlige-to.jpg",
-    "filename": "Sommer i tonsberg barnevennlige to",
+    "filename": "Sommer i Tønsberg",
     "alt": "Sommer i Tønsberg",
     "width": 1200,
     "height": 675,
@@ -1067,7 +1067,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/gatebildet-i-tonsberg-sentrum-spac.jpg",
-    "filename": "Gatebildet i tonsberg sentrum spac",
+    "filename": "Gatebildet i Tønsberg sentrum – Gatebildet i tonsberg sentrum spac",
     "alt": "Gatebildet i Tønsberg sentrum",
     "width": 1600,
     "height": 1200,
@@ -1082,7 +1082,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/kontakt-oss-vi-horer-gjerne-fra-de.jpg",
-    "filename": "Kontakt oss vi horer gjerne fra de",
+    "filename": "Tønsberg Torv, like ved sentrumskontoret i Rådhusgaten",
     "alt": "Tønsberg Torv, like ved sentrumskontoret i Rådhusgaten",
     "width": 1200,
     "height": 675,
@@ -1102,6 +1102,21 @@ const IMAGES = [
     "width": 1600,
     "height": 1200,
     "sizeBytes": 315082,
+    "format": "jpg",
+    "folder": "Nyheter",
+    "tags": [
+      "Tønsberg",
+      "Nyheter"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/nyheter-siste-nytt-fra-tonsberg-ga.jpg",
+    "filename": "Gatebildet i Tønsberg sentrum – Nyheter siste nytt fra tonsberg ga",
+    "alt": "Gatebildet i Tønsberg sentrum",
+    "width": 1440,
+    "height": 961,
+    "sizeBytes": 205117,
     "format": "jpg",
     "folder": "Nyheter",
     "tags": [
@@ -1171,21 +1186,6 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/nyheter-siste-nytt-fra-tonsberg-ga.jpg",
-    "filename": "Nyheter siste nytt fra tonsberg ga",
-    "alt": "Gatebildet i Tønsberg sentrum",
-    "width": 1440,
-    "height": 961,
-    "sizeBytes": 205117,
-    "format": "jpg",
-    "folder": "Nyheter",
-    "tags": [
-      "Tønsberg",
-      "Nyheter"
-    ],
-    "location": "Tønsberg"
-  },
-  {
     "url": "/images/tonsberg/tips-til-den-perfekte-helgen-ved-k.jpg",
     "filename": "Tips til den perfekte helgen ved k",
     "alt": "Tips til den perfekte helgen ved k – Tønsberg",
@@ -1201,12 +1201,12 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/bedriftene-i-tonsberg-7-500-bedrif.jpg",
-    "filename": "Bedriftene i tonsberg 7 500 bedrif",
-    "alt": "Næringsbygg i Tønsberg",
+    "url": "/images/tonsberg/foynkvartalet-bryggekanten-kaldnes.jpg",
+    "filename": "Foynkvartalet bryggekanten kaldnes",
+    "alt": "Foynkvartalet bryggekanten kaldnes – Tønsberg",
     "width": 1600,
-    "height": 900,
-    "sizeBytes": 273102,
+    "height": 1067,
+    "sizeBytes": 153955,
     "format": "jpg",
     "folder": "Næringslivet",
     "tags": [
@@ -1217,26 +1217,11 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/etablering-naeringsarealer-etabler.jpg",
-    "filename": "Etablering naeringsarealer etabler",
+    "filename": "Gatebildet i Tønsberg sentrum",
     "alt": "Gatebildet i Tønsberg sentrum",
     "width": 1440,
     "height": 1450,
     "sizeBytes": 276994,
-    "format": "jpg",
-    "folder": "Næringslivet",
-    "tags": [
-      "Tønsberg",
-      "Næringslivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
-    "url": "/images/tonsberg/foynkvartalet-bryggekanten-kaldnes.jpg",
-    "filename": "Foynkvartalet bryggekanten kaldnes",
-    "alt": "Foynkvartalet bryggekanten kaldnes – Tønsberg",
-    "width": 1600,
-    "height": 1067,
-    "sizeBytes": 153955,
     "format": "jpg",
     "folder": "Næringslivet",
     "tags": [
@@ -1262,11 +1247,26 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/matgr-nder-paa-torvet-max-w-7xl-mx.jpg",
-    "filename": "Matgr nder paa torvet max w 7xl mx",
+    "filename": "Matgründer på Torvet",
     "alt": "Matgründer på Torvet",
     "width": 1229,
     "height": 1843,
     "sizeBytes": 282951,
+    "format": "jpg",
+    "folder": "Næringslivet",
+    "tags": [
+      "Tønsberg",
+      "Næringslivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/bedriftene-i-tonsberg-7-500-bedrif.jpg",
+    "filename": "Næringsbygg i Tønsberg",
+    "alt": "Næringsbygg i Tønsberg",
+    "width": 1600,
+    "height": 900,
+    "sizeBytes": 273102,
     "format": "jpg",
     "folder": "Næringslivet",
     "tags": [
@@ -1291,21 +1291,6 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/tonsberg-by-og-havn-sett-fra-lufte.jpg",
-    "filename": "Tonsberg by og havn sett fra lufte",
-    "alt": "Tønsberg by og havn sett fra luften",
-    "width": 1600,
-    "height": 1200,
-    "sizeBytes": 269177,
-    "format": "jpg",
-    "folder": "Næringslivet",
-    "tags": [
-      "Tønsberg",
-      "Næringslivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
     "url": "/images/tonsberg/tonsberg-stasjonsomraade-foynkvart.jpg",
     "filename": "Tonsberg stasjonsomraade foynkvart",
     "alt": "Tonsberg stasjonsomraade foynkvart – Tønsberg",
@@ -1321,8 +1306,38 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
+    "url": "/images/tonsberg/tonsberg-by-og-havn-sett-fra-lufte.jpg",
+    "filename": "Tønsberg by og havn sett fra luften",
+    "alt": "Tønsberg by og havn sett fra luften",
+    "width": 1600,
+    "height": 1200,
+    "sizeBytes": 269177,
+    "format": "jpg",
+    "folder": "Næringslivet",
+    "tags": [
+      "Tønsberg",
+      "Næringslivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/vaare-partnere-sammen-for-tonsberg.jpg",
+    "filename": "Gatebildet i Tønsberg sentrum – Vaare partnere sammen for tonsberg",
+    "alt": "Gatebildet i Tønsberg sentrum",
+    "width": 1600,
+    "height": 755,
+    "sizeBytes": 112010,
+    "format": "jpg",
+    "folder": "Om oss",
+    "tags": [
+      "Tønsberg",
+      "Om oss"
+    ],
+    "location": "Tønsberg"
+  },
+  {
     "url": "/images/tonsberg/om-tonsberglivet-hvem-er-vi-tonsbe.jpg",
-    "filename": "Om tonsberglivet hvem er vi tonsbe",
+    "filename": "Tønsberg by og havn sett fra luften – Om tonsberglivet hvem er vi tonsbe",
     "alt": "Tønsberg by og havn sett fra luften",
     "width": 1600,
     "height": 977,
@@ -1337,7 +1352,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/presserom-mediekontakt-pressemeldi.jpg",
-    "filename": "Presserom mediekontakt pressemeldi",
+    "filename": "Tønsberg sentrum sett fra luften",
     "alt": "Tønsberg sentrum sett fra luften",
     "width": 1290,
     "height": 744,
@@ -1352,26 +1367,11 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/utsikt-over-tonsberg-by-og-brygge-.jpg",
-    "filename": "Utsikt over tonsberg by og brygge",
+    "filename": "Utsikt over Tønsberg by og brygge",
     "alt": "Utsikt over Tønsberg by og brygge",
     "width": 768,
     "height": 872,
     "sizeBytes": 71545,
-    "format": "jpg",
-    "folder": "Om oss",
-    "tags": [
-      "Tønsberg",
-      "Om oss"
-    ],
-    "location": "Tønsberg"
-  },
-  {
-    "url": "/images/tonsberg/vaare-partnere-sammen-for-tonsberg.jpg",
-    "filename": "Vaare partnere sammen for tonsberg",
-    "alt": "Gatebildet i Tønsberg sentrum",
-    "width": 1600,
-    "height": 755,
-    "sizeBytes": 112010,
     "format": "jpg",
     "folder": "Om oss",
     "tags": [
@@ -1402,6 +1402,21 @@ const IMAGES = [
     "width": 960,
     "height": 503,
     "sizeBytes": 69551,
+    "format": "jpg",
+    "folder": "Prosjekter",
+    "tags": [
+      "Tønsberg",
+      "Prosjekter"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/vaare-prosjekter-tonsberglivet-fol.jpg",
+    "filename": "Folkefest i Tønsberg",
+    "alt": "Folkefest i Tønsberg",
+    "width": 1600,
+    "height": 1200,
+    "sizeBytes": 360259,
     "format": "jpg",
     "folder": "Prosjekter",
     "tags": [
@@ -1516,21 +1531,6 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/vaare-prosjekter-tonsberglivet-fol.jpg",
-    "filename": "Vaare prosjekter tonsberglivet fol",
-    "alt": "Folkefest i Tønsberg",
-    "width": 1600,
-    "height": 1200,
-    "sizeBytes": 360259,
-    "format": "jpg",
-    "folder": "Prosjekter",
-    "tags": [
-      "Tønsberg",
-      "Prosjekter"
-    ],
-    "location": "Tønsberg"
-  },
-  {
     "url": "/images/tonsberg/bolaerne-oyene-moutmarka-bekkevika.jpg",
     "filename": "Bolaerne oyene moutmarka bekkevika",
     "alt": "Bolaerne oyene moutmarka bekkevika – Tønsberg",
@@ -1546,12 +1546,12 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/brygge-solnedgang.jpg",
-    "filename": "Brygge solnedgang",
-    "alt": "Tønsberg Brygge om kvelden",
-    "width": 1200,
-    "height": 675,
-    "sizeBytes": 125588,
+    "url": "/images/tonsberg/opplev-faerder-tonsbergs-reiseliv-.jpg",
+    "filename": "Bryggekanten i Tønsberg i kveldssol",
+    "alt": "Bryggekanten i Tønsberg i kveldssol",
+    "width": 1170,
+    "height": 1282,
+    "sizeBytes": 146406,
     "format": "jpg",
     "folder": "Reiselivet",
     "tags": [
@@ -1577,7 +1577,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/engo-gaard-paa-tjome-relative-aspe.jpg",
-    "filename": "Engo gaard paa tjome relative aspe",
+    "filename": "Engø Gård på Tjøme",
     "alt": "Engø Gård på Tjøme",
     "width": 1200,
     "height": 675,
@@ -1607,7 +1607,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/faerder-nasjonalpark-og-skjaergaar.jpg",
-    "filename": "Faerder nasjonalpark og skjaergaar",
+    "filename": "Færder Nasjonalpark og Skjærgården",
     "alt": "Færder Nasjonalpark og Skjærgården",
     "width": 1200,
     "height": 675,
@@ -1637,7 +1637,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/havna-hotell-tjome-ved-skjaergaard.jpg",
-    "filename": "Havna hotell tjome ved skjaergaard",
+    "filename": "Havna Hotell Tjøme ved skjærgården",
     "alt": "Havna Hotell Tjøme ved skjærgården",
     "width": 1600,
     "height": 898,
@@ -1667,11 +1667,26 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/hotel-klubben-ved-bryggen-relative.jpg",
-    "filename": "Hotel klubben ved bryggen relative",
+    "filename": "Hotel Klubben ved bryggen",
     "alt": "Hotel Klubben ved bryggen",
     "width": 1600,
     "height": 900,
     "sizeBytes": 241975,
+    "format": "jpg",
+    "folder": "Reiselivet",
+    "tags": [
+      "Tønsberg",
+      "Reiselivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/overnatting-byhotell-skjaergaardsp.jpg",
+    "filename": "Hotell ved brygga i Tønsberg",
+    "alt": "Hotell ved brygga i Tønsberg",
+    "width": 1200,
+    "height": 675,
+    "sizeBytes": 177528,
     "format": "jpg",
     "folder": "Reiselivet",
     "tags": [
@@ -1687,51 +1702,6 @@ const IMAGES = [
     "width": 1280,
     "height": 853,
     "sizeBytes": 191751,
-    "format": "jpg",
-    "folder": "Reiselivet",
-    "tags": [
-      "Tønsberg",
-      "Reiselivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
-    "url": "/images/tonsberg/opplev-faerder-tonsbergs-reiseliv-.jpg",
-    "filename": "Opplev faerder tonsbergs reiseliv",
-    "alt": "Bryggekanten i Tønsberg i kveldssol",
-    "width": 1170,
-    "height": 1282,
-    "sizeBytes": 146406,
-    "format": "jpg",
-    "folder": "Reiselivet",
-    "tags": [
-      "Tønsberg",
-      "Reiselivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
-    "url": "/images/tonsberg/opplevelser-kulturarv-natur-fra-vi.jpg",
-    "filename": "Opplevelser kulturarv natur fra vi",
-    "alt": "Verdens Ende og Færder fyr",
-    "width": 1600,
-    "height": 898,
-    "sizeBytes": 143552,
-    "format": "jpg",
-    "folder": "Reiselivet",
-    "tags": [
-      "Tønsberg",
-      "Reiselivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
-    "url": "/images/tonsberg/overnatting-byhotell-skjaergaardsp.jpg",
-    "filename": "Overnatting byhotell skjaergaardsp",
-    "alt": "Hotell ved brygga i Tønsberg",
-    "width": 1200,
-    "height": 675,
-    "sizeBytes": 177528,
     "format": "jpg",
     "folder": "Reiselivet",
     "tags": [
@@ -1757,7 +1727,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/quality-hotel-tonsberg-takbasseng-.jpg",
-    "filename": "Quality hotel tonsberg takbasseng",
+    "filename": "Quality Hotel Tønsberg takbasseng",
     "alt": "Quality Hotel Tønsberg takbasseng",
     "width": 1600,
     "height": 1280,
@@ -1772,7 +1742,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/slottsfjellet-og-reiselivet-i-tons.jpg",
-    "filename": "Slottsfjellet og reiselivet i tons",
+    "filename": "Slottsfjellet og Reiselivet i Tønsberg",
     "alt": "Slottsfjellet og Reiselivet i Tønsberg",
     "width": 1000,
     "height": 667,
@@ -1787,11 +1757,41 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/slottsfjellet-ruinepark-og-taarnet.jpg",
-    "filename": "Slottsfjellet ruinepark og taarnet",
+    "filename": "Slottsfjellet ruinepark og Tårnet",
     "alt": "Slottsfjellet ruinepark og Tårnet",
     "width": 1600,
     "height": 1067,
     "sizeBytes": 163278,
+    "format": "jpg",
+    "folder": "Reiselivet",
+    "tags": [
+      "Tønsberg",
+      "Reiselivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/brygge-solnedgang.jpg",
+    "filename": "Tønsberg Brygge om kvelden – Brygge solnedgang",
+    "alt": "Tønsberg Brygge om kvelden",
+    "width": 1200,
+    "height": 675,
+    "sizeBytes": 125588,
+    "format": "jpg",
+    "folder": "Reiselivet",
+    "tags": [
+      "Tønsberg",
+      "Reiselivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
+    "url": "/images/tonsberg/opplevelser-kulturarv-natur-fra-vi.jpg",
+    "filename": "Verdens Ende og Færder fyr",
+    "alt": "Verdens Ende og Færder fyr",
+    "width": 1600,
+    "height": 898,
+    "sizeBytes": 143552,
     "format": "jpg",
     "folder": "Reiselivet",
     "tags": [
@@ -1832,7 +1832,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/kveldsliv-og-samling-paa-brygga-st.jpg",
-    "filename": "Kveldsliv og samling paa brygga st",
+    "filename": "Kveldsliv og samling på Brygga",
     "alt": "Kveldsliv og samling på Brygga",
     "width": 1200,
     "height": 675,
@@ -1847,7 +1847,7 @@ const IMAGES = [
   },
   {
     "url": "/images/tonsberg/studentbolig-rabatter-studere-ved-.jpg",
-    "filename": "Studentbolig rabatter studere ved",
+    "filename": "Studenter i Tønsberg",
     "alt": "Studenter i Tønsberg",
     "width": 1200,
     "height": 675,
@@ -1861,23 +1861,8 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/studentliv-og-samhold-i-tonsberg-s.jpg",
-    "filename": "Studentliv og samhold i tonsberg s",
-    "alt": "Studentliv og samhold i Tønsberg",
-    "width": 1120,
-    "height": 1398,
-    "sizeBytes": 114171,
-    "format": "jpg",
-    "folder": "Studentlivet",
-    "tags": [
-      "Tønsberg",
-      "Studentlivet"
-    ],
-    "location": "Tønsberg"
-  },
-  {
     "url": "/images/tonsberg/studentlivet-i-bilder-bilder-fra-u.jpg",
-    "filename": "Studentlivet i bilder bilder fra u",
+    "filename": "Studenter som tilbringer tid sammen utendørs i Tønsberg",
     "alt": "Studenter som tilbringer tid sammen utendørs i Tønsberg",
     "width": 1200,
     "height": 900,
@@ -1891,8 +1876,23 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
+    "url": "/images/tonsberg/studentliv-og-samhold-i-tonsberg-s.jpg",
+    "filename": "Studentliv og samhold i Tønsberg",
+    "alt": "Studentliv og samhold i Tønsberg",
+    "width": 1120,
+    "height": 1398,
+    "sizeBytes": 114171,
+    "format": "jpg",
+    "folder": "Studentlivet",
+    "tags": [
+      "Tønsberg",
+      "Studentlivet"
+    ],
+    "location": "Tønsberg"
+  },
+  {
     "url": "/images/tonsberg/studentlivet-usn.jpg",
-    "filename": "Studentlivet usn",
+    "filename": "Studentlivet ved USN Campus Vestfold i Tønsberg",
     "alt": "Studentlivet ved USN Campus Vestfold i Tønsberg",
     "width": 1440,
     "height": 1280,
