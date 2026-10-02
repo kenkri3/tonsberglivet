@@ -32,7 +32,7 @@ const studentOffers = [
     title: 'Kollektivtransport & Tog',
     category: 'VKT & Vy',
     desc: 'Svært gode bussforbindelser mellom Tønsberg sentrum, Bakkenteigen og direkte togforbindelse mot Oslo.',
-    image: '/images/tonsberg/tonsberg_panorama.jpg',
+    image: '/images/tonsberg/byen_fra_luften.jpg',
   },
 ];
 
@@ -44,6 +44,9 @@ export default function StudentBoligOgRabatterPage() {
         subtitle="Studere ved USN Campus Vestfold / Tønsberg"
         description="Få full oversikt over SSN sine studentboliger, studentrabatter i byen og gratis helsetjenester."
         backgroundGradient="linear-gradient(135deg, #DC2626, #EF4444)"
+        backgroundImage="/images/tonsberg/student_park.jpg"
+        imageAlt="Studenter i Tønsberg"
+        priority
         compact={true}
       />
 

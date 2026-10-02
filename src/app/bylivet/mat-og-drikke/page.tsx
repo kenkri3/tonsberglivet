@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Utensils, Coffee, Sun, Wine, Star } from 'lucide-react';
 import Link from 'next/link';
@@ -25,6 +26,9 @@ export default function MatOgDrikkePage() {
         subtitle="Uteservering på Brygga & Lokale Smaker"
         description="Nyt nydelig mat fra byens beste restauranter, slapp av på koselige kaffebarer eller opplev den unike bryggestemningen i Tønsberg."
         backgroundGradient="linear-gradient(135deg, #b45309 0%, #d97706 50%, #16193d 100%)"
+        backgroundImage="/images/tonsberg/brygge_solnedgang.jpg"
+        imageAlt="Kveldssol over brygga i Tønsberg"
+        priority
         compact={true}
       />
 
@@ -52,13 +56,37 @@ export default function MatOgDrikkePage() {
             </div>
           </div>
           <div className="lg:col-span-5 relative aspect-[16/10] rounded-2xl overflow-hidden shadow-lg border border-border">
-            <img 
+            <Image 
               src="/images/tonsberg/mat_og_drikke_tonsberg.jpg" 
-              alt="Matopplevelser og uteservering på Tønsberg Brygge" 
-              className="w-full h-full object-cover"
-              loading="lazy"
+              alt="Familie som spiser uteservering på Tønsberg Brygge" 
+              fill
+              sizes="(max-width: 1024px) 100vw, 40vw"
+              className="object-cover"
             />
           </div>
+        </div>
+
+        {/* Smakebiter fra byens matliv */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          {[
+            { src: '/images/food.jpg', alt: 'Barista som lager kaffe på kafé i Tønsberg', caption: 'Kaffebarer' },
+            { src: '/images/tonsberg/marked_mat.jpg', alt: 'Kokk som lager mat på marked i Tønsberg', caption: 'Matmarkeder' },
+            { src: '/images/tonsberg/hostmarked.jpg', alt: 'Lokalproduserte grønnsaker fra marked i Tønsberg', caption: 'Lokale råvarer' },
+            { src: '/images/tonsberg/folkefest.jpg', alt: 'Folkefest med mat og musikk i Tønsberg', caption: 'Utearrangementer' },          ].map((p) => (
+            <figure key={p.src} className="group relative aspect-square rounded-2xl overflow-hidden border border-border shadow-sm">
+              <Image
+                src={p.src}
+                alt={p.alt}
+                fill
+                sizes="(max-width: 640px) 50vw, 25vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              <figcaption className="absolute bottom-2.5 left-3 right-3 text-white text-xs sm:text-sm font-semibold">
+                {p.caption}
+              </figcaption>
+            </figure>
+          ))}
         </div>
 
         {/* Venues Grid */}

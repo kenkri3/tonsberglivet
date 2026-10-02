@@ -377,6 +377,14 @@ export default async function Home() {
           subtitle="Opplev atmosfæren i Norges eldste kystby, på Brygga, Slottsfjellet og Færder-skjærgården."
           photos={[
             {
+              src: '/images/hero-aerial.jpg',
+              alt: 'Tønsberg sett fra luften med brygge, kanal og byfjord',
+              caption: 'Tønsberg fra luften',
+              location: 'Tønsberg Brygge & Kanalen',
+              category: 'Byoversikt',
+              photographer: 'Tønsberglivet Arkiv',
+            },
+            {
               src: '/images/tonsberg/hostfest_slottsfjell.png',
               alt: 'Slottsfjellstårnet og ruinene i Tønsberg',
               caption: 'Slottsfjellet & Tårnet',
@@ -409,11 +417,27 @@ export default async function Home() {
               photographer: 'Fotograf Varpe',
             },
             {
-              src: '/images/tonsberg/torvet_tonsberg.jpg',
-              alt: 'Sentrumshandel og markeder på Torvet',
-              caption: 'Handel på Tønsberg Torv',
+              src: '/images/tonsberg/byliv_gate.jpg',
+              alt: 'Gate med lys og folk i Tønsberg sentrum',
+              caption: 'Gateliv i sentrum',
+              location: 'Storgaten, Tønsberg',
+              category: 'Byliv & Stemning',
+              photographer: 'Tønsberglivet',
+            },
+            {
+              src: '/images/tonsberg/hostmarked.jpg',
+              alt: 'Lokalproduserte varer fra marked i Tønsberg',
+              caption: 'Høstmarked på Torvet',
+              location: 'Tønsberg Torv',
+              category: 'Marked & Lokalmat',
+              photographer: 'Tønsberglivet',
+            },
+            {
+              src: '/images/tonsberg/barn_aktivitet.jpg',
+              alt: 'Barn som lager kunst i Tønsberg',
+              caption: 'Barn i byen',
               location: 'Tønsberg Sentrum',
-              category: 'Shopping & Marked',
+              category: 'Familie & Kultur',
               photographer: 'Tønsberglivet',
             },
             {

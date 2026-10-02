@@ -17,7 +17,7 @@ const attractions = [
     name: 'Verdens Ende & Vippefyret',
     area: 'Tjøme / Færder',
     desc: 'Ikonisk fyrtårn og værbitte svaberg på spissen av Tjøme med mektig panoramautsikt mot Skagerrak og Færder fyr.',
-    image: '/images/tonsberg/ostre_bolarne.jpg',
+    image: '/images/skjaergard.jpg',
   },
   {
     name: 'Færder Nasjonalpark',
@@ -47,6 +47,9 @@ export default function OpplevelserPage() {
         subtitle="Fra Vikingtid til Færder Nasjonalpark"
         description="Opplev Norges vakreste skjærgård, historiske middelalderborger, ikoniske svaberg og levende kystkultur."
         backgroundGradient="linear-gradient(135deg, #D97706, #0E7490)"
+        backgroundImage="/images/skjaergard.jpg"
+        imageAlt="Verdens Ende og Færder fyr"
+        priority
         compact={true}
       />
 

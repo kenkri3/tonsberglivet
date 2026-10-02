@@ -31,6 +31,9 @@ export default function PartnerePage() {
         subtitle="Sammen for Tønsberg" 
         description="Et forpliktende partnerskap mellom kommunen, gårdeiere og næringslivet for å styrke Tønsbergs posisjon som fylkets handels- og opplevelseshovedstad."
         backgroundGradient="linear-gradient(135deg, #065f46 0%, #0d9488 50%, #16193d 100%)"
+        backgroundImage="/images/tonsberg/byliv_gate.jpg"
+        imageAlt="Gatebildet i Tønsberg sentrum"
+        priority
         compact={true}
       />
 

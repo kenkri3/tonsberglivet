@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   TrendingUp, Building2, Lightbulb, Users, ArrowRight,
   Briefcase, Plane, Train, ChevronRight, Sparkles
@@ -16,17 +17,20 @@ export default function NaeringslivetPage() {
   return (
     <main className="min-h-screen space-y-16 pb-20">
       {/* ── Bilde-Hero Banner ── */}
-      <header className="relative min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
+      <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
-          <img
-            src="/images/tonsberg/tonsberg_panorama.jpg"
-            alt="Næringslivet og Tønsberg havn panorama"
-            className="w-full h-full object-cover object-center scale-105"
+          <Image
+            src="/images/hero-aerial.jpg"
+            alt="Tønsberg by og havn sett fra luften"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/45" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 relative z-10 w-full">
           <div className="max-w-3xl space-y-4">
             
             {/* Breadcrumb */}
@@ -84,10 +88,12 @@ export default function NaeringslivetPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl group">
           <div className="lg:col-span-6 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
-            <img
+            <Image
               src="/images/tonsberg/fotograf_varpe_tonsberg.jpg"
               alt="Matgründer på Torvet"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <span className="absolute top-4 left-4 px-3.5 py-1 bg-surface/95 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
               Gründerprofil

@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Hotel, Bed, Sun, MapPin, Star } from 'lucide-react';
 import Link from 'next/link';
@@ -47,6 +48,9 @@ export default function OvernattingPage() {
         subtitle="Byhotell & Skjærgårdsperler"
         description="Finn det perfekte stedet å bo – fra livlige bryggehoteller i Tønsberg sentrum til idylliske herregårder på Tjøme."
         backgroundGradient="linear-gradient(135deg, #b45309 0%, #d97706 50%, #16193d 100%)"
+        backgroundImage="/images/tonsberg/quality_hotel_tonsberg.jpg"
+        imageAlt="Hotell ved brygga i Tønsberg"
+        priority
         compact={true}
       />
 
@@ -58,11 +62,12 @@ export default function OvernattingPage() {
               className="bg-surface rounded-3xl border border-border/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-amber-500/30 transition-all duration-300 flex flex-col group"
             >
               <div className="relative aspect-[16/10] overflow-hidden bg-surface-muted">
-                <img 
-                  src={h.image} 
-                  alt={h.name} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
+                <Image
+                  src={h.image}
+                  alt={h.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                 <span className="absolute top-4 left-4 text-xs font-bold text-white bg-amber-600/90 backdrop-blur-md px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">

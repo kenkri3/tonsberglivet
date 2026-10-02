@@ -70,7 +70,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
               Om oss
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-1 sm:space-y-3">
               {footerLinks.omOss.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -89,7 +89,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
               Utforsk
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-1 sm:space-y-3">
               {footerLinks.utforsk.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -108,7 +108,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
               Tjenester
             </h3>
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-1 sm:space-y-3 mb-8">
               {footerLinks.tjenester.map((link) => (
                 <li key={link.href}>
                   <Link

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 
 interface SectionCardProps {
@@ -19,7 +20,11 @@ export function SectionCard({ title, description, href, gradient, icon }: Sectio
       >
         <div>
           {icon && (
-            <div className="w-12 h-12 rounded-2xl bg-surface-muted border border-border/60 flex items-center justify-center mb-6 text-foreground group-hover:text-primary group-hover:scale-105 transition-all">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-sm
+                         group-hover:scale-105 transition-transform"
+              style={{ background: gradient }}
+            >
               {icon}
             </div>
           )}
@@ -63,10 +68,12 @@ export function EventCard({ title, date, time, location, category, href, imageUr
                           hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
         {imageUrl ? (
           <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-900">
-            <img
+            <Image
               src={imageUrl}
               alt={title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             <div className="absolute top-3 left-3 bg-surface/90 backdrop-blur-md rounded-xl px-2.5 py-1 text-center shadow-md border border-border">
@@ -135,11 +142,12 @@ export function NewsCard({ title, excerpt, date, category, href, imageUrl }: New
         {/* Nyhetsbilde eller dekorativ gradient */}
         <div className="relative aspect-[16/10] overflow-hidden bg-surface-muted">
           {imageUrl ? (
-            <img
+            <Image
               src={imageUrl}
               alt={title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              loading="lazy"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 via-surface-muted to-accent/20 flex items-center justify-center">

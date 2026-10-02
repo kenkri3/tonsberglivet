@@ -27,13 +27,13 @@ const shoppingCategories = [
     title: 'Tønsberg Torv & Markedsplass',
     desc: 'Bonde- og sesongmarkeder, blomster, lokalt håndverk og yrende folkeliv hele uken.',
     count: 'Torvhandel',
-    image: '/images/tonsberg/brygga_folk.jpg',
+    image: '/images/tonsberg/handel_marked.jpg',
   },
   {
     title: 'Matglede, Interiør & Design',
     desc: 'Skandinavisk interiør, håndverk og delikatesser i gågater og historiske kvartaler.',
     count: '25+ butikker',
-    image: '/images/tonsberg/spisuteuka.jpg',
+    image: '/images/food.jpg',
   },
 ];
 
@@ -45,6 +45,9 @@ export default function ShoppingPage() {
         subtitle="Unike nisjebutikker & Farmandstredet"
         description="I Tønsberg finner du en perfekt miks av tradisjonsrik sentrumshandel, spennende nisjebutikker og moderne kjøpesentre."
         backgroundGradient="linear-gradient(135deg, #1D4ED8, #0E7490)"
+        backgroundImage="/images/shopping.jpg"
+        imageAlt="Folkeliv og handel i Tønsberg sentrum"
+        priority
         compact={true}
       />
 

@@ -204,3 +204,42 @@ select:focus-visible {
   background: rgba(15, 23, 42, 0.75);
   border: 1px solid rgba(148, 163, 184, 0.1);
 }
+
+/* ═══════════════════════════════════════════
+   MOBIL: TAPPEVENNLIGHET
+   Lenkelister i foten var 17–20 px høye på mobil, godt under anbefalt
+   minimum på 44 px. Vi løfter dem uten å endre utseendet på desktop.
+   ═══════════════════════════════════════════ */
+@media (max-width: 640px) {
+  footer a,
+  footer button,
+  footer input,
+  footer ul a,
+  footer nav a,
+  footer address a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  /* Skjemafelt skal fylle bredden, ikke krympe til innholdet */
+  footer input {
+    display: flex;
+  }
+
+  .tap-target-list a,
+  .tap-target-list button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+}
+
+/* Horisontale scroller-lister skal ikke vise scrollbar */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

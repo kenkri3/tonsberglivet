@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { 
   Compass, Map, Utensils, BedDouble, Trees, Castle,
@@ -19,10 +20,12 @@ export default function ReiselivetPage() {
       {/* ── Bilde-Hero Banner ── */}
       <header className="relative min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
-          <img
+          <Image
             src="/images/slottsfjellet.jpg"
             alt="Slottsfjellet og Reiselivet i Tønsberg"
-            className="w-full h-full object-cover object-center scale-105"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover object-center scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
         </div>
@@ -97,10 +100,12 @@ export default function ReiselivetPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl group">
           <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
-            <img
+            <Image
               src="/images/skjaergard.jpg"
               alt="Færder Nasjonalpark og Skjærgården"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <span className="absolute top-4 left-4 px-3.5 py-1 bg-surface/95 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
               Færder Nasjonalpark
@@ -158,10 +163,12 @@ export default function ReiselivetPage() {
           {/* Quality Hotel Tønsberg */}
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
-              <img
+              <Image
                 src="/images/tonsberg/quality_hotel_tonsberg.jpg"
                 alt="Quality Hotel Tønsberg takbasseng"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-border">
                 Takbasseng & Spa
@@ -192,10 +199,12 @@ export default function ReiselivetPage() {
           {/* Hotel Klubben */}
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
-              <img
+              <Image
                 src="/images/tonsberg/brygge_kveldsstemning.jpg"
                 alt="Hotel Klubben ved bryggen"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border border-border">
                 Klassiker & Kultur
@@ -226,10 +235,12 @@ export default function ReiselivetPage() {
           {/* Engø Gård */}
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
-              <img
+              <Image
                 src="/images/tonsberg/sommer_tonsberg.png"
                 alt="Engø Gård på Tjøme"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 border border-border">
                 Eksklusiv Gourmet
@@ -260,10 +271,12 @@ export default function ReiselivetPage() {
           {/* Havna Hotell */}
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
-              <img
+              <Image
                 src="/images/tonsberg/ostre_bolarne.jpg"
                 alt="Havna Hotell Tjøme ved skjærgården"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 border border-border">
                 Skjærgårdshotell
@@ -300,12 +313,12 @@ export default function ReiselivetPage() {
           subtitle="Bilder fra Slottsfjellet, Færder Nasjonalpark, Verdens Ende og bryggemiljøet."
           photos={[
             {
-              src: '/images/skjaergard.jpg',
-              alt: 'Verdens Ende og Vippefyret i Færder',
-              caption: 'Verdens Ende & Vippefyret',
-              location: 'Tjøme / Færder Nasjonalpark',
-              category: 'Skjærgård & Kyst',
-              photographer: 'Visit Færder',
+              src: '/images/tonsberg/brygge_solnedgang.jpg',
+              alt: 'Bryggekanten i Tønsberg i kveldssol',
+              caption: 'Kveldssol ved brygga',
+              location: 'Tønsberg Brygge',
+              category: 'Byliv & Kyst',
+              photographer: 'Tønsberglivet',
             },
             {
               src: '/images/slottsfjellet.jpg',

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 
 interface HeroSectionProps {
@@ -13,6 +14,11 @@ interface HeroSectionProps {
   overlay?: 'dark' | 'light' | 'none';
   /** Bakgrunnsfarge brukes når det ikke er et bilde */
   backgroundGradient?: string;
+  /** Ekte foto fra Tønsberg. Legges bak gradienten og løfter hele heroen. */
+  backgroundImage?: string;
+  imageAlt?: string;
+  /** Sett til true for heroen øverst på siden (LCP-bilde) */
+  priority?: boolean;
   children?: React.ReactNode;
   compact?: boolean;
 }
@@ -27,17 +33,35 @@ export function HeroSection({
   secondaryCtaHref,
   overlay = 'dark',
   backgroundGradient,
+  backgroundImage,
+  imageAlt = '',
+  priority = false,
   children,
   compact = false,
 }: HeroSectionProps) {
   return (
     <section
-      className={`relative overflow-hidden ${compact ? 'py-20 md:py-28' : 'py-28 md:py-40 lg:py-52'}`}
+      className={`relative overflow-hidden ${compact ? 'py-20 md:py-28' : 'py-24 md:py-40 lg:py-52'}`}
       style={{
         background: backgroundGradient || 'linear-gradient(135deg, #1E3A5F 0%, #0F172A 50%, #1D4ED8 100%)',
       }}
     >
-      {/* Overlay */}
+      {backgroundImage && (
+        <Image
+          src={backgroundImage}
+          alt={imageAlt}
+          fill
+          priority={priority}
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+      )}
+
+      {/* Overlay — lysere på desktop der bildet får mer plass, mørkere på mobil
+          der teksten legger seg oppå hele bildet. */}
+      {backgroundImage && (
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/50 to-slate-950/25 md:bg-slate-950/25" />
+      )}
       {overlay !== 'none' && (
         <div
           className={`absolute inset-0 ${

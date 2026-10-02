@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { 
   GraduationCap, Home, HeartPulse, Ticket, Briefcase, 
@@ -18,17 +19,20 @@ export default function StudentlivetPage() {
   return (
     <main className="min-h-screen space-y-16 pb-20">
       {/* ── Bilde-Hero Banner ── */}
-      <header className="relative min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
+      <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
-          <img
+          <Image
             src="/images/tonsberg/studentlivet_usn.jpg"
             alt="Studentlivet ved USN Campus Vestfold i Tønsberg"
-            className="w-full h-full object-cover object-center scale-105"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative z-10 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 relative z-10 w-full">
           <div className="max-w-3xl space-y-4">
             
             {/* Breadcrumb */}
@@ -199,11 +203,11 @@ export default function StudentlivetPage() {
           subtitle="Bilder fra USN Campus Vestfold, student arrangementer og utelivet på Brygga."
           photos={[
             {
-              src: '/images/tonsberg/studentlivet_usn.jpg',
-              alt: 'Studenter på Campus Vestfold',
-              caption: 'USN Campus Vestfold',
-              location: 'Campus Vestfold / Bakkenteigen',
-              category: 'Utdanning & Campus',
+              src: '/images/tonsberg/student_park.jpg',
+              alt: 'Studenter som tilbringer tid sammen utendørs i Tønsberg',
+              caption: 'Studentmiljøet utendørs',
+              location: 'Campus Vestfold',
+              category: 'Studentlivet',
               photographer: 'USN Arkiv',
             },
             {

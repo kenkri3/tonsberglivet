@@ -36,7 +36,7 @@ const prosjekter = [
     desc: 'Lokale matprodusenter fyller Tønsberg Torv med ferske grønnsaker, ost, bakst og kortreiste spesialiteter.', 
     status: 'Årlig',
     icon: ShoppingBag,
-    image: '/images/tonsberg/torvet_tonsberg.jpg'
+    image: '/images/tonsberg/marked_mat.jpg'
   },
   { 
     id: 3, 
@@ -76,6 +76,7 @@ const prosjekter = [
     desc: 'Gode sommertilbud, underholdning og aktiviteter som støtter de unike butikkene i sentrum.', 
     status: 'Årlig',
     icon: Store,
+    image: '/images/shopping.jpg'
   },
   { 
     id: 8, 
@@ -83,6 +84,7 @@ const prosjekter = [
     desc: 'Bærekraftige markeder med gjenbruk av klær, vintage og redesign som samler både unge og voksne.', 
     status: 'Pågår',
     icon: Recycle,
+    image: '/images/tonsberg/handel_marked.jpg'
   },
   { 
     id: 9, 
@@ -90,6 +92,7 @@ const prosjekter = [
     desc: 'En varm og uformell velkomstfest for alle som nylig har flyttet til Tønsberg- og Færderregionen.', 
     status: 'Planlagt',
     icon: HeartHandshake,
+    image: '/images/tonsberg/folkefest.jpg'
   }
 ];
 
@@ -101,6 +104,9 @@ export default function ProsjekterPage() {
         subtitle="Tønsberglivet"
         description="Vi initierer, støtter og gjennomfører små og store prosjekter som gjør Tønsbergregionen til et mer levende, attraktivt og samlende sted å bo, besøke og drive næring i."
         backgroundGradient="linear-gradient(135deg, #16193d 0%, #1D4ED8 100%)"
+        backgroundImage="/images/tonsberg/folkefest.jpg"
+        imageAlt="Folkefest i Tønsberg"
+        priority
         compact={true}
       />
 
@@ -124,11 +130,12 @@ export default function ProsjekterPage() {
               >
                 {prosjekt.image && (
                   <div className="relative aspect-[16/10] overflow-hidden bg-surface-muted">
-                    <img 
-                      src={prosjekt.image} 
+                    <Image
+                      src={prosjekt.image}
                       alt={prosjekt.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                     <span className="absolute top-3 right-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-surface/90 backdrop-blur-md text-primary shadow-sm">

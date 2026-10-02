@@ -131,7 +131,12 @@ export function formatDisplayTime(dateInput: string, explicitTime?: string): str
 }
 
 /**
- * Normalizes raw Ticketmaster API response into standardized portal event objects.
+ * Fallback-bilde når Ticketmaster ikke leverer artwork.
+ * Skal alltid være et ekte bilde fra Tønsberg – aldri et internasjonalt arkivbilde.
+ */
+export const TONSBERG_EVENT_FALLBACK_IMAGE = '/images/tonsberg/folkefest.jpg';
+
+/** Normalizes raw Ticketmaster API response into standardized portal event objects.
  */
 export function normalizeTicketmasterEvent(item: any): TicketmasterEvent {
   const dates = item?.dates?.start;
@@ -139,7 +144,7 @@ export function normalizeTicketmasterEvent(item: any): TicketmasterEvent {
   const image = item?.images?.find((img: any) => img.ratio === '16_9' && img.width >= 1000)?.url ||
                 item?.images?.find((img: any) => img.width > 600)?.url ||
                 item?.images?.[0]?.url ||
-                'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80';
+                TONSBERG_EVENT_FALLBACK_IMAGE;
   const price = item?.priceRanges?.[0];
   const dateIso = dates?.dateTime || (dates?.localDate ? `${dates.localDate}T19:00:00Z` : new Date().toISOString());
   const vName = normalizeVenueName(venue?.name || '', venue?.city?.name || 'Tønsberg');
@@ -221,7 +226,7 @@ async function scrapeDirectTmPageEvents(url: string): Promise<ScrapedRawEvent[]>
                   : '';
                 if (!directUrl.includes('/event/')) continue;
 
-                let image = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80';
+                let image = TONSBERG_EVENT_FALLBACK_IMAGE;
                 if (item.artists && Array.isArray(item.artists)) {
                   for (const a of item.artists) {
                     const img = a.imageUrls;
@@ -307,7 +312,7 @@ async function fetchTicketmasterApiEvents(apiKey: string): Promise<ScrapedRawEve
                         item.images?.find((img: any) => img.ratio === '16_9' && img.width >= 600)?.url ||
                         item.images?.find((img: any) => img.width >= 600)?.url ||
                         item.images?.[0]?.url ||
-                        'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80';
+                        TONSBERG_EVENT_FALLBACK_IMAGE;
       const priceRange = item.priceRanges?.[0]
         ? `Fra ${item.priceRanges[0].min} ${item.priceRanges[0].currency || 'kr'}`
         : undefined;

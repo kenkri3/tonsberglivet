@@ -29,7 +29,7 @@ const demoNews = [
     category: 'Reiselivet', 
     date: '10. aug 2026', 
     excerpt: 'Slik får du mest ut av en helg fylt med matopplevelser, kyststier og båtliv i Norges eldste by.', 
-    imageUrl: '/images/tonsberg/brygga_full.jpg' 
+    imageUrl: '/images/tonsberg/brygge_solnedgang.jpg' 
   },
   { 
     id: 4, 
@@ -37,7 +37,7 @@ const demoNews = [
     category: 'Hverdagslivet', 
     date: '05. aug 2026', 
     excerpt: 'Gjør deg klar for årets store høstmarked med ferske lokale råvarer fra hele Vestfold.', 
-    imageUrl: '/images/tonsberg/torvet_tonsberg.jpg' 
+    imageUrl: '/images/tonsberg/hostmarked.jpg' 
   },
   { 
     id: 5, 
@@ -45,7 +45,7 @@ const demoNews = [
     category: 'Næringslivet', 
     date: '01. aug 2026', 
     excerpt: 'Bedrifter og Tønsberg kommune går sammen for nullutslipp og renere bykjerne.', 
-    imageUrl: '/images/tonsberg/sommer_tonsberg.png' 
+    imageUrl: '/images/tonsberg/byen_fra_luften.jpg' 
   },
   { 
     id: 6, 
@@ -53,7 +53,7 @@ const demoNews = [
     category: 'Bylivet', 
     date: '28. jul 2026', 
     excerpt: 'Gallerier, utstillinger og utendørsscener skaper en levende kulturarena for hele familien.', 
-    imageUrl: '/images/tonsberg/kultur_tonsberg.jpg' 
+    imageUrl: '/images/tonsberg/barnas_faerderfest.jpg' 
   },
 ];
 
@@ -70,6 +70,9 @@ export default function NyheterClient() {
         title="Nyheter" 
         subtitle="Siste nytt fra Tønsberg" 
         backgroundGradient="linear-gradient(135deg, #1E293B, #334155)"
+        backgroundImage="/images/tonsberg/byliv_gate.jpg"
+        imageAlt="Gatebildet i Tønsberg sentrum"
+        priority
         compact={true}
       />
       

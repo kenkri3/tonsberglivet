@@ -15,7 +15,7 @@ const activities = [
     title: 'Slottsfjellet & Tårnet',
     desc: 'Norges største ruinepark fra middelalderen med fantastisk panoramautsikt over hele byfjorden.',
     icon: Landmark,
-    image: '/images/tonsberg/slottsfjellet.jpg',
+    image: '/images/slottsfjellet.jpg',
     tag: 'Historisk landemerke',
   },
   {
@@ -39,6 +39,20 @@ const activities = [
     image: '/images/tonsberg/fotograf_varpe_tonsberg.jpg',
     tag: 'Kulturmøteplass',
   },
+  {
+    title: 'Vikingodden & Oseberg',
+    desc: 'Bli med tilbake til vikingtiden der historien lever i nåtid, med aktiviteter for hele familien.',
+    icon: Sparkles,
+    image: '/images/tonsberg/local-25.jpg',
+    tag: 'Vikinghistorie',
+  },
+  {
+    title: 'Barnas Tønsberg',
+    desc: 'Kunstprosjekter, verksteder og familieaktiviteter som setter farger på hele byen.',
+    icon: Music,
+    image: '/images/tonsberg/barn_aktivitet.jpg',
+    tag: 'For hele familien',
+  },
 ];
 
 export default function AktiviteterPage() {
@@ -48,7 +62,10 @@ export default function AktiviteterPage() {
         title="Kultur & Aktiviteter"
         subtitle="Historie, Teater & Opplevelser"
         description="Fra tusenårig historie på Slottsfjellet til sprudlende kulturliv og vannaktiviteter på Kanalen."
-        backgroundGradient="linear-gradient(135deg, #7C3AED, #8B5CF6)"
+        backgroundGradient="linear-gradient(135deg, #4C1D95, #7C3AED)"
+        backgroundImage="/images/tonsberg/local-25.jpg"
+        imageAlt="Vikingodden i Tønsberg"
+        priority
         compact={true}
       />
 
@@ -61,7 +78,7 @@ export default function AktiviteterPage() {
                 key={idx}
                 className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-purple-500/40 transition-all duration-300 flex flex-col"
               >
-                <div className="relative h-60 w-full overflow-hidden bg-surface-muted">
+                <div className="relative h-52 sm:h-60 w-full overflow-hidden bg-surface-muted">
                   <Image
                     src={act.image}
                     alt={act.title}
@@ -70,14 +87,14 @@ export default function AktiviteterPage() {
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-                  <span className="absolute top-4 right-4 text-xs font-bold text-white bg-purple-900/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-purple-400/30">
+                  <span className="absolute top-4 right-4 max-w-[60%] truncate text-[11px] sm:text-xs font-bold text-white bg-purple-900/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-purple-400/30">
                     {act.tag}
                   </span>
                   <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3">
-                    <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl text-white">
+                    <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-xl text-white shrink-0">
                       <Icon className="w-5 h-5" />
                     </div>
-                    <h3 className="font-bold text-xl text-white drop-shadow-sm">{act.title}</h3>
+                    <h3 className="font-bold text-lg sm:text-xl text-white drop-shadow-sm leading-tight">{act.title}</h3>
                   </div>
                 </div>
                 <div className="p-6 flex-1 flex flex-col justify-between space-y-4">

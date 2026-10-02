@@ -17,6 +17,9 @@ export default function PresseromPage() {
         subtitle="Mediekontakt & Pressemeldinger"
         description="Her finner du oppdaterte pressemeldinger, bildefiler, logoer og kontaktinformasjon for pressen."
         backgroundGradient="linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%)"
+        backgroundImage="/images/tonsberg/byen_fra_luften.jpg"
+        imageAlt="Tønsberg sentrum sett fra luften"
+        priority
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">

@@ -15,7 +15,7 @@ const areas = [
     type: 'Kollektivknutepunkt',
     status: 'Under utvikling',
     desc: 'Moderne kontorlokaler kun 1 time og 15 minutter fra Oslo S med tog.',
-    image: '/images/tonsberg/tonsberg_panorama.jpg',
+    image: '/images/tonsberg/byen_fra_luften.jpg',
   },
   {
     name: 'Foynkvartalet & Bryggekanten',
@@ -48,6 +48,9 @@ export default function EtableringPage() {
         subtitle="Etabler bedrift i Tønsbergregionen"
         description="Få hjelp til oppstart via Gründerhuset Hi5, START-programmet og sjekk ledige næringsarealer."
         backgroundGradient="linear-gradient(135deg, #1E3A5F, #1D4ED8)"
+        backgroundImage="/images/tonsberg/byliv_gate.jpg"
+        imageAlt="Gatebildet i Tønsberg sentrum"
+        priority
         compact={true}
       />
 

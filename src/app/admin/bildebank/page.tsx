@@ -108,7 +108,7 @@ export default function ImageBankPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newTitle,
-          url: newUrl || 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=1200&q=80',
+          url: newUrl || '/images/tonsberg/folkefest.jpg',
           folder: newFolder,
           photographer: newPhotographer,
           aiTags: analyzedTags.length > 0 ? analyzedTags : ['Tønsberg', newFolder],

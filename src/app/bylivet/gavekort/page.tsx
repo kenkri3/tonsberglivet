@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { CreditCard, Smartphone, Store, Building, ChevronRight, Gift } from 'lucide-react';
 import Link from 'next/link';
@@ -17,6 +18,9 @@ export default function GavekortPage() {
         subtitle="Gaven som gleder alle"
         description="Med Sentrumsgavekortet gir du ikke bare en fantastisk gave, du støtter også det lokale næringslivet i byen vår. Gavekortet kan brukes hos over 300 butikker, serveringssteder og opplevelser i Tønsberg."
         backgroundGradient="linear-gradient(135deg, #B45309 0%, #F59E0B 100%)"
+        backgroundImage="/images/tonsberg/byliv_gate.jpg"
+        imageAlt="Stemning i gatebildet i Tønsberg sentrum"
+        priority
       />
 
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -96,7 +100,7 @@ export default function GavekortPage() {
                 Søk etter «Mine Gavekort» i App Store eller Google Play, eller klikk på knappene nedenfor for å laste ned appen.
               </p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button className="px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary-hover transition-colors text-sm shadow-sm">
                 App Store
               </button>
@@ -105,6 +109,30 @@ export default function GavekortPage() {
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Byliv i bilder */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          {[
+            { src: '/images/tonsberg/handel_marked.jpg', alt: 'Markedsboder med klær og håndverk i Tønsberg sentrum', caption: 'Handel i sentrum' },
+            { src: '/images/tonsberg/marked_mat.jpg', alt: 'Kokk som serverer lokal mat i Tønsberg', caption: 'Kafé og servering' },
+            { src: '/images/tonsberg/hostmarked.jpg', alt: 'Lokalproduserte varer fra marked i Tønsberg', caption: 'Lokale varer' },          ].map((p) => (
+            <figure key={p.src} className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-border shadow-sm group">
+              <Image
+                src={p.src}
+                alt={p.alt}
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              <figcaption className="absolute bottom-3 left-4 right-4 text-white text-sm font-semibold">
+                {p.caption}
+              </figcaption>
+            </figure>
+          ))}
         </div>
       </section>
 

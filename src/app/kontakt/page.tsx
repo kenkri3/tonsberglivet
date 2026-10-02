@@ -17,6 +17,9 @@ export default function KontaktPage() {
         subtitle="Vi hører gjerne fra deg"
         description="Har du spørsmål om byutvikling, arrangementer, torvleie eller samarbeid? Ta kontakt med teamet vårt."
         backgroundGradient="linear-gradient(135deg, #1E3A5F, #1D4ED8)"
+        backgroundImage="/images/tonsberg/torvet_tonsberg.jpg"
+        imageAlt="Tønsberg Torv, like ved sentrumskontoret i Rådhusgaten"
+        priority
         compact={true}
       />
 
@@ -36,8 +39,8 @@ export default function KontaktPage() {
             <div className="bg-surface rounded-3xl shadow-sm border border-border overflow-hidden">
               <div className="relative h-48 w-full overflow-hidden bg-surface-muted">
                 <Image
-                  src="/images/tonsberg/tonsberg_panorama.jpg"
-                  alt="Tønsberg sentrum og brygge"
+                  src="/images/tonsberg/byliv_gate.jpg"
+                  alt="Gatebildet i Tønsberg sentrum"
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 50vw"
