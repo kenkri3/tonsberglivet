@@ -25,8 +25,10 @@ function Measurement({ title, value }: { title: string; value: number | null }) 
           '–'
         )}
       </div>
-      <p className={`text-[11px] font-semibold pt-1 ${measured ? 'text-emerald-600' : 'text-foreground-muted'}`}>
-        {measured ? 'Målt verdi fra Miljødirektoratet' : 'Ikke målt i denne rapporten'}
+      {/* Kilden står allerede i kortets topptekst, så vi gjentar den ikke her –
+          «Målt verdi fra Miljødirektoratet» brøt over to linjer i hvert kort. */}
+      <p className={`mt-auto text-[11px] font-semibold pt-2 ${measured ? 'text-emerald-600' : 'text-foreground-muted'}`}>
+        {measured ? 'Målt verdi' : 'Ikke målt i denne rapporten'}
       </p>
     </div>
   );
@@ -83,9 +85,11 @@ export function AirQualityWidget() {
   }
 
   return (
-    <div className="bg-surface rounded-3xl border border-border p-6 md:p-8 space-y-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-        <div>
+    /* @container: samme grunn som de andre kortene – widgeten står i en halv
+       kolonne (~590 px) på /hverdagslivet, men i full bredde andre steder. */
+    <div className="@container bg-surface rounded-3xl border border-border p-6 md:p-8 space-y-6 shadow-sm">
+      <div className="flex flex-col @2xl:flex-row @2xl:items-center justify-between gap-4 border-b border-border pb-6">
+        <div className="min-w-0">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
             <Wind className="w-3.5 h-3.5 text-emerald-500" />
             <span>Miljødirektoratet (live)</span>
@@ -99,7 +103,7 @@ export function AirQualityWidget() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto px-4 py-2 rounded-2xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+        <div className="flex items-center gap-2 self-start @2xl:self-auto px-4 py-2 rounded-2xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
           <ShieldCheck className="w-4 h-4" />
           <span className="text-xs font-black uppercase tracking-wider">{data.label}</span>
         </div>

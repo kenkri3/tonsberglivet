@@ -18,14 +18,30 @@ export function TrafficWidget() {
       .catch((e) => console.error('Feil ved trafikkstatus:', e));
   }, []);
 
-  if (!data) return null;
+  // Skjelett mens trafikkallet pågår, så kortet ikke forsvinner helt.
+  if (!data) {
+    return (
+      <div className="bg-surface rounded-3xl border border-border p-6 md:p-8 space-y-6 shadow-sm animate-pulse" aria-busy="true">
+        <div className="space-y-3 border-b border-border pb-6">
+          <div className="h-6 w-56 rounded-full bg-border" />
+          <div className="h-8 w-72 max-w-full rounded bg-border" />
+          <div className="h-4 w-60 max-w-full rounded bg-border" />
+        </div>
+        <div className="h-24 rounded-2xl bg-surface-muted border border-border" />
+        <div className="h-16 rounded-xl bg-surface-muted/60 border border-border" />
+      </div>
+    );
+  }
 
   const hasVerifiedBridgeStatus = data.kanalbrua.isCarPassable !== null;
 
   return (
-    <div className="bg-surface rounded-3xl border border-border p-6 md:p-8 space-y-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-        <div>
+    /* @container: widgeten står i en smal kolonne (ca. 590 px) på /bylivet men i
+       full bredde andre steder. Med viewport-baserte brytepunkter ble tittelen
+       klemt til to linjer fordi statuspilla tok plass ved siden av. */
+    <div className="@container bg-surface rounded-3xl border border-border p-6 md:p-8 space-y-6 shadow-sm">
+      <div className="flex flex-col @2xl:flex-row @2xl:items-center justify-between gap-4 border-b border-border pb-6">
+        <div className="min-w-0">
           <div
             className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${
               data.isLive
@@ -46,8 +62,8 @@ export function TrafficWidget() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto bg-surface-muted px-4 py-2 rounded-2xl border border-border">
-          <span className="relative flex h-3 w-3">
+        <div className="flex items-center gap-2 self-start @2xl:self-auto bg-surface-muted px-4 py-2 rounded-2xl border border-border min-w-0 max-w-full">
+          <span className="relative flex h-3 w-3 shrink-0">
             {data.isLive && (
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             )}
@@ -57,7 +73,9 @@ export function TrafficWidget() {
               }`}
             ></span>
           </span>
-          <span className="text-xs font-extrabold text-foreground">{data.trafficFlowOverview}</span>
+          <span className="text-xs font-extrabold text-foreground leading-snug break-words">
+            {data.trafficFlowOverview}
+          </span>
         </div>
       </div>
 
@@ -67,15 +85,16 @@ export function TrafficWidget() {
         </div>
       )}
 
-      {/* Kanalbrua fokus-boks */}
+      {/* Kanalbrua fokus-boks. Stablet layout: widgeten står i en smal kolonne,
+          og side-om-side gjorde «Neste åpning»-boksen trang. */}
       <div
-        className={`p-6 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+        className={`p-4 sm:p-6 rounded-2xl border flex flex-col gap-4 ${
           hasVerifiedBridgeStatus
             ? 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/20'
             : 'bg-surface-muted/50 border-border'
         }`}
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-start gap-4 min-w-0">
           <div
             className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
               hasVerifiedBridgeStatus ? 'bg-emerald-500 text-white' : 'bg-amber-500/80 text-white'
@@ -83,8 +102,8 @@ export function TrafficWidget() {
           >
             {hasVerifiedBridgeStatus ? <CheckCircle2 className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h4 className="font-extrabold text-lg text-foreground">
                 Kanalbrua (Fv. 308)
               </h4>
@@ -98,15 +117,17 @@ export function TrafficWidget() {
                 {data.kanalbrua.status}
               </span>
             </div>
-            <p className="text-xs text-foreground-muted mt-0.5">
+            <p className="text-xs text-foreground-muted mt-1 leading-relaxed break-words">
               {data.kanalbrua.details}
             </p>
           </div>
         </div>
 
-        <div className="shrink-0 bg-surface px-4 py-2 rounded-xl border border-border text-xs text-foreground-muted flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-primary" />
-          <span>
+        {/* Uten shrink-0 får denne boksen krympe og bryte teksten sin, i stedet
+            for å presse seg ut over kortets høyre kant. */}
+        <div className="w-full min-w-0 bg-surface px-4 py-2.5 rounded-xl border border-border text-xs text-foreground-muted flex items-center gap-2">
+          <Clock className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span className="min-w-0 leading-snug">
             Neste rutemessige åpning: <strong className="text-foreground">{data.kanalbrua.nextScheduledOpening}</strong>
           </span>
         </div>
