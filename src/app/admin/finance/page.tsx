@@ -87,13 +87,16 @@ export default function DuettFinancePage() {
 
         setExportMessage(data.message || `Fakturagrunnlag (${data.data.items.length} poster) er eksportert og lastet ned.`);
       } else {
-        // Direkte nedlasting via GET
-        window.location.href = '/api/finance/export';
-        setExportMessage('Laster ned Duett ERP CSV-fil...');
+        // Tidligere lastet vi bare ned CSV-en på nytt her og sa «Laster ned …»,
+        // også når serveren faktisk svarte med en feil. Rapporter i stedet hva
+        // som faktisk skjedde, slik at en feilslått eksport ikke ser ut som suksess.
+        setExportMessage(
+          data.error ||
+            `Eksporten ga ingen fil (HTTP ${res.status}). Ingenting er lastet ned.`,
+        );
       }
-    } catch (e) {
-      window.location.href = '/api/finance/export';
-      setExportMessage('Laster ned Duett ERP CSV-fil...');
+    } catch (e: any) {
+      setExportMessage(`Nettverksfeil under eksport: ${e?.message || 'ukjent feil'}. Ingenting er lastet ned.`);
     } finally {
       setIsExporting(false);
       setTimeout(() => setExportMessage(null), 6000);

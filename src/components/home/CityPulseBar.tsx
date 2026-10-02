@@ -8,17 +8,18 @@ import {
 } from 'lucide-react';
 
 export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
+  /**
+   * Viktig: ingen oppdiktede startverdier. Denne baren presenteres som
+   * «Bypulsen akkurat nå», og viste tidligere fabrikkerte verdier
+   * (neste tog, 17,5 °C badevann, «Kanalbrua: Åpen», «Luft: God») helt til
+   * API-ene svarte. Nå vises en verdi KUN når kilden faktisk er levende.
+   */
   const [pulseData, setPulseData] = useState<{
     nextTrain?: string;
     waterTemp?: number;
     bridgeStatus?: string;
     airLabel?: string;
-  }>({
-    nextTrain: 'RE11 Oslo S: 6 min',
-    waterTemp: 17.5,
-    bridgeStatus: 'Kanalbrua: Åpen',
-    airLabel: 'Luft: God',
-  });
+  }>({});
 
   useEffect(() => {
     Promise.allSettled([
@@ -27,32 +28,47 @@ export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
       fetch('/api/traffic').then((r) => r.json()),
       fetch('/api/airquality').then((r) => r.json()),
     ]).then(([enturRes, oceanRes, trafficRes, airRes]) => {
-      const updates: typeof pulseData = { ...pulseData };
+      const updates: {
+        nextTrain?: string;
+        waterTemp?: number;
+        bridgeStatus?: string;
+        airLabel?: string;
+      } = {};
 
-      if (enturRes.status === 'fulfilled' && enturRes.value.success) {
+      // Entur: kun ekte avgangsdata.
+      if (enturRes.status === 'fulfilled' && enturRes.value?.isLive) {
         const firstDep = enturRes.value.data?.departures?.[0];
-        if (firstDep) {
-          updates.nextTrain = `${firstDep.line} ${firstDep.destination.split('/')[0].trim()}: ${firstDep.minutesUntil}`;
+        if (firstDep?.line && firstDep?.minutesUntil) {
+          const destination = String(firstDep.destination ?? '').split('/')[0].trim();
+          updates.nextTrain = destination
+            ? `${firstDep.line} ${destination}: ${firstDep.minutesUntil}`
+            : `${firstDep.line}: ${firstDep.minutesUntil}`;
         }
       }
 
-      if (oceanRes.status === 'fulfilled' && oceanRes.value.success) {
-        updates.waterTemp = oceanRes.value.data?.seaTemperature;
+      // MET oceanforecast: vanntemperatur kan være null når kilden ikke svarer.
+      if (oceanRes.status === 'fulfilled' && typeof oceanRes.value?.data?.seaTemperature === 'number') {
+        updates.waterTemp = oceanRes.value.data.seaTemperature;
       }
 
-      if (trafficRes.status === 'fulfilled' && trafficRes.value.success) {
-        updates.bridgeStatus = trafficRes.value.data?.kanalbrua?.isCarPassable
-          ? 'Kanalbrua: Åpen'
-          : 'Kanalbrua: Åpning pågår';
+      // Statens vegvesen: isCarPassable er null når vi ikke har sanntidskilde.
+      const passable = trafficRes.status === 'fulfilled' ? trafficRes.value?.data?.kanalbrua?.isCarPassable : null;
+      if (typeof passable === 'boolean') {
+        updates.bridgeStatus = passable ? 'Kanalbrua: Åpen' : 'Kanalbrua: Åpning pågår';
       }
 
-      if (airRes.status === 'fulfilled' && airRes.value.success) {
+      // NILU: kun når målingen er levende.
+      if (airRes.status === 'fulfilled' && airRes.value?.isLive) {
         updates.airLabel = `Luft: ${airRes.value.data?.index === 'LAV' ? 'God' : 'Moderat'}`;
       }
 
       setPulseData(updates);
     });
   }, []);
+
+  const hasAnyLiveValue = Boolean(
+    pulseData.nextTrain || pulseData.bridgeStatus || typeof pulseData.waterTemp === 'number' || pulseData.airLabel,
+  );
 
   const quickCategories = [
     { label: 'Spisesteder & Brygga', href: '/bylivet/mat-og-drikke', icon: UtensilsCrossed },
@@ -84,41 +100,59 @@ export function CityPulseBar({ eventCount = 14 }: { eventCount?: number }) {
 
         {/* Live Status Indicators (Sleek monochromatic styling) */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-none text-[12px] font-medium text-foreground-muted">
-          <Link
-            href="/bylivet"
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
-            title="Entur sanntid tog"
-          >
-            <Train className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>{pulseData.nextTrain}</span>
-          </Link>
+          {!hasAnyLiveValue && (
+            <span
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted border border-border/70 text-foreground-subtle shrink-0"
+              title="Sanntidskildene svarte ikke ved denne lasting"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span>Sanntidsdata er ikke tilgjengelig akkurat nå</span>
+            </span>
+          )}
 
-          <Link
-            href="/bylivet"
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
-            title="Kanalbrua status"
-          >
-            <Car className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>{pulseData.bridgeStatus}</span>
-          </Link>
+          {pulseData.nextTrain && (
+            <Link
+              href="/bylivet"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
+              title="Entur sanntid tog"
+            >
+              <Train className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>{pulseData.nextTrain}</span>
+            </Link>
+          )}
 
-          <Link
-            href="/reiselivet/opplevelser"
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
-            title="Sjø- og badevannstemperatur"
-          >
-            <Waves className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>Badevann {pulseData.waterTemp}°C</span>
-          </Link>
+          {pulseData.bridgeStatus && (
+            <Link
+              href="/bylivet"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
+              title="Kanalbrua status"
+            >
+              <Car className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>{pulseData.bridgeStatus}</span>
+            </Link>
+          )}
 
-          <Link
-            href="/hverdagslivet"
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
-            title="Luftkvalitet"
-          >
-            <Wind className="w-3.5 h-3.5 text-primary shrink-0" />
-            <span>{pulseData.airLabel}</span>
-          </Link>
+          {typeof pulseData.waterTemp === 'number' && (
+            <Link
+              href="/reiselivet/opplevelser"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
+              title="Sjø- og badevannstemperatur (MET Norway)"
+            >
+              <Waves className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>Badevann {pulseData.waterTemp}°C</span>
+            </Link>
+          )}
+
+          {pulseData.airLabel && (
+            <Link
+              href="/hverdagslivet"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted hover:bg-surface border border-border/70 hover:border-border text-foreground transition-all shrink-0"
+              title="Luftkvalitet (NILU)"
+            >
+              <Wind className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>{pulseData.airLabel}</span>
+            </Link>
+          )}
         </div>
 
         {/* Arrangement-knapp */}

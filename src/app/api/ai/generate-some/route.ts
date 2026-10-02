@@ -1,12 +1,26 @@
 import { NextResponse } from 'next/server';
 import { createOneMinChatCompletion } from '@/lib/onemin-client';
 import { getEffectiveGeminiApiKey, getGeminiClient } from '@/lib/ai-config';
+import { requireEditorOrAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { title, text, category } = await request.json();
+    const auth = requireEditorOrAdmin(request);
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { success: false, error: auth.error || 'Uautorisert' },
+        { status: auth.user ? 403 : 401 }
+      );
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Ugyldig JSON i forespørselen' }, { status: 400 });
+    }
+
+    const { title, text, category } = body;
 
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return NextResponse.json({ success: false, error: 'Tittel er påkrevd' }, { status: 400 });

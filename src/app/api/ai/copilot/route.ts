@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getEffectiveGeminiApiKey, generateUnifiedAiResponse } from '@/lib/ai-config';
+import { requireEditorOrAdmin } from '@/lib/auth';
 import { 
   ENTERPRISE_SEO_SYSTEM_INSTRUCTION, 
   generateSafeSlug, 
@@ -13,7 +14,19 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const auth = requireEditorOrAdmin(request);
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { success: false, error: auth.error || 'Uautorisert' },
+        { status: auth.user ? 403 : 401 }
+      );
+    }
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Ugyldig JSON i forespørselen' }, { status: 400 });
+    }
+
     const { 
       prompt, 
       agent, 
@@ -43,12 +56,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Hvis ingen nøkkel finnes, returner feil eller pedagogisk instruksjon
+    // 2. Hvis ingen nøkkel finnes, er dette en serverkonfigurasjonsfeil (ikke klientfeil)
     if (!apiKey && !oneMinKey) {
       return NextResponse.json({
         success: false,
-        error: 'Ingen aktiv AI API-nøkkel funnet. Vennligst legg inn 1_MIN_AI i Railway eller Gemini-nøkkel under Admin > Innstillinger (BYOK).',
-      }, { status: 400 });
+        error: 'AI-tjenesten er ikke konfigurert på serveren: Ingen aktiv AI API-nøkkel funnet. Vennligst legg inn 1_MIN_AI i Railway eller Gemini-nøkkel under Admin > Innstillinger (BYOK).',
+      }, { status: 503 });
     }
 
     const { generateUnifiedAiResponse } = await import('@/lib/ai-config');

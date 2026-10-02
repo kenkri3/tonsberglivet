@@ -131,7 +131,9 @@ export default function BedrifterPage() {
       setLoadingEstablished(true);
       const res = await fetch('/api/brreg?limit=30');
       const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
+      // `success` betyr nå «Enhetsregisteret svarte», ikke «kallet gjennomførtes».
+      // `data` er befolket også når kilden ikke er live, så vi må ikke filtrere på success.
+      if (Array.isArray(json.data)) {
         setEstablishedCompanies(json.data);
       }
     } catch (err) {

@@ -16,6 +16,7 @@ import {
   AgentExecutionResult,
 } from '@/lib/agent-tools';
 import { prisma } from '@/lib/prisma';
+import { requireEditorOrAdmin } from '@/lib/auth';
 import { smartWebSearch } from '@/lib/web-intelligence';
 import { queryAutonomousAgent } from '@/lib/agent-client';
 
@@ -24,6 +25,37 @@ export const dynamic = 'force-dynamic';
 interface ChatHistoryItem {
   role: 'user' | 'assistant';
   content: string;
+}
+
+/**
+ * Validerer og normaliserer samtalehistorikken fra klienten.
+ * Gemini krever vekslende roller som starter med brukeren, så vi slår sammen
+ * påfølgende like roller, dropper tomme/ugyldige elementer og kapper lengden.
+ */
+function normalizeChatHistory(raw: any): ChatHistoryItem[] {
+  if (!Array.isArray(raw)) return [];
+
+  const items: ChatHistoryItem[] = [];
+  for (const entry of raw.slice(-12)) {
+    const role: ChatHistoryItem['role'] | null =
+      entry?.role === 'assistant' ? 'assistant' : entry?.role === 'user' ? 'user' : null;
+    const content = typeof entry?.content === 'string' ? entry.content.trim() : '';
+    if (!role || !content) continue;
+
+    const trimmed = content.slice(0, 2000);
+    const last = items[items.length - 1];
+    if (last && last.role === role) {
+      last.content = `${last.content}\n${trimmed}`.slice(0, 4000);
+    } else {
+      items.push({ role, content: trimmed });
+    }
+  }
+
+  while (items.length > 0 && items[0].role === 'assistant') {
+    items.shift();
+  }
+
+  return items.slice(-6);
 }
 
 // 🛠️ Verktøydeklarasjoner for Google Gemini 2.5 Flash
@@ -108,12 +140,13 @@ const toolDeclarations: FunctionDeclaration[] = [
   },
   {
     name: 'godkjenn_torvleie_booking',
-    description: 'Godkjenn en reell torvleiesøknad i databasen, send automatisk bekreftelse og rigginstruks til leietaker.',
+    description: 'Godkjenn en reell torvleiesøknad i databasen, send automatisk bekreftelse og rigginstruks til leietaker. Krever eksplisitt bookingId – godkjenner aldri en tilfeldig søknad.',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        bookingId: { type: Type.STRING, description: 'Valgfri booking ID (hvis utelatt godkjennes eldste ventende)' },
+        bookingId: { type: Type.STRING, description: 'Påkrevd booking-ID hentet fra hent_ventende_torvleie (f.eks. «cmabc123»). Kall hent_ventende_torvleie først hvis du ikke vet ID-en.' },
       },
+      required: ['bookingId'],
     },
   },
   {
@@ -188,11 +221,27 @@ async function executeAgentTool(name: string, args: any): Promise<AgentExecution
   }
 }
 
+/**
+ * POST /api/agent/chat — den autonome agenten bak adminpanelets Co-Pilot
+ * og Agent Hub.
+ *
+ * Denne ruten UTFØRER verktøy: oppretter og publiserer artikler og
+ * arrangementer, oppdaterer bedrifter, godkjenner torvleie (som sender
+ * bekreftelse på e-post) og synkroniserer til Duett ERP. Den MÅ derfor ikke
+ * være åpen. Alle kjente konsumenter er adminflater
+ * (src/app/admin/agent/page.tsx og TonsbergAgentChat i admin-layouten), så
+ * kravet bryter ingen legitime kallere.
+ */
 export async function POST(request: NextRequest) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const message = (body.message || '').trim();
-    const history: ChatHistoryItem[] = Array.isArray(body.history) ? body.history : [];
+    const history: ChatHistoryItem[] = normalizeChatHistory(body.history);
     const sessionId = String(body.sessionId || `session-${Date.now()}`);
     const userName = body.userName || 'Cecilie';
 
@@ -213,12 +262,30 @@ export async function POST(request: NextRequest) {
     // ═══════════════════════════════════════════════════════════════
     // 🤖 0. HOVEDMOTOR: AUTONOM AGENT (MCP / WEBHOOK VIA AGENT_API)
     // ═══════════════════════════════════════════════════════════════
+    const duettExportIntent =
+      lower.includes('duett') &&
+      (lower.includes('eksporter') ||
+        lower.includes('eksport') ||
+        lower.includes('overfør') ||
+        lower.includes('overfor') ||
+        lower.includes('klargjør') ||
+        lower.includes('klargjor'));
+
+    // «godkjenn …» med torvleie-kontekst, eller «godkjenn 123» (id-lignende tall).
+    // Selve id-en må fortsatt oppgis eksplisitt med # eller «id».
+    const approveIntent =
+      lower.includes('godkjenn') &&
+      (lower.includes('torvleie') ||
+        lower.includes('booking') ||
+        lower.includes('søknad') ||
+        /(?:^|\s)godkjenn\s+(?:#|nr\.?\s*)?\d+/.test(lower));
+
     const isDirectSystemAction =
       lower.startsWith('opprett artikkel') ||
       lower.startsWith('opprett som artikkel') ||
       lower.startsWith('lagre artikkel') ||
-      ((lower.includes('godkjenn') && (lower.includes('torvleie') || lower.includes('booking') || lower.includes('søknad')))) ||
-      (lower.includes('duett') && lower.includes('eksporter'));
+      approveIntent ||
+      duettExportIntent;
 
     if (!isDirectSystemAction) {
       try {
@@ -288,24 +355,53 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // D. Direkte eksport av godkjente torvleier til Duett ERP (må ligge før
+    // godkjenn-grenen: «…godkjente torvleier til Duett ERP» inneholder «torvleie»)
+    else if (duettExportIntent) {
+      const exportRes = await toolExportToDuett();
+      if (exportRes.success) {
+        actionExecuted = exportRes.actionExecuted || 'duett_synced';
+        actionResult = exportRes.actionResult;
+        replyText = `${exportRes.message}\n\n` +
+          `• **Godkjente avtaler:** ${exportRes.data?.antallAvtaler ?? 0}\n` +
+          `• **Beløp eks. mva:** kr ${Number(exportRes.data?.totalBelopEksMva || 0).toLocaleString('nb-NO')},-\n` +
+          (Number(exportRes.data?.antallUtenPris || 0) > 0
+            ? `• **Mangler pris:** ${exportRes.data?.antallUtenPris} avtale(r) (regnet som 0 kr)\n`
+            : '') +
+          `• **Klargjort:** ${exportRes.data?.klargjortTid || new Date().toISOString()}\n\n` +
+          `Ingen fakturaer er sendt og ingen EHF-fil er laget ennå – selve eksporten kjøres fra Admin > Økonomi.`;
+      } else {
+        replyText = `ℹ️ ${exportRes.message}`;
+      }
+      quickReplies.push({ title: '🏛️ Vis godkjente torvleier', payload: 'Hent ventende torvleiesøknader' });
+      quickReplies.push({ title: '📊 Publikumspuls', payload: 'Analyser publikumshenvendelser fra nettsiden' });
+    }
+
     // E. Direkte godkjenning av torvleiesøknad i databasen
-    else if (
-      lower.includes('godkjenn') &&
-      (lower.includes('torvleie') || lower.includes('booking') || lower.includes('søknad'))
-    ) {
-      // Trekk ut eventuell ID: "godkjenn booking #123"
-      const idMatch = message.match(/(?:#|id\s*[:=]?\s*)([a-z0-9_-]+)/i);
+    else if (approveIntent) {
+      // Krev en eksplisitt ID: "godkjenn booking #123" eller "godkjenn torvleie id: 123".
+      // Uten ID nekter vi – å godkjenne «eldste ventende» er en irreversibel
+      // statusendring som også sender bekreftelses-e-post til feil leietaker.
+      const idMatch = message.match(/(?:#\s*|(?:^|[\s(])id\s*[:=]?\s*)([a-z0-9][a-z0-9_-]*)/i);
       const bookingId = idMatch ? idMatch[1] : undefined;
 
-      const approveRes = await toolApproveBooking(bookingId);
-      if (approveRes.success) {
-        actionExecuted = approveRes.actionExecuted || 'booking_approved';
-        actionResult = approveRes.actionResult;
-        replyText = `${approveRes.message}\n\nFakturagrunnlag er klargjort for Duett ERP.`;
-        quickReplies.push({ title: '💳 Send til Duett ERP', payload: 'Klargjør og overfør godkjente torvleier til Duett ERP' });
-        quickReplies.push({ title: '🏛️ Vis resterende søknader', payload: 'Hent ventende torvleiesøknader' });
+      if (!bookingId) {
+        replyText = `⚠️ **Jeg trenger en eksplisitt booking-ID for å godkjenne.**\n\n` +
+          `Jeg gjetter ikke hvilken søknad som skal godkjennes, siden godkjenning er en ` +
+          `irreversibel statusendring som også sender bekreftelses-e-post til leietaker.\n\n` +
+          `Skriv f.eks. «godkjenn torvleie #<id>» med ID-en fra søknadslisten.`;
+        quickReplies.push({ title: '🏛️ Vis ventende søknader', payload: 'Hent ventende torvleiesøknader' });
       } else {
-        replyText = `ℹ️ ${approveRes.message}`;
+        const approveRes = await toolApproveBooking(bookingId);
+        if (approveRes.success) {
+          actionExecuted = approveRes.actionExecuted || 'booking_approved';
+          actionResult = approveRes.actionResult;
+          replyText = `${approveRes.message}\n\nFakturagrunnlag er klargjort for Duett ERP.`;
+          quickReplies.push({ title: '💳 Send til Duett ERP', payload: 'Klargjør og overfør godkjente torvleier til Duett ERP' });
+          quickReplies.push({ title: '🏛️ Vis resterende søknader', payload: 'Hent ventende torvleiesøknader' });
+        } else {
+          replyText = `ℹ️ ${approveRes.message}`;
+        }
       }
     }
 
@@ -319,14 +415,18 @@ export async function POST(request: NextRequest) {
     ) {
       const pulseRes = await toolGetVisitorPulse();
       const p = pulseRes.data;
-      replyText = `📊 **Publikumspuls fra Tønsberg-Guiden (landingsside-chatboten):**\n\n` +
-        `• **Registrerte henvendelser siste døgn:** ${p.totalSisteDogn}\n\n` +
-        `### 🔥 Mest etterspurte temaer:\n` +
-        p.toppTemaer.map((t: any) => `• **${t.topic}:** ${t.antall} henvendelser (${t.prosent})`).join('\n') +
-        `\n\n### 💬 Siste spørsmål fra besøkende:\n` +
-        p.ferskeSporsmal.map((q: string) => `• «${q}»`).join('\n') +
-        `\n\n### 💡 Anbefalte redaksjonelle tiltak:\n` +
-        p.anbefalteTiltak.map((a: string) => `👉 ${a}`).join('\n');
+      if (!pulseRes.success || !p) {
+        replyText = `ℹ️ Kunne ikke hente publikumspuls: ${pulseRes.message}`;
+      } else {
+        replyText = `📊 **Publikumspuls fra Tønsberg-Guiden (landingsside-chatboten):**\n\n` +
+          `• **Registrerte henvendelser siste døgn:** ${p.totalSisteDogn}\n\n` +
+          `### 🔥 Mest etterspurte temaer:\n` +
+          (p.toppTemaer || []).map((t: any) => `• **${t.topic}:** ${t.antall} henvendelser (${t.prosent})`).join('\n') +
+          `\n\n### 💬 Siste spørsmål fra besøkende:\n` +
+          (p.ferskeSporsmal || []).map((q: string) => `• «${q}»`).join('\n') +
+          `\n\n### 💡 Anbefalte redaksjonelle tiltak:\n` +
+          (p.anbefalteTiltak || []).map((a: string) => `👉 ${a}`).join('\n');
+      }
       quickReplies.push({ title: '✍️ Skriv helgeguide', payload: 'Generer ukens helgeguide' });
       quickReplies.push({ title: '🏛️ Sjekk torvleiesøknader', payload: 'Hent ventende torvleiesøknader' });
     }
@@ -371,15 +471,20 @@ RETNINGSLINJER:
 3. Hvis brukeren ber om et søk, bruk enten 'sok_nettet_brave' eller 'research_tavily'.
 4. Svar på profesjonelt, engasjerende norsk bokmål med formatering, overskrifter og emojier.`;
 
+          // Tidligere samtaleturer fra klienten (TonsbergAgentChat sender history)
+          const historyContents = history.map((item) => ({
+            role: item.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: item.content }],
+          }));
+          const currentTurn = {
+            role: 'user' as const,
+            parts: [{ text: `${systemInstruction}\n\nBrukerens oppgave: "${message}"` }],
+          };
+
           // Første kall til Gemini med verktøy
           let response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: `${systemInstruction}\n\nBrukerens oppgave: "${message}"` }],
-              },
-            ],
+            contents: [...historyContents, currentTurn],
             config: {
               tools: [{ functionDeclarations: toolDeclarations }],
             },
@@ -411,10 +516,8 @@ RETNINGSLINJER:
             const followUp = await ai.models.generateContent({
               model: 'gemini-2.5-flash',
               contents: [
-                {
-                  role: 'user',
-                  parts: [{ text: `${systemInstruction}\n\nBrukerens oppgave: "${message}"` }],
-                },
+                ...historyContents,
+                currentTurn,
                 {
                   role: 'model',
                   parts: functionCalls.map((fc) => ({
@@ -476,6 +579,10 @@ INSTRUKSJONER FOR SVAR:
 2. Når du svarer på arrangementsforespørsler eller «Event-Radar», trekk ut de spesifikke scenene (f.eks. Foynhagen og Oseberg Kulturhus), vis dato, klokkeslett, artist/tittel og oppgi direkte klikkbare lenker dersom tilgjengelig.
 3. Oppgi alltid kilder for ekstern informasjon.`,
               },
+              ...history.map((item) => ({
+                role: item.role,
+                content: item.content,
+              })),
               {
                 role: 'user',
                 content: message,
@@ -570,9 +677,9 @@ INSTRUKSJONER FOR SVAR:
             : '') +
           (d?.togAvganger && d.togAvganger.length > 0
             ? `### 🚆 Neste togavganger fra Tønsberg Stasjon:\n` +
-              d.togAvganger.map((t: any) => `• **${t.line}** mot ${t.destination}: Kl. ${t.timeFormatted}`).join('\n')
+              d.togAvganger.map((t: any) => `• **${t.linje}** mot ${t.destinasjon}: Kl. ${t.avgangstid}`).join('\n')
             : '') +
-          `\n\n• **Luftkvalitet:** ${d?.luftkvalitet || 'God'}`;
+          `\n\n• **Luftkvalitet:** ${d?.luftkvalitet || 'Ingen offisiell måling tilgjengelig'}`;
         quickReplies.push({ title: '📅 Vis arrangementer', payload: 'Hent live arrangementer' });
         quickReplies.push({ title: '🏛️ Sjekk torvleie', payload: 'Hent ventende torvleiesøknader' });
       }

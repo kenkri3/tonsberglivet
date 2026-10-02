@@ -109,6 +109,34 @@ const templates = [
   },
 ];
 
+/**
+ * ArticleCategory-enumet i CMS-et har fem verdier. AI-motoren og malene i dette
+ * panelet kan foreslå fritekst som «Kultur», som ikke finnes i enumet, og
+ * POST /api/articles svarer da 400. Vi mapper derfor til nærmeste gyldige
+ * kategori før innsending.
+ */
+const CMS_CATEGORIES = ['Bylivet', 'Hverdagslivet', 'Næringslivet', 'Reiselivet', 'Studentlivet'];
+
+function mapToCmsCategory(value: unknown): string {
+  const key = String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/æ/g, 'ae')
+    .replace(/ø/g, 'o')
+    .replace(/å/g, 'a')
+    .replace(/[^a-z]/g, '');
+
+  const direct = CMS_CATEGORIES.find((c) => c.toLowerCase() === String(value ?? '').trim().toLowerCase());
+  if (direct) return direct;
+
+  if (key.startsWith('hverdagsliv')) return 'Hverdagslivet';
+  if (key.startsWith('naeringsliv')) return 'Næringslivet';
+  if (key.startsWith('reiseliv')) return 'Reiselivet';
+  if (key.startsWith('studentliv')) return 'Studentlivet';
+  // «Kultur», «Event», «Nyhet» osv. hører redaksjonelt under Bylivet.
+  return 'Bylivet';
+}
+
 export default function CopilotStudioPage() {
   const [prompt, setPrompt] = useState('');
   const [category, setCategory] = useState('Bylivet');
@@ -121,6 +149,7 @@ export default function CopilotStudioPage() {
   const [audit, setAudit] = useState<SeoAuditScore>(() => auditSeoQuality(initialSampleOutput));
   const [copied, setCopied] = useState(false);
   const [published, setPublished] = useState(false);
+  const [publishMessage, setPublishMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleApplyTemplate = (tpl: typeof templates[0]) => {
@@ -169,25 +198,51 @@ export default function CopilotStudioPage() {
   };
 
   const handlePublishToCms = async () => {
+    setPublishMessage(null);
     try {
+      // AI-en kan foreslå kategorier som ikke finnes i CMS-enumet (f.eks. «Kultur»).
+      // Vi mapper derfor til en gyldig ArticleCategory-etikett før vi sender.
+      const cmsCategory = mapToCmsCategory(article.category);
+
       const res = await fetch('/api/articles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: article.title,
-          category: article.category,
+          category: cmsCategory,
           excerpt: article.excerpt || article.meta_description,
           content: article.content,
           published: true,
         }),
       });
-      if (res.ok) {
-        setPublished(true);
-        setTimeout(() => setPublished(false), 4000);
+
+      const data = await res.json().catch(() => null);
+
+      // Tidligere viste denne knappen «Publisert til CMS!» både ved HTTP-feil og
+      // ved nettverksfeil, uten at noe som helst ble lagret.
+      if (!res.ok || !data?.success) {
+        setPublishMessage({
+          ok: false,
+          text: data?.error || `Kunne ikke publisere artikkelen (HTTP ${res.status}). Ingenting er lagret.`,
+        });
+        return;
       }
-    } catch {
+
       setPublished(true);
-      setTimeout(() => setPublished(false), 3000);
+      setPublishMessage({
+        ok: true,
+        text:
+          `Artikkelen er lagret i CMS med kategorien «${cmsCategory}».` +
+          (cmsCategory.toLowerCase() !== String(article.category).toLowerCase()
+            ? ` (AI-en foreslo «${article.category}», som ikke er en gyldig CMS-kategori.)`
+            : ''),
+      });
+      setTimeout(() => setPublished(false), 5000);
+    } catch (e: any) {
+      setPublishMessage({
+        ok: false,
+        text: `Nettverksfeil ved publisering: ${e?.message || 'ukjent feil'}. Ingenting er lagret.`,
+      });
     }
   };
 
@@ -226,6 +281,20 @@ export default function CopilotStudioPage() {
         <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center gap-3 text-sm font-semibold">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           Artikkelen er nå opprettet i CMS-databasen og inkludert i sitemap for Google og AI-crawlere!
+        </div>
+      )}
+
+      {publishMessage && !publishMessage.ok && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center gap-3 text-sm font-semibold">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          {publishMessage.text}
+        </div>
+      )}
+
+      {publishMessage && publishMessage.ok && !published && (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-2xl flex items-center gap-3 text-sm font-semibold">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          {publishMessage.text}
         </div>
       )}
 

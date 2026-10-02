@@ -17,7 +17,8 @@ export function WeatherWidget() {
     fetch('/api/weather')
       .then((res) => res.json())
       .then((res) => {
-        if (res.success) {
+        // Only render values that actually came from MET – never a substituted guess.
+        if (res.success && res.isLive === true && res.data) {
           setWeather(res.data);
         }
       })

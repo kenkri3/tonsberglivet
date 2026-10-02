@@ -5,7 +5,10 @@ export async function GET() {
   try {
     const conditions = await fetchLiveOceanConditions();
     return NextResponse.json({
-      success: true,
+      success: conditions.source === 'LIVE',
+      source: conditions.source,
+      isLive: conditions.isLive,
+      note: conditions.note,
       data: conditions
     });
   } catch (error: any) {

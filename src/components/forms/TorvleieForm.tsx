@@ -35,7 +35,9 @@ export function TorvleieForm() {
     try {
       const res = await fetch(`/api/brreg?q=${encodeURIComponent(q)}&limit=5`);
       const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
+      // `success` betyr nå «Enhetsregisteret svarte», ikke «kallet gjennomførtes».
+      // `data` er befolket også når kilden ikke er live, så vi må ikke filtrere på success.
+      if (Array.isArray(json.data)) {
         setSearchResults(json.data);
       }
     } catch (e) {

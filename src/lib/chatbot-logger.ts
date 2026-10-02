@@ -1,4 +1,3 @@
-import { prisma } from './prisma';
 import { getSetting, setSetting } from './settings';
 
 export interface VisitorInquiry {
@@ -12,38 +11,13 @@ export interface VisitorInquiry {
   contactName?: string;
 }
 
-// Lokal minnebuffer for umiddelbar ytelse
-let inMemoryInquiries: VisitorInquiry[] = [
-  {
-    id: 'inq-1',
-    timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
-    question: 'Hva skjer på Foynhagen denne helgen?',
-    topic: 'ARRANGEMENT',
-    answered: true,
-  },
-  {
-    id: 'inq-2',
-    timestamp: new Date(Date.now() - 3600000 * 4).toISOString(),
-    question: 'Hvor kan man parkere nær Brygga med elbil?',
-    topic: 'PARKERING',
-    answered: true,
-  },
-  {
-    id: 'inq-3',
-    timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
-    question: 'Hvordan leier man standplass på Torvet for å selge håndverk?',
-    topic: 'TORVLEIE',
-    answered: true,
-    leadCaptured: true,
-  },
-  {
-    id: 'inq-4',
-    timestamp: new Date(Date.now() - 3600000 * 8).toISOString(),
-    question: 'Hva er badevannstemperaturen på Ringshaugstranda i dag?',
-    topic: 'STRAND_SJO',
-    answered: true,
-  },
-];
+// Lokal minnebuffer for umiddelbar ytelse.
+//
+// MERK: Ingen seedede «eksempelhenvendelser» her. Fire oppdiktede spørsmål ble
+// tidligere lagt inn og tellet med i «henvendelser siste døgn», slik at
+// publikumspulsen viste aktivitet som aldri hadde funnet sted. Den ekte kilden
+// er SystemSetting-nøkkelen `chatbot_visitor_pulse`.
+let inMemoryInquiries: VisitorInquiry[] = [];
 
 /**
  * Logg et spørsmål stilt av en innbygger eller turist i chatboten på landingssiden.
@@ -70,21 +44,11 @@ export async function logVisitorQuestion(
     inMemoryInquiries = inMemoryInquiries.slice(0, 50);
   }
 
-  // Hvis leadInfo er oppgitt, lagre automatisk som ContactMessage i databasen
-  if (leadInfo && (leadInfo.email || leadInfo.name)) {
-    try {
-      await prisma.contactMessage.create({
-        data: {
-          name: leadInfo.name || 'Besøkende fra Tønsberg-Guiden',
-          email: leadInfo.email || 'ubesvart@tonsberglivet.no',
-          subject: `Chatbot-henvendelse [${topic}]`,
-          message: question,
-        },
-      });
-    } catch (e) {
-      console.warn('[ChatbotLogger] Kunne ikke lagre ContactMessage i DB:', e);
-    }
-  }
+  // MERK: Vi oppretter bevisst INGEN ContactMessage her.
+  // addVisitorMessage() i live-chat.ts eier den skrivingen for den samme
+  // besøkende-meldingen (den kalles først i /api/agent/public-chat), og et
+  // ekstra create() her ga to identiske rader i admin-innboksen og dobbel
+  // ulest-teller. Loggingen begrenser seg derfor til puls-bufferen under.
 
   // Forsøk å synkronisere periodisk til SystemSetting
   try {
@@ -115,6 +79,15 @@ export async function getVisitorPulseSummary(): Promise<{
   } catch (e) {}
 
   const total = inMemoryInquiries.length;
+
+  // «Siste døgn» = faktisk antall henvendelser med tidsstempel innenfor siste 24 timer.
+  // Bufferen tar maks 50 elementer, så dens lengde er IKKE et døgnmål.
+  const ettDognSiden = Date.now() - 24 * 60 * 60 * 1000;
+  const totalSisteDogn = inMemoryInquiries.filter((inq) => {
+    const ts = Date.parse(inq.timestamp);
+    return Number.isFinite(ts) && ts >= ettDognSiden;
+  }).length;
+
   const topicCounts: Record<string, number> = {};
 
   for (const inq of inMemoryInquiries) {
@@ -138,7 +111,7 @@ export async function getVisitorPulseSummary(): Promise<{
   ];
 
   return {
-    totalSisteDogn: total,
+    totalSisteDogn,
     toppTemaer: sortedTopics,
     ferskeSporsmal,
     anbefalteTiltak,

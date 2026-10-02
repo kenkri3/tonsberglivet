@@ -4,7 +4,17 @@ import { requireAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * GET /api/social/connect — status for SoMe-tilkoblinger.
+ * Krever ADMIN: svaret inneholder kanal-ID-er og hvorvidt et tilgangstoken finnes,
+ * som er intern konfigurasjonsinformasjon (middleware dekker ikke /api/*).
+ */
 export async function GET(request: Request) {
+  const auth = requireAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const metaPageId = await getSetting('meta_page_id', '');
     const metaGroupId = await getSetting('meta_group_id', '');
@@ -45,7 +55,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Ugyldig JSON i forespørselen.' }, { status: 400 });
+    }
     const { action, provider, pageId, groupId, instagramId, token, accountId, locationId } = body;
 
     if (action === 'save_meta_token' || action === 'connect_meta') {
@@ -79,7 +92,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: 'Google Business Profile ble koblet fra.' });
     }
 
-    return NextResponse.json({ success: false, error: 'Ukjent handling' }, { status: 400 });
+    // Ukjent handling: svar eksplisitt med hva som faktisk støttes, slik at en
+    // kallende knapp ikke feiler i stillhet (adminpanelet så bare på data.success).
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          `Ukjent handling «${action ?? '(mangler)'}». Gyldige handlinger: ` +
+          'connect_meta, save_meta_token, disconnect_meta, connect_google, save_google_token, disconnect_google. ' +
+          'Merk: en tilkobling krever en ekte API-token — det finnes ingen simuleringshandling.',
+      },
+      { status: 400 }
+    );
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || 'Feil ved tilkobling' }, { status: 500 });
   }

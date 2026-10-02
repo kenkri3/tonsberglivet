@@ -131,8 +131,13 @@ export function SoMeModal({ title, category, excerpt, imageUrl, onClose }: SoMeM
       });
 
       const json = await res.json();
-      if (json.success && json.results) {
+      // Vis alltid resultatene per kanal når de finnes — også når ingenting ble
+      // publisert, slik at brukeren ser hvilke kanaler som mangler tilkobling.
+      if (json.results) {
         setPublishResults(json.results);
+        if (!json.success) {
+          setPublishError(json.message || 'Ingen av de valgte kanalene er tilkoblet — ingenting ble publisert.');
+        }
       } else {
         setPublishError(json.error || 'Feil ved publisering');
       }

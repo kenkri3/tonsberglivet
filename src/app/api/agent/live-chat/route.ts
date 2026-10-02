@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireEditorOrAdmin } from '@/lib/auth';
 import {
   getAllChatSessions,
   getOrCreateChatSession,
@@ -12,6 +13,14 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * GET /api/agent/live-chat
+ *
+ * ?sessionId=<id>  — ÅPEN. Den offentlige Tønsberg-Guiden poller sin egen samtale
+ *                    for å se svar fra admin. Id-er er tilfeldige (`sess-<ts>-<rand>`).
+ * Alt annet (innboks-listen og ulest-telleren) er adminflater og krever
+ * innlogging som redaktør eller administrator.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -19,21 +28,29 @@ export async function GET(request: NextRequest) {
     const sessionId = searchParams.get('sessionId');
 
     const globalAiEnabled = await getGlobalAiChatbotStatus();
+
+    // 1. Besøkende som henter sin egen samtale — ikke adminbeskyttet.
+    if (sessionId) {
+      const session = await getOrCreateChatSession(sessionId);
+      return NextResponse.json({
+        success: true,
+        session,
+        globalAiEnabled,
+      });
+    }
+
+    // 2. Innboks og ulest-teller er admininformasjon (navn, e-post, meldinger).
+    const auth = requireEditorOrAdmin(request);
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+    }
+
     const unreadCount = await getUnreadChatCount();
 
     if (countOnly === 'true') {
       return NextResponse.json({
         success: true,
         unreadCount,
-        globalAiEnabled,
-      });
-    }
-
-    if (sessionId) {
-      const session = await getOrCreateChatSession(sessionId);
-      return NextResponse.json({
-        success: true,
-        session,
         globalAiEnabled,
       });
     }
@@ -54,7 +71,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/agent/live-chat — alle handlinger er administratorhandlinger
+ * (svare som admin, skru AI av/på, markere lest) og krever innlogging.
+ */
 export async function POST(request: NextRequest) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const { action } = body;

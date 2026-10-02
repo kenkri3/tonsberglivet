@@ -183,10 +183,23 @@ async function scrapeDirectTmPageEvents(url: string): Promise<ScrapedRawEvent[]>
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Accept-Language': 'no,nb;q=0.9,en;q=0.8',
+        'Accept': 'text/html,application/xhtml+xml',
       },
+      cache: 'force-cache',
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(12000), // Bounded: a hung upstream must not park the handler
     });
-    if (!res.ok) return results;
+    if (!res.ok) {
+      console.warn(`Ticketmaster-siden ${url} svarte HTTP ${res.status}.`);
+      return results;
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('html')) {
+      // En JSON-/feilside har ingen hydreringspayload og skal ikke tolkes som arrangementer.
+      console.warn(`Ticketmaster-siden ${url} svarte med ikke-HTML (${contentType || 'ukjent'}) – avvises.`);
+      return results;
+    }
 
     const html = await res.text();
     const matches = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)];
@@ -258,9 +271,20 @@ async function fetchTicketmasterApiEvents(apiKey: string): Promise<ScrapedRawEve
         'Accept': 'application/json',
         'User-Agent': 'Tonsberglivet/2.0 post@tonsberglivet.no',
       },
+      cache: 'force-cache',
       next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(12000), // Bounded: a hung upstream must not park the handler
     });
-    if (!res.ok) return results;
+    if (!res.ok) {
+      console.warn(`Ticketmaster Discovery API svarte HTTP ${res.status}.`);
+      return results;
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('json')) {
+      console.warn(`Ticketmaster Discovery API svarte med ikke-JSON (${contentType || 'ukjent'}) – avvises.`);
+      return results;
+    }
 
     const data = await res.json();
     const rawEvents = data._embedded?.events || [];
@@ -312,22 +336,47 @@ async function fetchTicketmasterApiEvents(apiKey: string): Promise<ScrapedRawEve
 let inMemoryCachedEvents: TicketmasterEvent[] | null = null;
 let lastSyncTimestamp: number = 0;
 
+export type TicketmasterSource = 'LIVE_API' | 'LIVE_TICKETMASTER_DIRECT' | 'CACHE' | 'UNAVAILABLE';
+
+export interface TicketmasterFeed {
+  events: TicketmasterEvent[];
+  source: TicketmasterSource;
+  isLive: boolean;
+  usedDiscoveryApi: boolean;
+  /** Satt når ingen fersk data kunne hentes, med norsk forklaring. */
+  note?: string;
+  lastSync: number;
+}
+
+export const TICKETMASTER_UNAVAILABLE_NOTE =
+  'Ticketmaster svarte ikke. Vi viser ingen arrangementer i stedet for kuraterte eksempelarrangementer ' +
+  'med antatte datoer. Se ticketmaster.no for gjeldende program.';
+
 /**
  * Fetch live events for Tønsberg combining Ticketmaster direct landing hubs & Discovery API.
+ * Returnerer alltid kildeinformasjon slik at konsumentene kan skille ekte treff fra tomt svar.
  */
-export async function fetchLiveTicketmasterEvents(forceRefresh = false): Promise<TicketmasterEvent[]> {
+export async function fetchLiveTicketmasterFeed(forceRefresh = false): Promise<TicketmasterFeed> {
   // If cached and fresh (within 1 hour) and no forced refresh, return cache immediately
   if (!forceRefresh && inMemoryCachedEvents && inMemoryCachedEvents.length > 0 && (Date.now() - lastSyncTimestamp < 3600000)) {
-    return inMemoryCachedEvents;
+    return {
+      events: inMemoryCachedEvents,
+      source: 'CACHE',
+      isLive: true,
+      usedDiscoveryApi: false,
+      lastSync: lastSyncTimestamp,
+    };
   }
 
   const dynamicKey = await getSetting('ticketmaster_api_key');
   const apiKey = dynamicKey || process.env.TICKETMASTER_API_KEY;
+  const hasUsableKey = Boolean(apiKey && apiKey !== 'YOUR_TICKETMASTER_KEY');
+  const usedDiscoveryApi = hasUsableKey;
 
   try {
     const directPromises = TM_DISCOVER_URLS.map(url => scrapeDirectTmPageEvents(url));
-    const apiPromise = (apiKey && apiKey !== 'YOUR_TICKETMASTER_KEY')
-      ? fetchTicketmasterApiEvents(apiKey)
+    const apiPromise = hasUsableKey
+      ? fetchTicketmasterApiEvents(apiKey as string)
       : Promise.resolve([]);
 
     const [directSettled, apiSettled] = await Promise.all([
@@ -377,7 +426,7 @@ export async function fetchLiveTicketmasterEvents(forceRefresh = false): Promise
         location: item.venueName,
         venueName: item.venueName,
         category: item.category,
-        description: item.description || `${item.title} på ${item.venueName}. Sikre deg billetter via Ticketmaster og opplev fantastisk stemning i Tønsberg!`,
+        description: item.description || `${item.title} på ${item.venueName}.`,
         imageUrl: item.imageUrl,
         ticketUrl: formatAffiliateTicketUrl(item.directUrl),
         priceRange: item.priceRange,
@@ -386,79 +435,61 @@ export async function fetchLiveTicketmasterEvents(forceRefresh = false): Promise
 
       inMemoryCachedEvents = finalEvents;
       lastSyncTimestamp = Date.now();
-      return finalEvents;
+      return {
+        events: finalEvents,
+        // Kildevalget gjenspeiler hva som FAKTISK ble brukt – også når nøkkelen kommer fra
+        // databaseinnstillingen (BYOK via /api/settings) og ikke fra process.env.
+        source: usedDiscoveryApi ? 'LIVE_API' : 'LIVE_TICKETMASTER_DIRECT',
+        isLive: true,
+        usedDiscoveryApi,
+        lastSync: lastSyncTimestamp,
+      };
     }
+
+    // Ingen ferske treff: er kilden i det hele tatt tilgjengelig?
+    return {
+      events: [],
+      source: 'UNAVAILABLE',
+      isLive: false,
+      usedDiscoveryApi,
+      note: TICKETMASTER_UNAVAILABLE_NOTE,
+      lastSync: lastSyncTimestamp,
+    };
   } catch (error) {
     console.warn('Live Ticketmaster event fetch failed:', error);
   }
 
-  // If in-memory cache exists from before, return it
+  // If in-memory cache exists from before, return it – tydelig merket som cache.
   if (inMemoryCachedEvents && inMemoryCachedEvents.length > 0) {
-    return inMemoryCachedEvents;
+    return {
+      events: inMemoryCachedEvents,
+      source: 'CACHE',
+      isLive: true,
+      usedDiscoveryApi,
+      note: `Viser siste vellykkede henting (${new Date(lastSyncTimestamp).toLocaleString('no-NO')}).`,
+      lastSync: lastSyncTimestamp,
+    };
   }
 
-  // Fallback curated feed representing real Tønsberg Ticketmaster venues (Foynhagen, Oseberg, Slottsfjell)
-  return curatedFallbackEvents;
+  // Ingen kuratert «fallback» lenger: oppdiktede arrangementer med antatte datoer og
+  // affiliate-lenker ble tidligere servert som success:true.
+  return {
+    events: [],
+    source: 'UNAVAILABLE',
+    isLive: false,
+    usedDiscoveryApi,
+    note: TICKETMASTER_UNAVAILABLE_NOTE,
+    lastSync: lastSyncTimestamp,
+  };
 }
 
-const curatedFallbackEvents: TicketmasterEvent[] = [
-  {
-    id: 'tm-foynhagen-1',
-    title: 'Sommerkonsert i Foynhagen',
-    date: '22. aug 2026',
-    time: '20:00',
-    location: 'Foynhagen, Tønsberg Brygge',
-    venueName: 'Foynhagen',
-    category: 'Konsert',
-    description: 'Stemningsfull sommerkonsert ved bryggekanten i Tønsberg. Billettsalg via Ticketmaster.',
-    imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
-    ticketUrl: formatAffiliateTicketUrl('https://www.ticketmaster.no/venue/foynhagen-tonsberg-billetter/foyn/1085'),
-    priceRange: '395 - 650 NOK',
-    source: 'TICKETMASTER',
-  },
-  {
-    id: 'tm-oseberg-2',
-    title: 'Standup & Humorkveld på Oseberg',
-    date: '28. aug 2026',
-    time: '19:30',
-    location: 'Teigen Scene, Tønsberg',
-    venueName: 'Teigen Scene',
-    category: 'Kultur',
-    description: 'Norges fremste komikere inntar storsalen på Teigen Scene / Oseberg Kulturhus.',
-    imageUrl: 'https://images.unsplash.com/photo-1585699324551-f6c309eedeca?auto=format&fit=crop&w=1200&q=80',
-    ticketUrl: formatAffiliateTicketUrl('https://www.ticketmaster.no/venue/oseberg-kulturhus-tonsberg-billetter/ose/1201'),
-    priceRange: '450 NOK',
-    source: 'TICKETMASTER',
-  },
-  {
-    id: 'tm-slottsfjell-3',
-    title: 'Slottsfjell Teater — Høstpremiere',
-    date: '5. sep 2026',
-    time: '18:00',
-    location: 'Slottsfjellscenen, Tønsberg',
-    venueName: 'Slottsfjellscenen',
-    category: 'Teater',
-    description: 'Utendørs teaterforestilling med historisk tema fra Vikingtiden på Slottsfjellet.',
-    imageUrl: 'https://images.unsplash.com/photo-1469488865564-c2de10f69f96?auto=format&fit=crop&w=1200&q=80',
-    ticketUrl: formatAffiliateTicketUrl('https://www.ticketmaster.no/discover/tonsberg'),
-    priceRange: '290 NOK',
-    source: 'TICKETMASTER',
-  },
-  {
-    id: 'tm-kaldnes-4',
-    title: 'Tønsberg Mat & Vin-Festival',
-    date: '12. sep 2026',
-    time: '12:00',
-    location: 'Kaldnes Mek., Tønsberg',
-    venueName: 'Kaldnes Mek.',
-    category: 'Mat & Drikke',
-    description: 'Regional matfestival med kokkeshow, smakinger og lokale matprodusenter.',
-    imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80',
-    ticketUrl: formatAffiliateTicketUrl('https://www.ticketmaster.no/discover/tonsberg'),
-    priceRange: '150 - 350 NOK',
-    source: 'TICKETMASTER',
-  },
-];
+/**
+ * Bakoverkompatibel innpakning: returnerer kun arrangementslisten.
+ */
+export async function fetchLiveTicketmasterEvents(forceRefresh = false): Promise<TicketmasterEvent[]> {
+  const feed = await fetchLiveTicketmasterFeed(forceRefresh);
+  return feed.events;
+}
 
 export interface DoOHPlaylistItem {
   screenId: string;

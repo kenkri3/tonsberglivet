@@ -54,6 +54,24 @@ export async function POST(request: Request) {
       : undefined;
 
     const exportResult = await generateDuettInvoiceExport(bookingIds);
+
+    // Tom eksport er gyldig (ingen bookinger = ingen bilag), men da skal vi
+    // hverken sende noe til regnskapsfører eller late som om det finnes data.
+    if (exportResult.items.length === 0) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...exportResult,
+          webhook: {
+            success: true,
+            triggered: false,
+            message: 'Ingen bookinger å fakturere – webhook er ikke kalt.',
+          },
+        },
+        message: 'Fant ingen bookinger å fakturere. Eksporten er tom – ingenting er sendt til regnskapsfører.',
+      });
+    }
+
     const webhookResult = await triggerDuettWebhook(exportResult);
 
     return NextResponse.json({

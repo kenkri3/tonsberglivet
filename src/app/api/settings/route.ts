@@ -1,8 +1,26 @@
 import { NextResponse } from 'next/server';
 import { setSetting, getSetting, getAllSettings } from '@/lib/settings';
 import { requireAdmin } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Nøkkelnavn som historisk har vært skrevet/leset under to ulike navn.
+ * Dashboardet leser ga_measurement_id / gsc_verification_tag, mens
+ * innstillingssiden har brukt ga4_measurement_id / gsc_verification_code.
+ * Vi skriver begge og leser begge, slik at ingen allerede lagret verdi går tapt.
+ */
+const GA4_SETTING_KEYS = ['ga_measurement_id', 'ga4_measurement_id'];
+const GSC_SETTING_KEYS = ['gsc_verification_tag', 'gsc_verification_code'];
+
+async function readFirstSetting(keys: string[], fallback = ''): Promise<string> {
+  for (const key of keys) {
+    const value = await getSetting(key);
+    if (value && value.trim() !== '') return value;
+  }
+  return fallback;
+}
 
 function maskSecret(val?: string): string {
   if (!val || val.length <= 8) return val ? '••••••••' : '';
@@ -24,7 +42,10 @@ export async function GET(request: Request) {
     const ticketmasterKey = await getSetting('ticketmaster_api_key');
     const resendKey = await getSetting('resend_api_key');
     const smtpUrl = await getSetting('smtp_url');
-    const cronSecret = await getSetting('cron_secret', 'tonsberg_cron_secret_2026');
+  // Ingen standardverdi: en hardkodet reserveverdi ville rapportert cron som
+  // «konfigurert» selv når den ikke er det, og den gamle verdien ligger i den
+  // offentlige repo-historikken. Er den ikke satt, skal feltet være tomt.
+  const cronSecret = await getSetting('cron_secret');
     const slackUrl = await getSetting('slack_webhook_url');
     const teamsUrl = await getSetting('teams_webhook_url');
     const discordUrl = await getSetting('discord_webhook_url');
@@ -46,9 +67,9 @@ export async function GET(request: Request) {
     const googleBusinessAccountId = await getSetting('google_business_account_id', '');
     const googleBusinessLocationId = await getSetting('google_business_location_id', '');
     const googleBusinessAccessToken = await getSetting('google_business_access_token', '');
-    const ga4MeasurementId = (await getSetting('ga4_measurement_id', '')) || process.env.NEXT_PUBLIC_GA_ID || '';
+    const ga4MeasurementId = (await readFirstSetting(GA4_SETTING_KEYS)) || process.env.NEXT_PUBLIC_GA_ID || '';
     const gscSiteUrl = (await getSetting('gsc_site_url', '')) || 'https://tonsberglivet.no';
-    const gscVerificationCode = (await getSetting('gsc_verification_code', '')) || '';
+    const gscVerificationCode = await readFirstSetting(GSC_SETTING_KEYS);
 
     const effectiveOneMin = oneMinKey || process.env['1_MIN_AI'] || process.env.ONE_MIN_AI || process.env.ONE_MIN_AI_API_KEY;
 
@@ -117,10 +138,41 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    // setSetting svelger DB-feil (den skriver til minnebuffer først). Vi leser
+    // derfor verdien tilbake fra databasen og rapporterer ærlig dersom den ikke
+    // faktisk ble lagret, i stedet for å returnere suksess på en tapt skriving.
+    const failedSettings: string[] = [];
+    const persist = async (key: string, value: string, category: string = 'GENERAL') => {
+      await setSetting(key, value, category);
+      try {
+        const stored = await (prisma as any).systemSetting?.findUnique({ where: { key } });
+        if (!stored || stored.value !== value) {
+          failedSettings.push(key);
+        }
+      } catch (verifyError) {
+        console.error(`[Settings] Kunne ikke verifisere lagring av '${key}':`, verifyError);
+        failedSettings.push(key);
+      }
+    };
+
+    const respondToSave = (message: string) => {
+      if (failedSettings.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Kunne ikke lagre følgende innstillinger: ${failedSettings.join(', ')}. Verdiene er ikke lagret i databasen.`,
+            failedKeys: failedSettings,
+          },
+          { status: 500 }
+        );
+      }
+      return NextResponse.json({ success: true, message });
+    };
+
     // 1. Enkeltnøkkel lagring ({ key, value, category })
     if (body.key && typeof body.value === 'string') {
-      await setSetting(body.key, body.value, body.category || 'GENERAL');
-      return NextResponse.json({ success: true, message: `Innstilling '${body.key}' er lagret!` });
+      await persist(body.key, body.value, body.category || 'GENERAL');
+      return respondToSave(`Innstilling '${body.key}' er lagret!`);
     }
 
     // 2. Samlet form-lagring
@@ -154,101 +206,111 @@ export async function POST(request: Request) {
     } = body;
 
     if (oneMinApiKey && !oneMinApiKey.includes('••••')) {
-      await setSetting('1_min_ai', oneMinApiKey.trim(), 'AI');
+      await persist('1_min_ai', oneMinApiKey.trim(), 'AI');
     }
     if (geminiApiKey && !geminiApiKey.includes('••••')) {
-      await setSetting('gemini_api_key', geminiApiKey.trim(), 'AI');
+      await persist('gemini_api_key', geminiApiKey.trim(), 'AI');
     }
     if (braveApiKey && !braveApiKey.includes('••••')) {
-      await setSetting('brave_api_key', braveApiKey.trim(), 'AI');
+      await persist('brave_api_key', braveApiKey.trim(), 'AI');
     }
     if (tavilyApiKey && !tavilyApiKey.includes('••••')) {
-      await setSetting('tavily_api_key', tavilyApiKey.trim(), 'AI');
+      await persist('tavily_api_key', tavilyApiKey.trim(), 'AI');
     }
     if (apifyApiKey && !apifyApiKey.includes('••••')) {
-      await setSetting('apify_api_key', apifyApiKey.trim(), 'AI');
+      await persist('apify_api_key', apifyApiKey.trim(), 'AI');
     }
     if (ticketmasterApiKey && !ticketmasterApiKey.includes('••••')) {
-      await setSetting('ticketmaster_api_key', ticketmasterApiKey.trim(), 'INTEGRATIONS');
+      await persist('ticketmaster_api_key', ticketmasterApiKey.trim(), 'INTEGRATIONS');
     }
     if (resendApiKey && !resendApiKey.includes('••••')) {
-      await setSetting('resend_api_key', resendApiKey.trim(), 'EMAIL');
+      await persist('resend_api_key', resendApiKey.trim(), 'EMAIL');
     }
     if (smtpUrl && !smtpUrl.includes('••••')) {
-      await setSetting('smtp_url', smtpUrl.trim(), 'EMAIL');
+      await persist('smtp_url', smtpUrl.trim(), 'EMAIL');
     }
     if (cronSecret && !cronSecret.includes('••••')) {
-      await setSetting('cron_secret', cronSecret.trim(), 'INTEGRATIONS');
+      await persist('cron_secret', cronSecret.trim(), 'INTEGRATIONS');
     }
     if (duettWebhookUrl !== undefined && !duettWebhookUrl.includes('••••')) {
-      await setSetting('duett_webhook_url', duettWebhookUrl.trim(), 'FINANCE');
+      await persist('duett_webhook_url', duettWebhookUrl.trim(), 'FINANCE');
     }
     if (slackWebhookUrl !== undefined && !slackWebhookUrl.includes('••••')) {
-      await setSetting('slack_webhook_url', slackWebhookUrl.trim(), 'NOTIFICATIONS');
+      await persist('slack_webhook_url', slackWebhookUrl.trim(), 'NOTIFICATIONS');
     }
     if (teamsWebhookUrl !== undefined && !teamsWebhookUrl.includes('••••')) {
-      await setSetting('teams_webhook_url', teamsWebhookUrl.trim(), 'NOTIFICATIONS');
+      await persist('teams_webhook_url', teamsWebhookUrl.trim(), 'NOTIFICATIONS');
     }
     if (discordWebhookUrl !== undefined && !discordWebhookUrl.includes('••••')) {
-      await setSetting('discord_webhook_url', discordWebhookUrl.trim(), 'NOTIFICATIONS');
+      await persist('discord_webhook_url', discordWebhookUrl.trim(), 'NOTIFICATIONS');
     }
     if (notificationEmail) {
-      await setSetting('notification_email', notificationEmail.trim(), 'GENERAL');
+      await persist('notification_email', notificationEmail.trim(), 'GENERAL');
     }
     if (autoApproveBookings !== undefined) {
-      await setSetting('auto_approve_bookings', String(autoApproveBookings), 'AUTOMATION');
+      await persist('auto_approve_bookings', String(autoApproveBookings), 'AUTOMATION');
     }
     if (autonomyMode !== undefined) {
-      await setSetting('autonomy_mode', String(autonomyMode), 'AUTOMATION');
+      await persist('autonomy_mode', String(autonomyMode), 'AUTOMATION');
     }
     if (autoPublishArticles !== undefined) {
-      await setSetting('auto_publish_articles', String(autoPublishArticles), 'AUTOMATION');
+      await persist('auto_publish_articles', String(autoPublishArticles), 'AUTOMATION');
     }
     if (autoPublishEvents !== undefined) {
-      await setSetting('auto_publish_events', String(autoPublishEvents), 'AUTOMATION');
+      await persist('auto_publish_events', String(autoPublishEvents), 'AUTOMATION');
     }
     if (autoRedirectExpired !== undefined) {
-      await setSetting('auto_redirect_expired', String(autoRedirectExpired), 'AUTOMATION');
+      await persist('auto_redirect_expired', String(autoRedirectExpired), 'AUTOMATION');
     }
 
     // Meta & SoMe
     if (metaPageId !== undefined) {
-      await setSetting('meta_page_id', metaPageId.trim(), 'SOME');
+      await persist('meta_page_id', metaPageId.trim(), 'SOME');
     }
     if (metaGroupId !== undefined) {
-      await setSetting('meta_group_id', metaGroupId.trim(), 'SOME');
+      await persist('meta_group_id', metaGroupId.trim(), 'SOME');
     }
     if (metaInstagramId !== undefined) {
-      await setSetting('meta_instagram_id', metaInstagramId.trim(), 'SOME');
+      await persist('meta_instagram_id', metaInstagramId.trim(), 'SOME');
     }
     if (metaAccessToken && !metaAccessToken.includes('••••')) {
-      await setSetting('meta_access_token', metaAccessToken.trim(), 'SOME');
+      await persist('meta_access_token', metaAccessToken.trim(), 'SOME');
     }
 
     // Google Business Profile
     if (googleBusinessAccountId !== undefined) {
-      await setSetting('google_business_account_id', googleBusinessAccountId.trim(), 'SOME');
+      await persist('google_business_account_id', googleBusinessAccountId.trim(), 'SOME');
     }
     if (googleBusinessLocationId !== undefined) {
-      await setSetting('google_business_location_id', googleBusinessLocationId.trim(), 'SOME');
+      await persist('google_business_location_id', googleBusinessLocationId.trim(), 'SOME');
     }
     if (googleBusinessAccessToken && !googleBusinessAccessToken.includes('••••')) {
-      await setSetting('google_business_access_token', googleBusinessAccessToken.trim(), 'SOME');
+      await persist('google_business_access_token', googleBusinessAccessToken.trim(), 'SOME');
     }
 
     // Google Analytics 4 & Search Console
+    // Begge nøkkelnavn skrives, slik at dashboardet (ga_measurement_id /
+    // gsc_verification_tag) og innstillingssiden (ga4_measurement_id /
+    // gsc_verification_code) alltid ser samme verdi.
     if (body.ga4MeasurementId !== undefined) {
-      await setSetting('ga4_measurement_id', body.ga4MeasurementId.trim(), 'ANALYTICS');
+      const ga4Value = String(body.ga4MeasurementId).trim();
+      for (const key of GA4_SETTING_KEYS) {
+        await persist(key, ga4Value, 'ANALYTICS');
+      }
     }
     if (body.gscSiteUrl !== undefined) {
-      await setSetting('gsc_site_url', body.gscSiteUrl.trim(), 'ANALYTICS');
+      await persist('gsc_site_url', String(body.gscSiteUrl).trim(), 'ANALYTICS');
     }
     if (body.gscVerificationCode !== undefined) {
-      await setSetting('gsc_verification_code', body.gscVerificationCode.trim(), 'ANALYTICS');
+      const gscValue = String(body.gscVerificationCode).trim();
+      for (const key of GSC_SETTING_KEYS) {
+        await persist(key, gscValue, 'ANALYTICS');
+      }
     }
 
-    return NextResponse.json({ success: true, message: 'Innstillinger er lagret!' });
+    return respondToSave('Innstillinger er lagret!');
   } catch (error: any) {
+    console.error('[Settings] Kunne ikke lagre innstillinger:', error);
     return NextResponse.json({ success: false, error: 'Kunne ikke lagre innstillinger' }, { status: 500 });
   }
 }

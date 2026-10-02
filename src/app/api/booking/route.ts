@@ -1,53 +1,15 @@
 import { NextResponse } from 'next/server';
-import { bookingSchema } from '@/lib/validations';
+import { bookingSchema, formatZodError } from '@/lib/validations';
 import { prisma } from '@/lib/prisma';
-import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { checkRateLimit, getClientIdentity } from '@/lib/rate-limit';
 import { requireEditorOrAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-// Memory fallback store if database is not migrated yet in local dev environment
-const memoryBookings: Array<{
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  type: string;
-  startDate?: string;
-  endDate?: string;
-  message?: string;
-  status: string;
-  createdAt: string;
-}> = [
-  {
-    id: 'req-1',
-    name: 'Tønsberg Frukt AS',
-    email: 'post@tonsbergfrukt.no',
-    phone: '98765432',
-    type: 'SESONG',
-    startDate: '2026-06-01',
-    endDate: '2026-08-31',
-    message: 'Ønsker bodplass for salg av jordbær og epler på Torvet i sommer.',
-    status: 'NEW',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'req-2',
-    name: 'Vestfold Håndverk',
-    email: 'info@vh.no',
-    phone: '41234567',
-    type: 'DAGPLASS',
-    startDate: '2026-08-22',
-    message: 'Kompakt stand under Bondens marked.',
-    status: 'APPROVED',
-    createdAt: new Date().toISOString(),
-  },
-];
-
 export async function POST(request: Request) {
   // Rate limiting for booking-forespørsler
-  const ip = getClientIp(request);
-  const rateLimit = checkRateLimit(`booking_${ip}`, 5, 600);
+  const client = getClientIdentity(request);
+  const rateLimit = await checkRateLimit(`booking_${client.id}`, 5, 600, client.identified);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { success: false, error: `For mange bookingforespørsler. Vennligst vent ${rateLimit.resetSeconds} sekunder.` },
@@ -55,45 +17,49 @@ export async function POST(request: Request) {
     );
   }
 
+  let body: unknown;
   try {
-    const body = await request.json();
-    const validated = bookingSchema.parse(body);
-
-    try {
-      const booking = await prisma.bookingRequest.create({
-        data: {
-          name: validated.name,
-          email: validated.email,
-          phone: validated.phone,
-          type: validated.type,
-          startDate: validated.startDate ? new Date(validated.startDate) : null,
-          endDate: validated.endDate ? new Date(validated.endDate) : null,
-          message: validated.message,
-          status: 'NEW',
-        },
-      });
-      return NextResponse.json({ success: true, data: booking }, { status: 201 });
-    } catch (dbError) {
-      console.warn('Prisma DB unavailable, storing booking in memory fallback:', dbError);
-      const newBooking = {
-        id: `req-${Date.now()}`,
-        name: validated.name,
-        email: validated.email,
-        phone: validated.phone,
-        type: validated.type,
-        startDate: validated.startDate,
-        endDate: validated.endDate,
-        message: validated.message,
-        status: 'NEW',
-        createdAt: new Date().toISOString(),
-      };
-      memoryBookings.unshift(newBooking);
-      return NextResponse.json({ success: true, data: newBooking }, { status: 201 });
-    }
-  } catch (error: any) {
+    body = await request.json();
+  } catch {
     return NextResponse.json(
-      { success: false, error: error.errors || 'Ugyldige data innsendt' },
+      { success: false, error: 'Ugyldig JSON i forespørselen.' },
       { status: 400 }
+    );
+  }
+
+  const validation = bookingSchema.safeParse(body);
+  if (!validation.success) {
+    return NextResponse.json(
+      { success: false, error: formatZodError(validation.error) },
+      { status: 400 }
+    );
+  }
+  const parsed = validation.data;
+
+  try {
+    const booking = await prisma.bookingRequest.create({
+      data: {
+        name: parsed.name,
+        email: parsed.email,
+        phone: parsed.phone,
+        type: parsed.type,
+        startDate: parsed.startDate ? new Date(parsed.startDate) : null,
+        endDate: parsed.endDate ? new Date(parsed.endDate) : null,
+        message: parsed.message,
+        status: 'NEW',
+      },
+    });
+    return NextResponse.json({ success: true, data: booking }, { status: 201 });
+  } catch (dbError) {
+    // Ingen minne-fallback: en søknad som ikke er lagret skal aldri se ut som en suksess.
+    console.error('[Booking] Kunne ikke lagre søknaden i databasen:', dbError);
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          'Søknaden kunne ikke lagres på grunn av en teknisk feil. Ingen søknad er registrert – prøv igjen om litt, eller send e-post til post@tonsberglivet.no.',
+      },
+      { status: 503 }
     );
   }
 }
@@ -110,7 +76,11 @@ export async function GET(request: Request) {
     });
     return NextResponse.json({ success: true, data: bookings });
   } catch (e) {
-    return NextResponse.json({ success: true, data: memoryBookings });
+    console.error('[Booking] Kunne ikke hente søknader fra databasen:', e);
+    return NextResponse.json(
+      { success: false, error: 'Kunne ikke hente søknader fra databasen akkurat nå.', data: [] },
+      { status: 503 }
+    );
   }
 }
 
@@ -120,24 +90,36 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
   }
 
+  let body: any;
   try {
-    const { id, status } = await request.json();
-    if (!id || !['APPROVED', 'REJECTED', 'PROCESSING'].includes(status)) {
-      return NextResponse.json({ success: false, error: 'Ugyldig status' }, { status: 400 });
-    }
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ success: false, error: 'Ugyldig JSON i forespørselen.' }, { status: 400 });
+  }
 
-    try {
-      const updated = await prisma.bookingRequest.update({
-        where: { id },
-        data: { status },
-      });
-      return NextResponse.json({ success: true, data: updated });
-    } catch (e) {
-      const booking = memoryBookings.find((b) => b.id === id);
-      if (booking) booking.status = status;
-      return NextResponse.json({ success: true, data: booking });
+  const { id, status } = body || {};
+  if (!id || !['APPROVED', 'REJECTED', 'PROCESSING'].includes(status)) {
+    return NextResponse.json({ success: false, error: 'Ugyldig status' }, { status: 400 });
+  }
+
+  try {
+    const updated = await prisma.bookingRequest.update({
+      where: { id },
+      data: { status },
+    });
+    return NextResponse.json({ success: true, data: updated });
+  } catch (e: any) {
+    // P2025 = «Record to update not found» -> søknaden finnes ikke
+    if (e?.code === 'P2025') {
+      return NextResponse.json(
+        { success: false, error: 'Fant ingen søknad med denne ID-en.' },
+        { status: 404 }
+      );
     }
-  } catch (error) {
-    return NextResponse.json({ success: false, error: 'Feil ved oppdatering' }, { status: 500 });
+    console.error(`[Booking] Kunne ikke oppdatere status for søknad ${id}:`, e);
+    return NextResponse.json(
+      { success: false, error: 'Kunne ikke oppdatere søknaden på grunn av en teknisk feil. Status er ikke endret.' },
+      { status: 503 }
+    );
   }
 }

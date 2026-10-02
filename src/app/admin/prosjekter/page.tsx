@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   FolderOpen, Plus, Search, RefreshCw, Trash2, 
-  Calendar, CheckCircle2, Clock, AlertCircle, Building2,
+  CheckCircle2, AlertCircle, Building2,
   X, Compass
 } from 'lucide-react';
 
@@ -11,13 +11,9 @@ interface Project {
   id: string;
   title: string;
   slug: string;
-  category: string;
-  description: string;
-  content: string;
+  description: string | null;
+  content: string | null;
   status: 'ACTIVE' | 'UPCOMING' | 'COMPLETED';
-  leadPartner: string;
-  timeline: string;
-  budgetStatus: string;
   published: boolean;
 }
 
@@ -30,11 +26,7 @@ export default function ProsjekterAdminPage() {
   // Modal for nytt prosjekt
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [newCategory, setNewCategory] = useState('Byutvikling');
   const [newStatus, setNewStatus] = useState<'ACTIVE' | 'UPCOMING' | 'COMPLETED'>('ACTIVE');
-  const [newLeadPartner, setNewLeadPartner] = useState('Tønsberglivet & Tønsberg Kommune');
-  const [newTimeline, setNewTimeline] = useState('2026–2027');
-  const [newBudgetStatus, setNewBudgetStatus] = useState('Finansiert');
   const [newDescription, setNewDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -69,17 +61,13 @@ export default function ProsjekterAdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newTitle,
-          category: newCategory,
           status: newStatus,
-          leadPartner: newLeadPartner,
-          timeline: newTimeline,
-          budgetStatus: newBudgetStatus,
           description: newDescription,
         }),
       });
 
       const json = await res.json();
-      if (json.success) {
+      if (res.ok && json.success) {
         setIsModalOpen(false);
         setNewTitle('');
         setNewDescription('');
@@ -114,9 +102,7 @@ export default function ProsjekterAdminPage() {
     const matchesStatus = statusFilter === 'ALL' || p.status === statusFilter;
     const matchesSearch =
       p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.category?.toLowerCase().includes(search.toLowerCase()) ||
-      p.leadPartner?.toLowerCase().includes(search.toLowerCase()) ||
-      p.description?.toLowerCase().includes(search.toLowerCase());
+      (p.description || '').toLowerCase().includes(search.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -249,9 +235,6 @@ export default function ProsjekterAdminPage() {
                       <FolderOpen className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="text-[11px] font-semibold text-primary/80 uppercase tracking-wider block">
-                        {p.category}
-                      </span>
                       <h3 className="font-bold text-foreground text-base leading-snug">{p.title}</h3>
                     </div>
                   </div>
@@ -277,24 +260,9 @@ export default function ProsjekterAdminPage() {
                   </div>
                 </div>
 
-                <p className="text-xs sm:text-sm text-foreground-muted leading-relaxed mb-4">
+                <p className="text-xs sm:text-sm text-foreground-muted leading-relaxed">
                   {p.description}
                 </p>
-              </div>
-
-              <div className="pt-3.5 border-t border-border space-y-1.5 text-xs text-foreground-muted">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">Hovedansvar:</span>
-                  <span className="truncate max-w-[220px] text-right">{p.leadPartner}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">Tidslinje:</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-primary" /> {p.timeline}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">Finansiering:</span>
-                  <span className="text-foreground-subtle">{p.budgetStatus}</span>
-                </div>
               </div>
             </div>
           ))}
@@ -330,59 +298,17 @@ export default function ProsjekterAdminPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1">Kategori</label>
-                  <input
-                    type="text"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1">Status</label>
-                  <select
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="ACTIVE">Aktiv</option>
-                    <option value="UPCOMING">Kommende</option>
-                    <option value="COMPLETED">Fullført</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1">Ansvarlig aktør</label>
-                  <input
-                    type="text"
-                    value={newLeadPartner}
-                    onChange={(e) => setNewLeadPartner(e.target.value)}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1">Tidslinje</label>
-                  <input
-                    type="text"
-                    value={newTimeline}
-                    onChange={(e) => setNewTimeline(e.target.value)}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-
               <div>
-                <label className="block text-xs font-semibold text-foreground mb-1">Finansiering / Budsjettstatus</label>
-                <input
-                  type="text"
-                  value={newBudgetStatus}
-                  onChange={(e) => setNewBudgetStatus(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                <label className="block text-xs font-semibold text-foreground mb-1">Status</label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="ACTIVE">Aktiv</option>
+                  <option value="UPCOMING">Kommende</option>
+                  <option value="COMPLETED">Fullført</option>
+                </select>
               </div>
 
               <div>

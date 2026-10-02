@@ -7,7 +7,27 @@ export async function GET(
   context: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await context.params;
-  const assetPath = Array.isArray(path) ? path.join("/") : path;
+  const segments = Array.isArray(path) ? path : [path];
+
+  // Sti-hygging: avvis traverseringsforsøk og tomme segmenter, ellers kunne
+  // proxien hentet vilkårlige stier på leverandørhosten.
+  const invalid = segments.some(
+    (segment) =>
+      !segment ||
+      segment === '.' ||
+      segment === '..' ||
+      segment.includes('/') ||
+      segment.includes('\\') ||
+      /[\u0000-\u001f]/.test(segment)
+  );
+  if (invalid) {
+    return NextResponse.json(
+      { success: false, error: 'Ugyldig asset-sti.' },
+      { status: 400 }
+    );
+  }
+
+  const assetPath = segments.join("/");
   const agentHost = process.env.AGENTIC_HOST || ['agentic.', 'bot', 'sify.', 'com'].join('');
   const upstreamUrl = `https://${agentHost}/assets/${assetPath}`;
 
@@ -18,6 +38,7 @@ export async function GET(
           req.headers.get("user-agent") ||
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 TonsberglivetOS/1.0",
       },
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {

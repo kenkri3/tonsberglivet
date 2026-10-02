@@ -6,6 +6,9 @@ export async function GET() {
     const traffic = await fetchLiveTrafficStatus();
     return NextResponse.json({
       success: true,
+      source: traffic.source,
+      isLive: traffic.isLive,
+      note: traffic.note,
       data: traffic
     });
   } catch (error: any) {

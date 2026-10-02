@@ -126,7 +126,7 @@ export default function NaeringslivetPage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <NavJobsWidget
           title="Karrieremuligheter i Tønsbergregionen"
-          subtitle="Hentes direkte fra NAV Arbeidsplassen for Tønsberg og Færder kommune."
+          subtitle="Stillinger hentes fra NAV Arbeidsplassen. Widgeten viser selv når kilden ikke er tilgjengelig."
           limit={6}
         />
       </section>

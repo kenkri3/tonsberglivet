@@ -26,7 +26,7 @@ export function PublicTransportWidget({ initialStop = 'tog', compact = false }: 
     try {
       const res = await fetch(`/api/entur?stop=${stop}`);
       const json = await res.json();
-      if (json.success && json.data) {
+      if (json.data) {
         setData(json.data);
       }
     } catch (e) {
@@ -49,15 +49,23 @@ export function PublicTransportWidget({ initialStop = 'tog', compact = false }: 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
-            <Radio className="w-3.5 h-3.5 animate-pulse text-emerald-500" />
-            <span>Entur Nasjonal Sanntid Live</span>
+          <div
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${
+              data?.isLive
+                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+            }`}
+          >
+            <Radio className={`w-3.5 h-3.5 text-emerald-500 ${data?.isLive ? 'animate-pulse' : ''}`} />
+            <span>{data?.isLive ? 'Entur Sanntid (live)' : 'Entur: ikke tilgjengelig'}</span>
           </div>
           <h3 className="text-2xl md:text-3xl font-extrabold text-foreground">
             Kollektivtrafikk & Avganger
           </h3>
           <p className="text-foreground-muted text-sm mt-1">
-            Sanntidsinformasjon for tog (RE11) og busser i Tønsberg og omegn.
+            {data?.isLive
+              ? 'Sanntidsinformasjon for tog (RE11) og busser i Tønsberg og omegn.'
+              : 'Vi viser ingen oppdiktede avganger. Sanntidsdata fra Entur er ikke tilgjengelig akkurat nå.'}
           </p>
         </div>
 
@@ -150,7 +158,9 @@ export function PublicTransportWidget({ initialStop = 'tog', compact = false }: 
 
           {(!data?.departures || data.departures.length === 0) && (
             <div className="p-8 text-center text-foreground-muted text-sm">
-              Ingen aktive avganger funnet for denne holdeplassen i øyeblikket.
+              {data && !data.isLive
+                ? data.note || 'Sanntidsdata fra Entur er ikke tilgjengelig akkurat nå.'
+                : 'Ingen aktive avganger funnet for denne holdeplassen i øyeblikket.'}
             </div>
           )}
         </div>

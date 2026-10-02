@@ -20,6 +20,8 @@ export function NavJobsWidget({
   const [onlyStudent, setOnlyStudent] = useState(initialOnlyStudent);
   const [jobs, setJobs] = useState<JobVacancy[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLive, setIsLive] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
     fetchJobs();
@@ -30,9 +32,11 @@ export function NavJobsWidget({
     try {
       const res = await fetch(`/api/jobs?student=${onlyStudent}&limit=${limit}`);
       const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
+      if (Array.isArray(json.data)) {
         setJobs(json.data);
       }
+      setIsLive(json.isLive === true);
+      setNote(typeof json.note === 'string' ? json.note : null);
     } catch (e) {
       console.error('Feil ved lasting av stillinger:', e);
     } finally {
@@ -44,12 +48,20 @@ export function NavJobsWidget({
     <div className="bg-surface rounded-3xl border border-border p-6 md:p-8 space-y-6 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-2">
+          <div
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${
+              isLive
+                ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400'
+                : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+            }`}
+          >
             <Briefcase className="w-3.5 h-3.5" />
-            <span>NAV Arbeidsplassen Live API</span>
+            <span>{isLive ? 'NAV Arbeidsplassen (live)' : 'NAV Arbeidsplassen: ikke tilgjengelig'}</span>
           </div>
           <h3 className="text-2xl md:text-3xl font-extrabold text-foreground">{title}</h3>
-          <p className="text-foreground-muted text-sm mt-1">{subtitle}</p>
+          <p className="text-foreground-muted text-sm mt-1">
+            {isLive ? subtitle : 'Ingen oppdiktede stillinger vises – kilden er ikke tilgjengelig.'}
+          </p>
         </div>
 
         {/* Filter-knapp */}
@@ -129,8 +141,24 @@ export function NavJobsWidget({
         ))}
 
         {jobs.length === 0 && !loading && (
-          <div className="col-span-full py-12 text-center text-foreground-muted">
-            Ingen stillinger funnet i øyeblikket. Sjekk igjen snart.
+          <div className="col-span-full py-12 px-6 text-center text-foreground-muted space-y-2">
+            {!isLive && note ? (
+              <>
+                <p className="font-bold text-foreground">Stillingsfeedet fra NAV er ikke tilgjengelig</p>
+                <p className="text-xs leading-relaxed max-w-2xl mx-auto">{note}</p>
+                <a
+                  href="https://arbeidsplassen.nav.no/stillinger"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline font-bold text-xs pt-1"
+                >
+                  Søk i stillinger på arbeidsplassen.nav.no
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </>
+            ) : (
+              <p>Ingen stillinger funnet i øyeblikket. Sjekk igjen snart.</p>
+            )}
           </div>
         )}
       </div>

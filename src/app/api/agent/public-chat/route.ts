@@ -107,7 +107,7 @@ REELLE SANNTIDSDATA FRA TØNSBERG AKKURAT NÅ:
 - Kommende arrangementer og konserter: ${JSON.stringify(activeEvents)}
 - Sjøtemperatur og flo/fjære: ${JSON.stringify(rt?.sjoOgVar || 'Ikke tilgjengelig')}
 - Togavganger: ${JSON.stringify(rt?.togAvganger || 'Ikke tilgjengelig')}
-- Luftkvalitet: ${rt?.luftkvalitet || 'God'}
+- Luftkvalitet: ${rt?.luftkvalitet || 'Ingen offisiell måling tilgjengelig'}
 
 RETNINGSLINJER FOR FORMATERING OG SVAR:
 1. Skriv ren, oversiktlig tekst. Bruk kulepunkter (•) for lister.
@@ -126,8 +126,30 @@ Brukerens spørsmål: "${message}"`;
       if (oneMinRes.success && oneMinRes.content) {
         replyText = oneMinRes.content;
       } else {
-        const { generateUnifiedAiResponse } = await import('@/lib/ai-config');
-        replyText = await generateUnifiedAiResponse({ prompt });
+        // Primærleverandøren svarte ikke. Fallbacken skal være
+        // (a) eksplisitt på Gemini – ikke et nytt betalt 1min.AI-kall via
+        //     generateUnifiedAiResponse – og (b) helt stille når ingen
+        //     leverandør er konfigurert, slik at den regelbaserte malen under
+        //     svarer med 100 % reelle data.
+        if (oneMinRes.error) {
+          console.warn('[Public Chat API] 1min.AI utilgjengelig:', oneMinRes.error);
+        }
+
+        const { getEffectiveGeminiApiKey, getGeminiClient } = await import('@/lib/ai-config');
+        const geminiKey = await getEffectiveGeminiApiKey();
+
+        if (geminiKey) {
+          const gemini = await getGeminiClient();
+          const geminiRes = await gemini?.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+          });
+          if (geminiRes?.text) {
+            replyText = geminiRes.text;
+          }
+        } else {
+          console.warn('[Public Chat API] Ingen AI-leverandør konfigurert – bruker regelbasert svar med reelle data.');
+        }
       }
     } catch (aiErr: any) {
       console.warn('[Public Chat API] AI-assistent feilet:', aiErr?.message);

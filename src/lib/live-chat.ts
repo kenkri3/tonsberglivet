@@ -23,41 +23,16 @@ export interface ChatSession {
   messages: ChatMessageItem[];
 }
 
-// In-memory cache for ultra-fast response
-let inMemorySessions: Record<string, ChatSession> = {
-  'demo-session-1': {
-    id: 'demo-session-1',
-    visitorName: 'Turist fra Oslo',
-    visitorEmail: 'turist@example.com',
-    aiEnabled: true,
-    status: 'waiting_admin',
-    topic: 'TORVLEIE',
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    updatedAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-    unreadByAdmin: true,
-    messages: [
-      {
-        id: 'm1',
-        sender: 'visitor',
-        content: 'Hei! Vi ønsker å leie standplass på Torvet for å selge keramikk under Tønsbergdagene. Hvordan går vi frem?',
-        timestamp: new Date(Date.now() - 1000 * 60 * 15).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' }),
-      },
-      {
-        id: 'm2',
-        sender: 'assistant',
-        senderName: 'Tønsberg-Guiden AI',
-        content: 'Hei! Så spennende med håndverk og keramikk på Torvet! Standleie koster kr 350,- per dag for 3x3 meter. Du kan søke direkte her eller legge igjen kontaktinfo.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 14).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' }),
-      },
-      {
-        id: 'm3',
-        sender: 'visitor',
-        content: 'Kan vi få en hjørneplass mot Brygga? Kontakt meg gjerne på turist@example.com.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 5).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' }),
-      },
-    ],
-  },
-};
+// In-memory cache for ultra-fast response.
+//
+// MERK: Ingen seedet demosamtale her. En hardkodet «Turist fra Oslo»-sesjon ble
+// tidligere lagt inn, persistert til SystemSetting og aldri fjernet. Den ga
+// adminpanelet en permanent falsk «1 ny henvendelse»-badge og en oppdiktet
+// samtale i innboksen, selv på en helt tom database.
+let inMemorySessions: Record<string, ChatSession> = {};
+
+/** Eldre demosamtaler som skal ryddes bort hvis de allerede ligger i databasen. */
+const LEGACY_DEMO_SESSION_IDS = new Set(['demo-session-1']);
 
 let loadedFromDb = false;
 
@@ -68,7 +43,13 @@ async function ensureSessionsLoaded(): Promise<void> {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (typeof parsed === 'object' && parsed !== null) {
-        inMemorySessions = { ...inMemorySessions, ...parsed };
+        const cleaned: Record<string, ChatSession> = {};
+        for (const [id, session] of Object.entries(parsed as Record<string, ChatSession>)) {
+          // Fjern den gamle, hardkodede demosamtalen hvis den ligger lagret.
+          if (LEGACY_DEMO_SESSION_IDS.has(id)) continue;
+          cleaned[id] = session;
+        }
+        inMemorySessions = { ...inMemorySessions, ...cleaned };
       }
     }
   } catch (e) {

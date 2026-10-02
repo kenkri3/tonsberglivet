@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Users, Plus, ExternalLink, Search, RefreshCw, 
-  Trash2, Mail, CheckCircle2, ShieldCheck, Building2,
+  Trash2, CheckCircle2, ShieldCheck, Building2,
   X, AlertCircle
 } from 'lucide-react';
 
@@ -11,13 +11,11 @@ interface Partner {
   id: string;
   name: string;
   slug: string;
-  website: string;
-  description: string;
+  website: string | null;
+  description: string | null;
   level: 'PREMIUM' | 'STANDARD' | 'BASIC';
-  category: string;
   published: boolean;
-  contactEmail?: string;
-  joinedYear?: number;
+  createdAt?: string;
 }
 
 export default function PartnerePage() {
@@ -30,10 +28,8 @@ export default function PartnerePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newWebsite, setNewWebsite] = useState('');
-  const [newCategory, setNewCategory] = useState('Næringsliv');
   const [newLevel, setNewLevel] = useState<'PREMIUM' | 'STANDARD' | 'BASIC'>('STANDARD');
   const [newDescription, setNewDescription] = useState('');
-  const [newEmail, setNewEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
@@ -68,20 +64,17 @@ export default function PartnerePage() {
         body: JSON.stringify({
           name: newName,
           website: newWebsite,
-          category: newCategory,
           level: newLevel,
           description: newDescription,
-          contactEmail: newEmail,
         }),
       });
 
       const json = await res.json();
-      if (json.success) {
+      if (res.ok && json.success) {
         setIsModalOpen(false);
         setNewName('');
         setNewWebsite('');
         setNewDescription('');
-        setNewEmail('');
         setStatusMessage(json.message || 'Partner lagret!');
         setTimeout(() => setStatusMessage(null), 4000);
         fetchPartners();
@@ -113,8 +106,7 @@ export default function PartnerePage() {
     const matchesLevel = selectedLevel === 'ALL' || p.level === selectedLevel;
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.category?.toLowerCase().includes(search.toLowerCase()) ||
-      p.description?.toLowerCase().includes(search.toLowerCase());
+      (p.description || '').toLowerCase().includes(search.toLowerCase());
     return matchesLevel && matchesSearch;
   });
 
@@ -267,9 +259,6 @@ export default function PartnerePage() {
                 </div>
 
                 <h3 className="font-bold text-foreground text-base mb-1">{p.name}</h3>
-                <span className="text-[11px] font-semibold text-primary/80 uppercase tracking-wider block mb-2">
-                  {p.category}
-                </span>
                 <p className="text-xs text-foreground-muted line-clamp-3 leading-relaxed mb-4">
                   {p.description}
                 </p>
@@ -287,16 +276,6 @@ export default function PartnerePage() {
                   </a>
                 ) : (
                   <span className="text-foreground-subtle">Ingen nettside</span>
-                )}
-
-                {p.contactEmail && (
-                  <a
-                    href={`mailto:${p.contactEmail}`}
-                    className="text-foreground-subtle hover:text-foreground flex items-center gap-1"
-                    title={p.contactEmail}
-                  >
-                    <Mail className="w-3.5 h-3.5" /> Kontakt
-                  </a>
                 )}
               </div>
             </div>
@@ -333,29 +312,17 @@ export default function PartnerePage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1">Partnerskapsnivå</label>
-                  <select
-                    value={newLevel}
-                    onChange={(e) => setNewLevel(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="PREMIUM">Premium</option>
-                    <option value="STANDARD">Standard</option>
-                    <option value="BASIC">Basic</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-foreground mb-1">Kategori / Sektor</label>
-                  <input
-                    type="text"
-                    placeholder="f.eks. Handel, Kultur"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-foreground mb-1">Partnerskapsnivå</label>
+                <select
+                  value={newLevel}
+                  onChange={(e) => setNewLevel(e.target.value as any)}
+                  className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="PREMIUM">Premium</option>
+                  <option value="STANDARD">Standard</option>
+                  <option value="BASIC">Basic</option>
+                </select>
               </div>
 
               <div>
@@ -365,17 +332,6 @@ export default function PartnerePage() {
                   placeholder="https://example.no"
                   value={newWebsite}
                   onChange={(e) => setNewWebsite(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-1">Kontakt-e-post</label>
-                <input
-                  type="email"
-                  placeholder="kontakt@partner.no"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
                   className="w-full px-3.5 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>

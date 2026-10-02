@@ -1,123 +1,98 @@
 import { NextResponse } from 'next/server';
+import { GdprStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { sanitizeInput } from '@/lib/validations';
 import { requireEditorOrAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-const memoryImages = [
-  {
-    id: 'img-1',
-    title: 'Tønsberg Brygge og Havnepromenade',
-    url: '/images/hero.jpg',
-    folder: 'Bylivet',
-    photographer: 'Tønsberglivet Arkiv',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Brygga', 'Havn', 'Solnedgang', 'Bylivet', 'Båtliv'],
-    uploadedAt: '2026-08-01',
-  },
-  {
-    id: 'img-2',
-    title: 'Slottsfjellet og Tårnet',
-    url: '/images/slottsfjellet.jpg',
-    folder: 'Kultur & Historie',
-    photographer: 'Tønsberglivet Arkiv',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Slottsfjellet', 'Tårnet', 'Historie', 'Utsikt', 'Middelalder'],
-    uploadedAt: '2026-08-03',
-  },
-  {
-    id: 'img-3',
-    title: 'Matmarked og ferske bakervarer på Torvet',
-    url: '/images/food.jpg',
-    folder: 'Næringslivet',
-    photographer: 'Tønsberglivet Arkiv',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Torvet', 'Matmarked', 'Surdeigsbrød', 'Lokalmat', 'Gründer'],
-    uploadedAt: '2026-08-05',
-  },
-  {
-    id: 'img-4',
-    title: 'Gründergata og Nordbyens trehus',
-    url: '/images/grundergata.jpg',
-    folder: 'Bylivet',
-    photographer: 'Tønsberglivet Arkiv',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Gründergata', 'Nordbyen', 'Trehus', 'Kulturarv', 'Shopping'],
-    uploadedAt: '2026-08-06',
-  },
-  {
-    id: 'img-5',
-    title: 'Kanalen og Bryggestemning',
-    url: '/images/brygge.jpg',
-    folder: 'Bylivet',
-    photographer: 'Tønsberglivet Arkiv',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Kanalen', 'Brygga', 'Uteservering', 'Sommer'],
-    uploadedAt: '2026-08-08',
-  },
-  {
-    id: 'img-6',
-    title: 'Kultur og konsertopplevelser',
-    url: '/images/kultur.jpg',
-    folder: 'Kultur & Historie',
-    photographer: 'Tønsberglivet Arkiv',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Kultur', 'Konsert', 'Foynhagen', 'Musikk'],
-    uploadedAt: '2026-08-10',
-  },
-  {
-    id: 'img-7',
-    title: 'Færder Skjærgård og Kystnatur',
-    url: '/images/skjaergard.jpg',
-    folder: 'Reiselivet',
-    photographer: 'Visit Færder',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Færder', 'Skjærgård', 'Svaberg', 'Nasjonalpark', 'Kyst'],
-    uploadedAt: '2026-08-12',
-  },
-  {
-    id: 'img-8',
-    title: 'Studentlivet ved USN Campus Vestfold',
-    url: '/images/student.jpg',
-    folder: 'Studentlivet',
-    photographer: 'USN Kommunikasjon',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Student', 'USN', 'Campus Vestfold', 'Bakkenteigen', 'Utdanning'],
-    uploadedAt: '2026-08-14',
-  },
-  {
-    id: 'img-9',
-    title: 'Shopping i gågater og nisjebutikker',
-    url: '/images/shopping.jpg',
-    folder: 'Bylivet',
-    photographer: 'Tønsberglivet Arkiv',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Handel', 'Shopping', 'Gågater', 'Sentrumsgavekortet'],
-    uploadedAt: '2026-08-16',
-  },
-  {
-    id: 'img-10',
-    title: 'Sommerfestival og Mangfold på Kaikanten',
-    url: '/images/regnbue.jpg',
-    folder: 'Kultur & Historie',
-    photographer: 'Tønsberglivet Arkiv',
-    gdprStatus: 'APPROVED',
-    aiTags: ['Festival', 'Folkefest', 'Mangfold', 'Sommer', 'Fellesskap'],
-    uploadedAt: '2026-08-18',
-  },
-];
+/** Normalisert bilde-DTO — samme form uansett hvilke kolonner DB-raden har. */
+interface ImageDto {
+  id: string;
+  title: string;
+  alt: string;
+  url: string;
+  folder: string;
+  photographer: string;
+  gdprStatus: GdprStatus;
+  tags: string[];
+  aiTags: string[];
+  uploadedAt: string;
+}
 
-export async function GET() {
+type ImageRow = {
+  id: string;
+  url: string;
+  filename: string | null;
+  alt: string | null;
+  photographer: string | null;
+  gdprStatus: GdprStatus;
+  tags: string[];
+  aiTags: string[];
+  createdAt: Date;
+  folder?: { name: string } | null;
+};
+
+/**
+ * DB-raden har filename/alt/folder-relasjon, ikke title/folder-streng.
+ * Normaliser her slik at UI-et aldri kan dereferencere undefined.
+ */
+function toImageDto(img: ImageRow): ImageDto {
+  const filename = typeof img.filename === 'string' ? img.filename.trim() : '';
+  const alt = typeof img.alt === 'string' ? img.alt.trim() : '';
+  return {
+    id: img.id,
+    title: filename || alt || 'Uten tittel',
+    alt,
+    url: img.url,
+    folder: img.folder?.name || 'Ukategorisert',
+    photographer: img.photographer?.trim() || 'Ukreditert',
+    gdprStatus: img.gdprStatus,
+    tags: Array.isArray(img.tags) ? img.tags : [],
+    aiTags: Array.isArray(img.aiTags) ? img.aiTags : [],
+    uploadedAt: img.createdAt instanceof Date ? img.createdAt.toISOString() : String(img.createdAt),
+  };
+}
+
+function normalizeGdprStatus(value: unknown): GdprStatus {
+  const candidate = String(value ?? '').toUpperCase();
+  return (Object.values(GdprStatus) as string[]).includes(candidate)
+    ? (candidate as GdprStatus)
+    : GdprStatus.PENDING;
+}
+
+function toStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.map((v) => String(v)).filter((v) => v.trim() !== '') : [];
+}
+
+/**
+ * GET /api/images — bildebanken.
+ * Krever redaktør/administrator: listen inneholder ikke-publiserte og
+ * GDPR-flaggede (PENDING/REJECTED) assets samt mappestruktur, og skal derfor
+ * ikke være åpen for anonyme. Alle kjente konsumenter er adminflater.
+ */
+export async function GET(request: Request) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     const images = await prisma.image.findMany({
       orderBy: { createdAt: 'desc' },
+      include: { folder: { select: { name: true } } },
     });
-    if (images && images.length > 0) {
-      return NextResponse.json({ success: true, data: images });
-    }
-    return NextResponse.json({ success: true, data: memoryImages });
-  } catch (e) {
-    return NextResponse.json({ success: true, data: memoryImages });
+    return NextResponse.json({
+      success: true,
+      source: 'DATABASE',
+      data: images.map(toImageDto),
+      total: images.length,
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: 'Kunne ikke hente bilder: databasen svarte ikke.' },
+      { status: 503 },
+    );
   }
 }
 
@@ -127,40 +102,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
   }
 
+  let body: any;
   try {
-    const body = await request.json();
-    const { title, url, folder, photographer, aiTags, gdprStatus } = body;
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ success: false, error: 'Ugyldig JSON i forespørselen' }, { status: 400 });
+  }
 
-    if (!title || !url) {
-      return NextResponse.json({ success: false, error: 'Tittel og URL er påkrevd' }, { status: 400 });
+  const { title, url, folder, photographer, aiTags, gdprStatus, tags } = body ?? {};
+
+  if (!title || !url) {
+    return NextResponse.json({ success: false, error: 'Tittel og URL er påkrevd' }, { status: 400 });
+  }
+
+  const cleanTitle = sanitizeInput(String(title));
+  const cleanUrl = String(url).trim();
+  const folderName = typeof folder === 'string' && folder.trim() ? folder.trim() : null;
+
+  try {
+    let folderId: string | null = null;
+    if (folderName) {
+      const existing = await prisma.imageFolder.findFirst({ where: { name: folderName, parentId: null } });
+      folderId = existing?.id ?? (await prisma.imageFolder.create({ data: { name: folderName } })).id;
     }
 
-    try {
-      const img = await prisma.image.create({
-        data: {
-          filename: title,
-          url,
-          photographer: photographer || 'Tønsberglivet',
-          gdprStatus: (gdprStatus as any) || 'APPROVED',
-          aiTags: Array.isArray(aiTags) ? aiTags : ['Tønsberg'],
-        },
-      });
-      return NextResponse.json({ success: true, data: img }, { status: 201 });
-    } catch (e) {
-      const newImg = {
-        id: `img-${Date.now()}`,
-        title,
-        url,
-        folder: folder || 'Bylivet',
-        photographer: photographer || 'Tønsberglivet',
-        gdprStatus: gdprStatus || 'APPROVED',
-        aiTags: aiTags || ['Tønsberg'],
-        uploadedAt: new Date().toISOString().split('T')[0],
-      };
-      memoryImages.unshift(newImg);
-      return NextResponse.json({ success: true, data: newImg }, { status: 201 });
-    }
-  } catch (error) {
-    return NextResponse.json({ success: false, error: 'Feil ved lagring av bilde' }, { status: 500 });
+    const img = await prisma.image.create({
+      data: {
+        filename: cleanTitle,
+        url: cleanUrl,
+        photographer: typeof photographer === 'string' && photographer.trim() ? photographer.trim() : null,
+        gdprStatus: normalizeGdprStatus(gdprStatus),
+        // tags og aiTags er NOT NULL String[] uten default — de MÅ settes.
+        tags: toStringArray(tags),
+        aiTags: toStringArray(aiTags),
+        folderId,
+      },
+      include: { folder: { select: { name: true } } },
+    });
+    return NextResponse.json({ success: true, data: toImageDto(img) }, { status: 201 });
+  } catch {
+    // Ingen falsk suksess: bildet er IKKE lagret.
+    return NextResponse.json(
+      { success: false, error: 'Kunne ikke lagre bildet: databasen svarte ikke. Bildet er ikke lagret.' },
+      { status: 503 },
+    );
   }
 }

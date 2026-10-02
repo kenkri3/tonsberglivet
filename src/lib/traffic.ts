@@ -1,5 +1,19 @@
 // Statens vegvesen & Trafikkmeldinger Service for Tønsbergregionen
-// Open traffic data from Statens vegvesen Datex II & Trafikkdata
+// Åpne trafikkdata fra Statens vegvesen (DATEX II / Trafikkdata).
+//
+// VIKTIG: Det finnes ingen nøkkelfri, maskinlesbar trafikkkilde for Kanalbrua.
+// DATEX II- og Trafikkdata-endepunktene til Statens vegvesen krever autentisering
+// (SVV-API-nøkkel / tilgangsavtale), og webatlas-REST-endepunktet er 404.
+// Inntil en slik tilgang er konfigurert finnes det INGEN sanntids trafikkdata her:
+// `isLive` er derfor false og `alerts` er tom. Tidligere inneholdt dette svaret
+// oppdiktede «veimeldinger» og en påstått trafikkflyt som ble presentert som live.
+
+export type TrafficSource = 'LIVE' | 'UNAVAILABLE';
+
+export const TRAFFIC_UNAVAILABLE_NOTE =
+  'Statens vegvesen krever API-tilgang for trafikkdata (DATEX II/Trafikkdata), og den er ikke ' +
+  'konfigurert. Vi viser derfor ingen påstått sanntidsstatus for Kanalbrua eller E18. ' +
+  'Se vegvesen.no/trafikk for gjeldende situasjon.';
 
 export interface TrafficAlert {
   id: string;
@@ -15,14 +29,20 @@ export interface TrafficAlert {
 
 export interface TbgTrafficStatus {
   kanalbrua: {
-    status: 'ÅPEN FOR VEITRAFIKK' | 'BROÅPNING (BÅTTRAFIKK)' | 'VEDLIKEHOLD';
-    isCarPassable: boolean;
+    status: 'ÅPEN FOR VEITRAFIKK' | 'BROÅPNING (BÅTTRAFIKK)' | 'VEDLIKEHOLD' | 'UKJENT';
+    /** false når det ikke finnes en verifisert sanntidskilde for brua. */
+    isCarPassable: boolean | null;
     nextScheduledOpening?: string;
     details: string;
   };
   alerts: TrafficAlert[];
-  trafficFlowOverview: 'Flyter fint' | 'Tett trafikk' | 'Forsinkelser';
+  trafficFlowOverview: 'Flyter fint' | 'Tett trafikk' | 'Forsinkelser' | 'Ukjent (ingen sanntidskilde)';
   updatedAt: string;
+  source: TrafficSource;
+  isLive: boolean;
+  note: string;
+  /** 'ESTIMATE' = neste åpning er regnet ut lokalt, ikke meldt fra Statens vegvesen. */
+  bridgeScheduleSource: 'ESTIMATE';
 }
 
 export async function fetchLiveTrafficStatus(): Promise<TbgTrafficStatus> {
@@ -30,48 +50,27 @@ export async function fetchLiveTrafficStatus(): Promise<TbgTrafficStatus> {
   const formatTime = (d: Date) =>
     `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
-  // Next scheduled bridge opening (Kanalbrua normally opens at set minutes past the hour in summer/daytime)
+  // Neste rutemessige åpning er ren lokal aritmetikk (typisk åpning xx:05), ikke en
+  // melding fra Statens vegvesen. Den merkes derfor eksplisitt som anslag.
   const nextHour = new Date(now.getTime() + 60 * 60000);
-  nextHour.setMinutes(5); // Typical opening at xx:05
-  const nextOpeningStr = `Kl. ${formatTime(nextHour)}`;
+  nextHour.setMinutes(5);
+  const nextOpeningStr = `ca. kl. ${formatTime(nextHour)} (beregnet)`;
 
   return {
     kanalbrua: {
-      status: 'ÅPEN FOR VEITRAFIKK',
-      isCarPassable: true,
+      status: 'UKJENT',
+      isCarPassable: null,
       nextScheduledOpening: nextOpeningStr,
-      details: 'Kanalbrua er åpen for biler, syklister og fotgjengere. Normal drift.'
+      details:
+        'Ingen verifisert sanntidskilde for Kanalbrua er tilkoblet. Neste rutemessige åpning er ' +
+        'beregnet lokalt og kan avvike fra faktisk tidspunkt.'
     },
-    alerts: [
-      {
-        id: 'traf-1',
-        road: 'Fv. 308 Kanalbrua',
-        location: 'Kanalen mellom Tønsberg og Nøtterøy',
-        severity: 'NORMAL',
-        heading: 'Kanalbrua: Normal passering',
-        description: 'Fri ferdsel for kjøretøy og myke trafikanter.',
-        isBridgeStatus: true
-      },
-      {
-        id: 'traf-2',
-        road: 'E18 Kopstad - Sem',
-        location: 'E18 Tønsberg / Sandefjord',
-        severity: 'LOW',
-        heading: 'E18 Tønsberg: God flyt',
-        description: 'Fin flyt i begge retninger forbi Tønsberg-avkjørslene.',
-        isBridgeStatus: false
-      },
-      {
-        id: 'traf-3',
-        road: 'Fv. 325 Nedre Langgate',
-        location: 'Tønsberg Brygge',
-        severity: 'LOW',
-        heading: 'Miljøfartsgrense 30 km/t i sentrum',
-        description: 'Husk å ta hensyn til fotgjengere og syklister langs bryggeområdet.',
-        isBridgeStatus: false
-      }
-    ],
-    trafficFlowOverview: 'Flyter fint',
-    updatedAt: now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })
+    alerts: [],
+    trafficFlowOverview: 'Ukjent (ingen sanntidskilde)',
+    updatedAt: now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' }),
+    source: 'UNAVAILABLE',
+    isLive: false,
+    note: TRAFFIC_UNAVAILABLE_NOTE,
+    bridgeScheduleSource: 'ESTIMATE'
   };
 }

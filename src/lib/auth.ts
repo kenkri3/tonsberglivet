@@ -14,10 +14,32 @@ export interface SessionUser {
 }
 
 /**
- * Henter hemmelighet for sesjonssignering.
+ * Hemmelighet for sesjonssignering.
+ *
+ * VIKTIG: Det finnes ingen hardkodet reserveverdi her. En kjent, innsjekket
+ * hemmelighet gjør at hvem som helst kan signere sin egen ADMIN-cookie.
+ * Er ingen hemmelighet konfigurert, genererer vi en tilfeldig en for denne
+ * prosessen: sesjoner kan da ikke forfalskes, men de overlever heller ikke
+ * omstart eller deles mellom flere instanser. Sett NEXTAUTH_SECRET i miljøet.
  */
+let ephemeralAuthSecret: string | null = null;
+
 function getAuthSecret(): string {
-  return process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || 'tonsberglivet-super-secure-production-secret-2026';
+  const configured = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+  if (configured && configured.trim() !== '') {
+    return configured;
+  }
+
+  if (!ephemeralAuthSecret) {
+    ephemeralAuthSecret = crypto.randomBytes(32).toString('hex');
+    console.error(
+      '[Auth] NEXTAUTH_SECRET/AUTH_SECRET er ikke konfigurert. ' +
+        'Genererer en tilfeldig sesjonshemmelighet for denne prosessen — ' +
+        'innlogginger blir ugyldige ved omstart og deles ikke mellom instanser. ' +
+        'Sett NEXTAUTH_SECRET i miljøet for produksjon.',
+    );
+  }
+  return ephemeralAuthSecret;
 }
 
 /**
@@ -35,8 +57,12 @@ export function hashPassword(password: string): string {
 export function verifyPassword(password: string, storedHash: string): boolean {
   if (!storedHash || !storedHash.includes(':')) return false;
   const [salt, key] = storedHash.split(':');
+  if (!salt || !key || !/^[0-9a-f]+$/i.test(key)) return false;
+
   const keyBuffer = Buffer.from(key, 'hex');
   const derivedKey = crypto.scryptSync(password, salt, 64);
+  // timingSafeEqual kaster RangeError ved ulik lengde — sjekk først.
+  if (keyBuffer.length !== derivedKey.length) return false;
   return crypto.timingSafeEqual(keyBuffer, derivedKey);
 }
 
@@ -73,7 +99,14 @@ export function verifySessionToken(token: string): SessionUser | null {
   hmac.update(payloadB64);
   const expectedSig = hmac.digest('base64url');
 
-  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) {
+  // En ugyldig/avkuttet cookie skal gi "ikke innlogget" (401), ikke en 500.
+  // timingSafeEqual kaster RangeError når bufferne har ulik lengde.
+  try {
+    const sigBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expectedSig);
+    if (sigBuffer.length !== expectedBuffer.length) return null;
+    if (!crypto.timingSafeEqual(sigBuffer, expectedBuffer)) return null;
+  } catch {
     return null;
   }
 

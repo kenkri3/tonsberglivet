@@ -27,7 +27,9 @@ interface DashboardStatsData {
   articlesCount: number;
   eventsCount: number;
   newCompaniesCount: number;
-  totalBrregTonsberg: number;
+  /** Faktisk antall enheter i Enhetsregisteret, eller null når registeret ikke svarer. */
+  totalBrregTonsberg: number | null;
+  totalBrregTonsbergIsLive?: boolean;
   totalBookingsCount: number;
   pendingBookingsCount: number;
   approvedBookingsRevenue: number;
@@ -59,7 +61,8 @@ export default function AdminDashboard() {
     articlesCount: 0,
     eventsCount: 0,
     newCompaniesCount: 0,
-    totalBrregTonsberg: 13169,
+    // Ingen oppdiktet standardverdi: viser «–» til registeret har svart.
+    totalBrregTonsberg: null,
     totalBookingsCount: 0,
     pendingBookingsCount: 0,
     approvedBookingsRevenue: 0,
@@ -101,7 +104,7 @@ export default function AdminDashboard() {
     },
     {
       label: 'Arrangementer',
-      value: stats.eventsCount > 0 ? stats.eventsCount.toString() : 'Live synk',
+      value: String(stats.eventsCount),
       subtext: 'Ticketmaster OpenAPI sanntid',
       icon: Calendar,
       href: '/admin/arrangementer',
@@ -109,11 +112,19 @@ export default function AdminDashboard() {
     },
     {
       label: 'Bedrifter (Brreg.no)',
-      value: stats.newCompaniesCount > 0 ? `${stats.newCompaniesCount} nye` : '13 169',
-      subtext: `${stats.newCompaniesCount} nystartet i Tønsberg siste 30 dager`,
+      // Tidligere falt denne tilbake til det hardkodede tallet «13 169».
+      // Nå viser vi det faktiske antallet fra Enhetsregisteret, eller «–».
+      value:
+        stats.totalBrregTonsberg !== null
+          ? stats.totalBrregTonsberg.toLocaleString('nb-NO')
+          : '–',
+      subtext:
+        stats.newCompaniesCount > 0
+          ? `${stats.newCompaniesCount} nystartet i Tønsberg siste 30 dager`
+          : 'Ingen nye registrert siste 30 dager',
       icon: Building2,
       href: '/admin/bedrifter',
-      badge: 'Brreg OpenAPI',
+      badge: stats.totalBrregTonsbergIsLive ? 'Brreg OpenAPI' : 'Brreg utilgjengelig',
     },
     {
       label: 'Torvleie & Byrom',

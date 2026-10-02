@@ -5,14 +5,23 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const onlyStudent = searchParams.get('student') === 'true';
-    const limit = Number(searchParams.get('limit')) || 10;
 
-    const jobs = await fetchLiveJobs(onlyStudent, limit);
+    // Clamp limit til 1–50: ?limit=-1 ga tidligere slice(0, -1) og droppet siste stilling.
+    const rawLimit = Number(searchParams.get('limit'));
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0
+      ? Math.min(Math.trunc(rawLimit), 50)
+      : 10;
+
+    const result = await fetchLiveJobs(onlyStudent, limit);
 
     return NextResponse.json({
-      success: true,
-      data: jobs,
-      count: jobs.length
+      // success gjenspeiler om NAV faktisk svarte – ikke om kallet gjennomførtes.
+      success: result.isLive,
+      source: result.source,
+      isLive: result.isLive,
+      note: result.note,
+      data: result.jobs,
+      count: result.jobs.length
     });
   } catch (error: any) {
     return NextResponse.json(

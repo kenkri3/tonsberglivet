@@ -36,7 +36,9 @@ export function BrregSearchWidget() {
 
       const res = await fetch(`/api/brreg?${params.toString()}`);
       const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
+      // `success` betyr nå «Enhetsregisteret svarte», ikke «kallet gjennomførtes».
+      // `data` er befolket også når kilden ikke er live, så vi må ikke filtrere på success.
+      if (Array.isArray(json.data)) {
         setCompanies(json.data);
       }
     } catch (e) {

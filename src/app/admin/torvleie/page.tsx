@@ -19,6 +19,7 @@ interface Booking {
 export default function TorvleieAdminPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusMessage, setStatusMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -40,20 +41,33 @@ export default function TorvleieAdminPage() {
   }, []);
 
   const handleUpdateStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
+    setStatusMessage(null);
     try {
       const res = await fetch('/api/booking', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
       });
-      const data = await res.json();
-      if (data.success) {
-        setBookings((prev) =>
-          prev.map((b) => (b.id === id ? { ...b, status } : b))
-        );
+      const data = await res.json().catch(() => null);
+
+      // Tidligere feilet dette helt i stillhet: 404/503 ble svelget og
+      // knappen så ut som den virket selv om ingenting ble endret.
+      if (!res.ok || !data?.success) {
+        setStatusMessage({
+          ok: false,
+          text: data?.error || `Kunne ikke oppdatere søknaden (HTTP ${res.status}). Status er ikke endret.`,
+        });
+        return;
       }
-    } catch (e) {
-      console.error('Status update failed:', e);
+
+      setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
+      setStatusMessage({ ok: true, text: `Status oppdatert til ${status === 'APPROVED' ? 'godkjent' : 'avslått'}.` });
+      setTimeout(() => setStatusMessage(null), 5000);
+    } catch (e: any) {
+      setStatusMessage({
+        ok: false,
+        text: `Nettverksfeil: ${e?.message || 'ukjent feil'}. Status er ikke endret.`,
+      });
     }
   };
 
@@ -72,6 +86,19 @@ export default function TorvleieAdminPage() {
           Oppdater
         </button>
       </div>
+
+      {statusMessage && (
+        <div
+          className={`p-4 rounded-2xl border text-sm font-semibold flex items-center gap-3 ${
+            statusMessage.ok
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
+          }`}
+        >
+          <span className="shrink-0">{statusMessage.ok ? '✓' : '⚠'}</span>
+          <span>{statusMessage.text}</span>
+        </div>
+      )}
 
       <div className="grid gap-4">
         {bookings.map((b) => (

@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { searchBrave, searchTavily, scrapeUrl, smartWebSearch, WebSearchResultItem } from './web-intelligence';
+import { searchBrave, searchTavily, scrapeUrl, smartWebSearch } from './web-intelligence';
 import { fetchLiveTicketmasterEvents } from './ticketmaster';
 import { fetchLibraryEvents } from './libraryEvents';
 import { fetchLiveDepartures, TONSBERG_STOPS } from './entur';
@@ -197,15 +197,59 @@ export async function toolGetRealEvents(daysAhead: number = 14): Promise<AgentEx
 }
 
 /**
+ * 4b. Validér og normaliser fritekst-kategori til en faktisk Prisma-enum.
+ * Kaller/AI kan sende «Bylivet», «næringslivet» eller søppel – vi skriver aldri
+ * ukjente verdier rett inn i en enum-kolonne (det gir 500 i Prisma).
+ */
+const ARTICLE_CATEGORY_ALIASES: Record<string, 'BYLIVET' | 'HVERDAGSLIVET' | 'NAERINGSLIVET' | 'REISELIVET' | 'STUDENTLIVET'> = {
+  BYLIV: 'BYLIVET',
+  BYLIVET: 'BYLIVET',
+  HVERDAGSLIV: 'HVERDAGSLIVET',
+  HVERDAGSLIVET: 'HVERDAGSLIVET',
+  NAERINGSLIV: 'NAERINGSLIVET',
+  NAERINGSLIVET: 'NAERINGSLIVET',
+  NARINGSLIV: 'NAERINGSLIVET',
+  NARINGSLIVET: 'NAERINGSLIVET',
+  REISELIV: 'REISELIVET',
+  REISELIVET: 'REISELIVET',
+  STUDENTLIV: 'STUDENTLIVET',
+  STUDENTLIVET: 'STUDENTLIVET',
+};
+
+export function normalizeArticleCategory(
+  value?: string | null
+): 'BYLIVET' | 'HVERDAGSLIVET' | 'NAERINGSLIVET' | 'REISELIVET' | 'STUDENTLIVET' {
+  if (!value || typeof value !== 'string') return 'BYLIVET';
+
+  const normalized = value
+    .trim()
+    .toUpperCase()
+    .replace(/Æ/g, 'AE')
+    .replace(/Ø/g, 'O')
+    .replace(/Å/g, 'A')
+    .replace(/[^A-Z]/g, '');
+
+  const resolved = ARTICLE_CATEGORY_ALIASES[normalized];
+  if (!resolved) {
+    console.warn(
+      `[AgentTools] Ukjent artikkelkategori «${value}» – bruker BYLIVET i stedet for å skrive en ugyldig enum-verdi.`
+    );
+    return 'BYLIVET';
+  }
+  return resolved;
+}
+
+/**
  * 5. Opprett faktisk artikkel i databasen (Prisma CMS)
  */
 export async function toolCreateRealArticle(args: {
   title: string;
   excerpt?: string;
   content: string;
-  category?: 'BYLIVET' | 'HVERDAGSLIVET' | 'NAERINGSLIVET' | 'REISELIVET' | 'STUDENTLIVET';
+  category?: string;
   published?: boolean;
 }): Promise<AgentExecutionResult> {
+  const category = normalizeArticleCategory(args.category);
   const cleanSlug =
     args.title
       .toLowerCase()
@@ -223,7 +267,7 @@ export async function toolCreateRealArticle(args: {
         slug: cleanSlug,
         excerpt: args.excerpt || args.content.slice(0, 160) + '...',
         content: args.content,
-        category: (args.category as any) || 'BYLIVET',
+        category,
         published: args.published ?? false,
       },
     });
@@ -243,31 +287,19 @@ export async function toolCreateRealArticle(args: {
       },
     };
     } catch (err: any) {
-      console.warn('[AgentTools] Prisma create feilet (fallback til draft queue):', err?.message);
-      const fallbackArticle = {
-        id: `draft-${Date.now()}`,
-        title: args.title,
-        slug: cleanSlug,
-        excerpt: args.excerpt || args.content.slice(0, 160) + '...',
-        content: args.content,
-        category: (args.category as any) || 'BYLIVET',
-        published: args.published ?? false,
-        createdAt: new Date().toISOString(),
-      };
+      // Ingen lokal «draft-kø» finnes: vi later aldri som om artikkelen er lagret.
+      console.error('[AgentTools] Kunne ikke opprette artikkel i CMS:', err?.message);
 
       return {
         toolName: 'opprett_artikkel_cms',
-        success: true,
-        message: `✅ Artikkelen «${args.title}» er opprettet som redaksjonelt utkast i CMS! (Slug: ${cleanSlug})`,
-        data: fallbackArticle,
-        actionExecuted: 'article_created',
-        actionResult: {
-          id: fallbackArticle.id,
-          title: fallbackArticle.title,
-          slug: cleanSlug,
-          category: fallbackArticle.category,
-          published: false,
-        },
+        success: false,
+        message:
+          `Kunne ikke lagre artikkelen «${args.title}» i CMS-databasen: ` +
+          `${err?.message || 'ukjent databasefeil'}. Ingen artikkel er opprettet og ingenting er lagret – ` +
+          `prøv igjen, eller opprett saken manuelt under Artikler i adminpanelet.`,
+        data: null,
+        actionExecuted: null,
+        actionResult: null,
       };
     }
   }
@@ -303,34 +335,36 @@ export async function toolGetRealBookings(): Promise<AgentExecutionResult> {
 
 /**
  * 7. Godkjenn faktisk torvleie i databasen og send bekreftelse
+ *
+ * Krever en eksplisitt booking-ID. Vi gjetter aldri «eldste ventende»: godkjenning
+ * er en irreversibel statusendring som også sender bekreftelses-e-post til leietaker.
  */
 export async function toolApproveBooking(bookingId?: string): Promise<AgentExecutionResult> {
   try {
-    let targetId = bookingId;
+    const targetId = typeof bookingId === 'string' ? bookingId.trim() : '';
 
-    // Hvis ingen ID oppgitt, finn eldste ventende
     if (!targetId) {
-      const oldest = await (prisma as any).bookingRequest?.findFirst({
-        where: { status: { in: ['NEW', 'PROCESSING'] } },
-        orderBy: { createdAt: 'asc' },
-      });
-      if (!oldest) {
-        return {
-          toolName: 'godkjenn_torvleie_booking',
-          success: false,
-          message: 'Det er for øyeblikket ingen ubehandlede torvleiesøknader i systemet.',
-          data: null,
-        };
-      }
-      targetId = oldest.id;
+      return {
+        toolName: 'godkjenn_torvleie_booking',
+        success: false,
+        message:
+          'Ingen booking-ID oppgitt. Av sikkerhetshensyn godkjenner jeg ikke en tilfeldig søknad – ' +
+          'oppgi eksplisitt ID, f.eks. «godkjenn torvleie #<id>».',
+        data: null,
+      };
     }
 
-    const result = await approveAndConfirmBooking(targetId!);
+    const result = await approveAndConfirmBooking(targetId);
+    // Bekreftelsen er godkjent, men e-posten er ikke nødvendigvis levert.
+    // `emailSent`/`emailMode` kommer fra email.ts og må rapporteres ærlig.
+    const emailStatus = result.emailSent
+      ? `Bekreftelses-e-post er sendt til ${result.booking.email}.`
+      : `Bekreftelses-e-post ble IKKE sendt (${result.emailMode}) – søknaden er likevel godkjent.`;
 
     return {
       toolName: 'godkjenn_torvleie_booking',
       success: true,
-      message: `✅ Torvleiesøknad #${targetId} for ${result.booking.name} (${result.booking.zone}) er godkjent! Bekreftelses-e-post er sendt til ${result.booking.email}.`,
+      message: `✅ Torvleiesøknad #${targetId} for ${result.booking.name} (${result.booking.zone}) er godkjent! ${emailStatus}`,
       data: result.booking,
       actionExecuted: 'booking_approved',
       actionResult: {
@@ -363,6 +397,7 @@ export async function toolGetRealtimeStatus(): Promise<AgentExecutionResult> {
     ]);
 
     const departuresList = departuresData?.departures || [];
+    const airQualityData = airQuality?.data;
 
     return {
       toolName: 'hent_sanntidsinformasjon',
@@ -376,13 +411,15 @@ export async function toolGetRealtimeStatus(): Promise<AgentExecutionResult> {
         })),
         sjoOgVar: ocean
           ? {
-              sjoTemperatur: `${ocean.seaTemperature} °C`,
-              bolgehoyde: `${ocean.waveHeight} m`,
+              sjoTemperatur: ocean.seaTemperature !== null ? `${ocean.seaTemperature} °C` : 'Ikke tilgjengelig',
+              bolgehoyde: ocean.waveHeight !== null ? `${ocean.waveHeight} m` : 'Ikke tilgjengelig',
               vannstand: ocean.tideState,
               nesteHoyvann: ocean.nextHighTide,
             }
           : null,
-        luftkvalitet: airQuality ? `${airQuality.label} (${airQuality.healthAdvice})` : 'God luftkvalitet',
+        luftkvalitet: airQualityData
+          ? `${airQualityData.label} (${airQualityData.healthAdvice})`
+          : 'Ingen offisiell luftkvalitetsmåling tilgjengelig akkurat nå',
         trafikkOversikt: traffic?.trafficFlowOverview || 'Flyter fint',
         kanalbrua: traffic?.kanalbrua?.status || 'Åpen for veitrafikk',
         trafikkmeldinger: (traffic?.alerts || []).slice(0, 3).map((a) => a.heading),
@@ -445,7 +482,7 @@ export async function toolGetVisitorPulse(): Promise<AgentExecutionResult> {
     return {
       toolName: 'analyser_publikumshenvendelser',
       success: true,
-      message: `Tønsberg-Guiden (landingsside-chatbot) har logget følgende publikumstrender:`,
+      message: `Tønsberg-Guiden (landingsside-chatbot) har logget ${pulse.totalSisteDogn} henvendelser siste døgn og følgende publikumstrender:`,
       data: pulse,
     };
   } catch (err: any) {
@@ -459,42 +496,63 @@ export async function toolGetVisitorPulse(): Promise<AgentExecutionResult> {
 }
 
 /**
- * 11. Klargjør og eksporter fakturagrunnlag til Duett ERP (Peppol EHF 3.0)
+ * 11. Klargjør fakturagrunnlag for godkjente torvleieavtaler.
+ *
+ * MERK: Funksjonen het tidligere «eksporter til Duett (Peppol EHF 3.0)» og
+ * svarte «✅ Klargjort … eksport», men den genererer ingen EHF-fil og snakker
+ * ikke med Duett — den teller godkjente avtaler. Den oppdiktet i tillegg
+ * 3500 kr per avtale som manglet pris. Nå summeres kun lagrede beløp, og
+ * meldingen sier hva som faktisk er gjort: grunnlaget er klargjort, og den
+ * ekte CSV-eksporten ligger i /api/finance/export.
  */
 export async function toolExportToDuett(): Promise<AgentExecutionResult> {
+  let approvedBookings: any[];
   try {
-    const approvedBookings = await (prisma as any).bookingRequest?.findMany({
+    approvedBookings = await (prisma as any).bookingRequest.findMany({
       where: { status: 'APPROVED' },
       take: 20,
-    }).catch(() => []);
-
-    const totalAmount = approvedBookings.reduce(
-      (sum: number, b: any) => sum + (Number(b.totalPrice) || 3500),
-      0
-    );
-
-    return {
-      toolName: 'eksporter_til_duett',
-      success: true,
-      message: `✅ Klargjort Duett ERP Peppol EHF 3.0 eksport for ${approvedBookings.length} godkjente avtaler.`,
-      data: {
-        antallFakturaer: approvedBookings.length,
-        totalBelopEksMva: totalAmount,
-        format: 'Peppol BIS Billing 3.0 (EHF)',
-        klargjortTid: new Date().toISOString(),
-      },
-      actionExecuted: 'duett_synced',
-      actionResult: {
-        exportedCount: approvedBookings.length,
-        totalAmount,
-      },
-    };
+    });
   } catch (err: any) {
     return {
       toolName: 'eksporter_til_duett',
       success: false,
-      message: `Feil ved klargjøring til Duett ERP: ${err?.message}`,
+      message: `Kunne ikke lese godkjente torvleieavtaler fra databasen: ${err?.message}. Ingenting er klargjort.`,
       data: null,
     };
   }
+
+  // Kun faktisk lagrede beløp telles. Vi finner ikke opp en pris.
+  const totalAmount = approvedBookings.reduce(
+    (sum: number, b: any) => sum + (Number(b.totalPrice) || 0),
+    0
+  );
+  const missingPriceCount = approvedBookings.filter(
+    (b: any) => b.totalPrice === null || b.totalPrice === undefined
+  ).length;
+
+  return {
+    toolName: 'eksporter_til_duett',
+    success: true,
+    message:
+      `📋 Fakturagrunnlaget er klargjort for ${approvedBookings.length} godkjente avtaler ` +
+      `(sum ${totalAmount.toLocaleString('nb-NO')} kr eks. mva). ` +
+      `Ingen EHF-fil er generert og ingenting er sendt til Duett ennå — ` +
+      `selve eksporten kjøres fra Admin > Økonomi.` +
+      (missingPriceCount > 0
+        ? ` Merk: ${missingPriceCount} avtale(r) mangler pris og er regnet som 0 kr.`
+        : ''),
+    data: {
+      antallAvtaler: approvedBookings.length,
+      antallUtenPris: missingPriceCount,
+      totalBelopEksMva: totalAmount,
+      eksportEndepunkt: '/api/finance/export',
+      klargjortTid: new Date().toISOString(),
+    },
+    actionExecuted: 'duett_prepared',
+    actionResult: {
+      preparedCount: approvedBookings.length,
+      totalAmount,
+      missingPriceCount,
+    },
+  };
 }

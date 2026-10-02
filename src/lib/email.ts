@@ -14,65 +14,6 @@ export interface BookingConfirmationData {
   confirmedAt?: Date;
 }
 
-// Fallback in-memory catalog for bookings when database is in local development
-const fallbackBookings: Record<string, BookingConfirmationData> = {
-  '1': {
-    id: '1',
-    name: 'Foodtruck Spesial AS',
-    email: 'booking@foodtruckspesial.no',
-    orgNr: '928 341 092',
-    zone: 'Tønsberg Torv – Sone A (Foodtruck)',
-    dates: '15. Aug - 18. Aug 2026',
-    powerNeeded: true,
-    waterNeeded: true,
-    totalPrice: 7400,
-  },
-  '2': {
-    id: '2',
-    name: 'Vestfold Keramikk & Kunst BA',
-    email: 'kunst@vestfoldkeramikk.no',
-    orgNr: '812 492 110',
-    zone: 'Tønsberg Torv – Sone B (Salgsbod)',
-    dates: '16. Aug - 17. Aug 2026',
-    powerNeeded: false,
-    waterNeeded: false,
-    totalPrice: 1900,
-  },
-  '3': {
-    id: '3',
-    name: 'Tønsberg Jazzklubb',
-    email: 'post@tonsbergjazz.no',
-    orgNr: '991 204 883',
-    zone: 'Tønsberg Torv – Sone C (Hovedscene)',
-    dates: '22. Aug - 24. Aug 2026',
-    powerNeeded: true,
-    waterNeeded: false,
-    totalPrice: 13500,
-  },
-  '4': {
-    id: '4',
-    name: 'Kystens Ferske Reker AS',
-    email: 'reker@kystensferske.no',
-    orgNr: '914 832 990',
-    zone: 'Brygga & Havna – A3',
-    dates: '19. Aug - 21. Aug 2026',
-    powerNeeded: true,
-    waterNeeded: true,
-    totalPrice: 6300,
-  },
-  '5': {
-    id: '5',
-    name: 'Farmand Bondens Marked',
-    email: 'marked@farmand.no',
-    orgNr: '984 219 400',
-    zone: 'Hele Torvet',
-    dates: '29. Aug 2026',
-    powerNeeded: true,
-    waterNeeded: true,
-    totalPrice: 12000,
-  },
-};
-
 /**
  * Genererer en stilig, responsiv HTML-epost for leiebekreftelse.
  */
@@ -177,17 +118,32 @@ export function generateBookingEmailHtml(booking: BookingConfirmationData): stri
 </html>`;
 }
 
+export interface BookingEmailSendResult {
+  /** true kun når e-posten faktisk er levert til en e-posttransport. */
+  success: boolean;
+  /** true kun når meldingen har forlatt serveren (Resend). */
+  delivered: boolean;
+  /** 'resend' = ekte utsending, 'smtp'/'mock_logged' = simulert/logget, 'failed' = forsøkt og feilet. */
+  mode: 'resend' | 'smtp' | 'mock_logged' | 'failed';
+  messageId?: string;
+  message: string;
+}
+
 /**
  * Sender bekreftelses-epost via Resend API eller logger dersom ingen nøkkel er satt opp.
+ * Rapporterer alltid den faktiske leveringsstatusen – «success» er aldri true
+ * når e-posten bare er logget lokalt.
  */
 export async function sendBookingConfirmationEmail(
   booking: BookingConfirmationData
-): Promise<{ success: boolean; mode: 'resend' | 'smtp' | 'mock_logged'; messageId?: string }> {
+): Promise<BookingEmailSendResult> {
   const resendApiKey = (await getSetting('resend_api_key')) || process.env.RESEND_API_KEY;
   const smtpUrl = (await getSetting('smtp_url')) || process.env.SMTP_URL;
 
   const subject = `Bekreftelse på Torvleie i Tønsberg – ${booking.zone} (${booking.dates})`;
   const html = generateBookingEmailHtml(booking);
+
+  let resendFailure: string | null = null;
 
   // 1. Send via Resend dersom nøkkel er tilgjengelig
   if (resendApiKey && resendApiKey.trim() !== '') {
@@ -209,20 +165,33 @@ export async function sendBookingConfirmationEmail(
       if (res.ok) {
         const data = await res.json();
         console.log(`[Email] Bekreftelse sendt via Resend til ${booking.email} (ID: ${data.id})`);
-        return { success: true, mode: 'resend', messageId: data.id };
+        return {
+          success: true,
+          delivered: true,
+          mode: 'resend',
+          messageId: data.id,
+          message: `Bekreftelsen er sendt til ${booking.email} via Resend.`,
+        };
       } else {
         const errText = await res.text();
+        resendFailure = `Resend API svarte med status ${res.status}`;
         console.warn(`[Email] Resend API svarte med feil (${res.status}): ${errText}`);
       }
-    } catch (error) {
+    } catch (error: any) {
+      resendFailure = `Nettverksfeil mot Resend: ${error?.message || 'ukjent feil'}`;
       console.error('[Email] Feil ved utsending via Resend:', error);
     }
   }
 
-  // 2. SMTP fallback logging dersom konfigurert
+  // 2. SMTP er konfigurert, men utsending er ikke implementert -> simulert
   if (smtpUrl && smtpUrl.trim() !== '') {
-    console.log(`[Email] SMTP konfigurert (${smtpUrl}). Sender epost til ${booking.email}`);
-    return { success: true, mode: 'smtp' };
+    console.log(`[Email] SMTP konfigurert (${smtpUrl}). Utsending er ikke implementert – logger i stedet for ${booking.email}`);
+    return {
+      success: false,
+      delivered: false,
+      mode: 'smtp',
+      message: `SMTP-utsending er ikke implementert. E-posten til ${booking.email} er kun logget på serveren.`,
+    };
   }
 
   // 3. Fallback: Logging til konsoll (utviklingsmodus / manglende nøkler)
@@ -234,81 +203,91 @@ export async function sendBookingConfirmationEmail(
   console.log(`Totalpris: ${booking.totalPrice} kr`);
   console.log(`Status: E-post generert og klar for produksjon.\n`);
 
-  return { success: true, mode: 'mock_logged' };
+  return {
+    success: false,
+    delivered: false,
+    mode: resendFailure ? 'failed' : 'mock_logged',
+    message: resendFailure
+      ? `${resendFailure}. Ingen e-posttjeneste er konfigurert – meldingen er kun logget på serveren.`
+      : 'Ingen e-posttjeneste er konfigurert. Meldingen er kun logget på serveren (simulert utsending).',
+  };
 }
 
 /**
- * Henter en booking fra databasen eller minnet, godkjenner den og sender e-postbekreftelse.
- * Garanterer at e-postfeil aldri krasjer godkjenningen.
+ * Henter en booking fra databasen, godkjenner den og sender e-postbekreftelse.
+ * Kaster feil dersom bookingen ikke finnes eller ikke kan oppdateres – vi
+ * oppretter aldri en oppdiktet booking.
  */
 export async function approveAndConfirmBooking(bookingId: string): Promise<{
   success: boolean;
   booking: BookingConfirmationData;
   emailSent: boolean;
+  emailMode: 'resend' | 'smtp' | 'mock_logged' | 'failed' | 'not_attempted';
   message: string;
 }> {
-  let bookingData: BookingConfirmationData | null = null;
-
-  // 1. Forsøk oppslag i Prisma
+  // 1. Oppslag i Prisma (eneste kilde til bookinger)
+  let dbBooking: any;
   try {
-    const dbBooking = await prisma.bookingRequest.findUnique({
+    dbBooking = await prisma.bookingRequest.findUnique({
       where: { id: bookingId },
     });
+  } catch (dbError: any) {
+    console.error(`[Booking Approval] Kunne ikke lese booking ${bookingId} fra databasen:`, dbError);
+    throw new Error(
+      `Kunne ikke lese torvleiesøknad «${bookingId}» fra databasen. Ingen endring er gjort og ingen e-post er sendt.`
+    );
+  }
 
-    if (dbBooking) {
-      const datesFormatted = dbBooking.startDate && dbBooking.endDate
-        ? `${dbBooking.startDate.toLocaleDateString('nb-NO')} - ${dbBooking.endDate.toLocaleDateString('nb-NO')}`
-        : 'Etter avtale';
+  if (!dbBooking) {
+    throw new Error(`Fant ingen torvleiesøknad med ID «${bookingId}». Ingen e-post er sendt.`);
+  }
 
-      bookingData = {
-        id: dbBooking.id,
-        name: dbBooking.name,
-        email: dbBooking.email,
-        orgNr: dbBooking.orgNr || undefined,
-        zone: dbBooking.zone || 'Tønsberg Torv – Sentral Sone',
-        dates: datesFormatted,
-        powerNeeded: dbBooking.powerNeeded,
-        waterNeeded: dbBooking.waterNeeded,
-        totalPrice: dbBooking.totalPrice || 2500,
+  const datesFormatted = dbBooking.startDate && dbBooking.endDate
+    ? `${dbBooking.startDate.toLocaleDateString('nb-NO')} - ${dbBooking.endDate.toLocaleDateString('nb-NO')}`
+    : 'Etter avtale';
+
+  const bookingData: BookingConfirmationData = {
+    id: dbBooking.id,
+    name: dbBooking.name,
+    email: dbBooking.email,
+    orgNr: dbBooking.orgNr || undefined,
+    zone: dbBooking.zone || 'Ikke spesifisert',
+    dates: datesFormatted,
+    powerNeeded: dbBooking.powerNeeded,
+    waterNeeded: dbBooking.waterNeeded,
+    // Kun lagret beløp. Mangler prisen, viser vi 0 – vi finner ikke på et beløp.
+    totalPrice: typeof dbBooking.totalPrice === 'number' && Number.isFinite(dbBooking.totalPrice) ? dbBooking.totalPrice : 0,
+    confirmedAt: new Date(),
+  };
+
+  // 2. Oppdater status og confirmedAt i databasen før e-post går ut
+  try {
+    await prisma.bookingRequest.update({
+      where: { id: bookingId },
+      data: {
+        status: 'APPROVED',
         confirmedAt: new Date(),
-      };
-
-      // Oppdater status og confirmedAt i databasen
-      await prisma.bookingRequest.update({
-        where: { id: bookingId },
-        data: {
-          status: 'APPROVED',
-          confirmedAt: new Date(),
-        },
-      });
-    }
-  } catch (dbError) {
-    console.warn(`[Booking Approval] Kunne ikke lese/oppdatere DB for booking ${bookingId}, sjekker minnefallback.`);
+      },
+    });
+  } catch (dbError: any) {
+    console.error(`[Booking Approval] Kunne ikke oppdatere booking ${bookingId}:`, dbError);
+    throw new Error(
+      `Kunne ikke godkjenne torvleiesøknad «${bookingId}» i databasen. Status er uendret og ingen e-post er sendt.`
+    );
   }
 
-  // 2. Fallback til minnekatalogen dersom booking ikke finnes i DB
-  if (!bookingData) {
-    const fallback = fallbackBookings[bookingId] || {
-      id: bookingId,
-      name: `Leietaker #${bookingId}`,
-      email: 'leietaker@tonsberg.kommune.no',
-      zone: 'Tønsberg Torv – Sone A',
-      dates: 'Dagsleie 2026',
-      powerNeeded: true,
-      totalPrice: 1850,
-    };
-    bookingData = {
-      ...fallback,
-      confirmedAt: new Date(),
-    };
-  }
-
-  // 3. Send e-postbekreftelse (defensiv try/catch)
+  // 3. Send e-postbekreftelse (defensiv try/catch – godkjenningen er allerede lagret)
   let emailSent = false;
+  let emailMode: 'resend' | 'smtp' | 'mock_logged' | 'failed' | 'not_attempted' = 'not_attempted';
+  let emailMessage = 'E-postbekreftelse ble ikke forsøkt sendt.';
   try {
     const emailResult = await sendBookingConfirmationEmail(bookingData);
-    emailSent = emailResult.success;
-  } catch (emailErr) {
+    emailSent = emailResult.delivered;
+    emailMode = emailResult.mode;
+    emailMessage = emailResult.message;
+  } catch (emailErr: any) {
+    emailMode = 'failed';
+    emailMessage = `E-postutsending feilet: ${emailErr?.message || 'ukjent feil'}`;
     console.error(`[Booking Approval] Feil under e-postsending for booking ${bookingId}:`, emailErr);
   }
 
@@ -316,6 +295,7 @@ export async function approveAndConfirmBooking(bookingId: string): Promise<{
     success: true,
     booking: bookingData,
     emailSent,
-    message: `Booking #${bookingId} (${bookingData.name}) er godkjent og bekreftelse sendt til ${bookingData.email}.`,
+    emailMode,
+    message: `Booking #${bookingId} (${bookingData.name}) er godkjent. ${emailMessage}`,
   };
 }

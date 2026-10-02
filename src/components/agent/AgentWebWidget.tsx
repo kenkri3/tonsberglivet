@@ -8,11 +8,13 @@ interface AgentWebWidgetProps {
 }
 
 export function AgentWebWidget({
+  // Ingen innsjekket reserve-ID her. Er ingenting konfigurert, lastes ingen
+  // widget i stedet for å falle tilbake på en hardkodet bot-nøkkel.
   botId = process.env.NEXT_PUBLIC_AGENT_API || '',
   enabled = true,
 }: AgentWebWidgetProps) {
   useEffect(() => {
-    if (!enabled || typeof window === 'undefined') return;
+    if (!enabled || !botId || typeof window === 'undefined') return;
 
     // Unngå duplikat initialisering
     if ((window as any).webbot && (window as any).webbot.invoked) {

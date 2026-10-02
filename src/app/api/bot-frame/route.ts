@@ -2,15 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Standard bot-ID. Dette er en offentlig verdi (den ligger i en offentlig
+ * landingsside-URL), men den skal bare brukes når ingenting er konfigurert.
+ */
+const DEFAULT_BOT_KEY = "";
+
+/**
+ * `?bot_api=` gjorde tidligere denne ruten til en ÅPEN PROXY: hvem som helst
+ * kunne be tonsberglivet.no hente hvilken som helst annen bot fra leverandøren
+ * og presentere den under vårt domene. Vi godtar derfor bare den konfigurerte
+ * nøkkelen, eller den kjente standardnøkkelen når ingenting er konfigurert.
+ */
+function resolveBotKey(requested: string | null): { key: string } | { error: string } {
+  const configured =
+    process.env.AGENT_API || process.env.NEXT_PUBLIC_AGENT_API || DEFAULT_BOT_KEY;
+
+  if (!requested) return { key: configured };
+  if (requested === configured || requested === DEFAULT_BOT_KEY) return { key: requested };
+
+  return {
+    error:
+      'Ukjent bot_api. Denne ruten proxier bare Tønsberglivets egen bot. ' +
+      'Sett AGENT_API i miljøet for å bytte bot.',
+  };
+}
+
 export async function GET(req: NextRequest) {
-  const botKey =
-    req.nextUrl.searchParams.get("bot_api") ||
-    process.env.AGENT_API ||
-    process.env.NEXT_PUBLIC_AGENT_API ||
-    "";
+  const resolved = resolveBotKey(req.nextUrl.searchParams.get("bot_api"));
+  if ("error" in resolved) {
+    return NextResponse.json({ success: false, error: resolved.error }, { status: 400 });
+  }
+  const botKey = resolved.key;
 
   const agentHost = process.env.AGENTIC_HOST || ['agentic.', 'bot', 'sify.', 'com'].join('');
-  const upstreamUrl = `https://${agentHost}/web-bot/landing/${botKey}`;
+  const upstreamUrl = `https://${agentHost}/web-bot/landing/${encodeURIComponent(botKey)}`;
 
   try {
     const res = await fetch(upstreamUrl, {
@@ -21,6 +47,7 @@ export async function GET(req: NextRequest) {
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!res.ok) {

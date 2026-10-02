@@ -46,6 +46,7 @@ export default function ImageBankPage() {
   const [newPhotographer, setNewPhotographer] = useState('Tønsberglivet');
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const [analyzedTags, setAnalyzedTags] = useState<string[]>([]);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const fetchImages = async () => {
@@ -53,8 +54,11 @@ export default function ImageBankPage() {
     try {
       const res = await fetch('/api/images');
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.data)) {
         setImages(data.data);
+      } else {
+        setImages([]);
+        console.error('Kunne ikke hente bildebanken:', data.error);
       }
     } catch (e) {
       console.error('Failed to load images:', e);
@@ -70,18 +74,26 @@ export default function ImageBankPage() {
   const handleAiAnalyze = async () => {
     if (!newTitle) return;
     setAiAnalyzing(true);
+    setAiError(null);
+    setAnalyzedTags([]);
     try {
+      // API-et trenger selve bildet. Vi sender URL-en, og serveren henter
+      // bildebyttene – tidligere sendte vi bare filnavnet, som ga 400 og
+      // dermed en knapp som så ut som den kjørte uten å gjøre noe.
       const res = await fetch('/api/ai/analyze-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageName: newTitle, folder: newFolder }),
+        body: JSON.stringify({ imageName: newTitle, folder: newFolder, imageUrl: newUrl }),
       });
-      const data = await res.json();
-      if (data.success && data.aiTags) {
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.success && Array.isArray(data.aiTags)) {
         setAnalyzedTags(data.aiTags);
+      } else {
+        setAiError(data?.error || `AI-analysen feilet (HTTP ${res.status}). Ingen tagger er generert.`);
       }
-    } catch (e) {
-      console.error('AI Analysis failed:', e);
+    } catch (e: any) {
+      setAiError(`AI-analysen feilet: ${e?.message || 'ukjent feil'}. Ingen tagger er generert.`);
     } finally {
       setAiAnalyzing(false);
     }
@@ -104,26 +116,33 @@ export default function ImageBankPage() {
         }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setUploadOpen(false);
         setNewTitle('');
         setNewUrl('');
         setAnalyzedTags([]);
         fetchImages();
+      } else {
+        // Ingen falsk suksess: bildet ble ikke lagret.
+        alert(data.error || 'Bildet kunne ikke lagres.');
       }
     } catch (e) {
       console.error('Upload failed:', e);
+      alert('Nettverksfeil under lagring av bildet. Bildet er ikke lagret.');
     } finally {
       setUploading(false);
     }
   };
 
   const filteredImages = images.filter((img) => {
+    const title = img.title || '';
+    const photographer = img.photographer || '';
+    const query = searchQuery.toLowerCase();
     const matchesSearch =
       searchQuery === '' ||
-      img.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      img.photographer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (Array.isArray(img.aiTags) && img.aiTags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
+      title.toLowerCase().includes(query) ||
+      photographer.toLowerCase().includes(query) ||
+      (Array.isArray(img.aiTags) && img.aiTags.some((t) => String(t).toLowerCase().includes(query)));
     const matchesFolder = !selectedFolder || img.folder === selectedFolder;
     return matchesSearch && matchesFolder;
   });
@@ -206,6 +225,11 @@ export default function ImageBankPage() {
                     {aiAnalyzing ? 'Analyserer...' : 'Kjør AI-tagging'}
                   </button>
                 </div>
+                {aiError && (
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[11px] leading-relaxed">
+                    {aiError}
+                  </div>
+                )}
                 {analyzedTags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {analyzedTags.map((t, idx) => (
@@ -243,7 +267,11 @@ export default function ImageBankPage() {
         <div>
           <h2 className="text-2xl font-bold text-foreground">Bildebank & DAM (Digital Asset Management)</h2>
           <p className="text-foreground-muted text-sm mt-1">
-            {images.length} verifiserte bilder • Universelt utformet & GDPR-sikret
+            {images.length} bilde{images.length === 1 ? '' : 'r'} i banken •{' '}
+            {images.filter((i) => i.gdprStatus === 'APPROVED').length} GDPR-godkjent
+            {images.filter((i) => i.gdprStatus !== 'APPROVED').length > 0
+              ? ` • ${images.filter((i) => i.gdprStatus !== 'APPROVED').length} til vurdering`
+              : ''}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -315,21 +343,33 @@ export default function ImageBankPage() {
                 <div className="relative aspect-4/3 bg-surface-muted overflow-hidden">
                   <img
                     src={img.url}
-                    alt={img.title}
+                    alt={img.title || 'Bilde fra bildebanken'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3 bg-surface/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-foreground border border-border">
-                    {img.folder}
+                    {img.folder || 'Ukategorisert'}
                   </div>
-                  <div className="absolute top-3 right-3 bg-success-light text-success px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                    <Shield className="w-3 h-3" /> GDPR Godkjent
-                  </div>
+                  {/* GDPR-status skal vise bildets FAKTISKE status — tidligere stod det
+                      «GDPR Godkjent» på alle bilder, også PENDING og REJECTED. */}
+                  {img.gdprStatus === 'APPROVED' ? (
+                    <div className="absolute top-3 right-3 bg-success-light text-success px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <Shield className="w-3 h-3" /> GDPR Godkjent
+                    </div>
+                  ) : img.gdprStatus === 'REJECTED' ? (
+                    <div className="absolute top-3 right-3 bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <Shield className="w-3 h-3" /> GDPR Avvist
+                    </div>
+                  ) : (
+                    <div className="absolute top-3 right-3 bg-amber-500/15 text-amber-700 dark:text-amber-400 px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <Shield className="w-3 h-3" /> GDPR Vurderes
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-4 space-y-3">
-                  <h4 className="font-bold text-foreground truncate">{img.title}</h4>
+                  <h4 className="font-bold text-foreground truncate">{img.title || 'Uten tittel'}</h4>
                   <div className="flex items-center justify-between text-xs text-foreground-muted">
-                    <span className="flex items-center gap-1"><Camera className="w-3.5 h-3.5 text-primary" /> {img.photographer}</span>
+                    <span className="flex items-center gap-1"><Camera className="w-3.5 h-3.5 text-primary" /> {img.photographer || 'Ukreditert'}</span>
                   </div>
                   <div className="flex flex-wrap gap-1 pt-1">
                     {(Array.isArray(img.aiTags) ? img.aiTags : []).map((t, idx) => (

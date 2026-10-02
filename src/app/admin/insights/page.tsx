@@ -23,16 +23,31 @@ import {
 } from 'lucide-react';
 
 interface TrafficData {
-  bridgeStatus?: string;
-  volumePerHour?: number;
-  statusText?: string;
-  lastUpdated?: string;
+  source?: 'LIVE' | 'UNAVAILABLE';
+  isLive?: boolean;
+  note?: string;
+  kanalbrua?: {
+    status: string;
+    isCarPassable: boolean | null;
+    nextScheduledOpening?: string;
+    details: string;
+  };
+  trafficFlowOverview?: string;
+  alerts?: unknown[];
+  updatedAt?: string;
 }
 
 interface SsbData {
-  population?: number;
-  workplaces?: number;
-  year?: string;
+  population: number | null;
+  workplaces: number | null;
+  year: number | null;
+  employmentYear: number | null;
+  source?: 'LIVE' | 'PARTIAL' | 'UNAVAILABLE';
+  isLive?: boolean;
+  note?: string;
+  populationTable?: string;
+  employmentTable?: string;
+  populationUpdated?: string | null;
 }
 
 export default function InsightsPage() {
@@ -322,39 +337,64 @@ export default function InsightsPage() {
         </div>
       </div>
 
-      {/* ── SEKSJON 2: SANNTIDSDATA SOM FAKTISK ER TILKOBLET ── */}
+      {/* ── SEKSJON 2: OFFENTLIGE DATAKILDER – LIVE DER DET FAKTISK ER LIVE ── */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-500" />
-            Offentlige sanntidsdata & målinger (Aktivt i drift)
+            Offentlige datakilder & målinger
           </h2>
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live APIs
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${
+              trafficData?.isLive && ssbData?.isLive
+                ? 'text-emerald-600 bg-emerald-500/10'
+                : 'text-amber-700 dark:text-amber-400 bg-amber-500/10'
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                trafficData?.isLive && ssbData?.isLive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+              }`}
+            />
+            {trafficData?.isLive && ssbData?.isLive
+              ? 'Alle kilder live'
+              : 'Én eller flere kilder er ikke tilkoblet'}
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Kort A: Statens Vegvesen Kanalbrua */}
+          {/* Kort A: Trafikk Kanalbrua – ingen verifisert sanntidskilde er tilkoblet */}
           <div className="bg-surface rounded-2xl border border-border p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider flex items-center gap-1.5">
                 <Car className="w-4 h-4 text-primary" /> Trafikk Kanalbrua
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600">
-                Statens Vegvesen
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  trafficData?.isLive
+                    ? 'bg-emerald-500/10 text-emerald-600'
+                    : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                }`}
+              >
+                {trafficData?.isLive ? 'Statens vegvesen (live)' : 'Ikke tilkoblet'}
               </span>
             </div>
             <div>
               <p className="text-2xl font-black text-foreground">
-                {trafficData?.volumePerHour ? `${trafficData.volumePerHour} kjt/t` : 'Normal flyt'}
+                {trafficData?.isLive
+                  ? trafficData?.trafficFlowOverview || 'Ukjent'
+                  : 'Ingen sanntidskilde'}
               </p>
               <p className="text-xs text-foreground-muted mt-1">
-                {trafficData?.bridgeStatus || 'Trafikksensor ved Kanalbrua aktiv'}
+                {trafficData?.kanalbrua?.status && trafficData.kanalbrua.status !== 'UKJENT'
+                  ? `Kanalbrua: ${trafficData.kanalbrua.status}`
+                  : 'Kanalbrua: status ikke tilgjengelig'}
               </p>
             </div>
             <p className="text-[11px] text-foreground-subtle border-t border-border pt-2">
-              Inn/ut av Tønsberg sentrum
+              {trafficData?.isLive
+                ? 'Inn/ut av Tønsberg sentrum'
+                : 'Statens vegvesen krever API-tilgang (DATEX II) som ikke er konfigurert'}
             </p>
           </div>
 
@@ -364,18 +404,32 @@ export default function InsightsPage() {
               <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-blue-500" /> Innbyggere
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600">
-                SSB Tabell 07459
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  ssbData?.population != null
+                    ? 'bg-blue-500/10 text-blue-600'
+                    : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                }`}
+              >
+                {ssbData?.population != null ? 'SSB tabell 07459' : 'SSB ikke tilgjengelig'}
               </span>
             </div>
             <div>
               <p className="text-2xl font-black text-foreground">
-                {ssbData?.population ? ssbData.population.toLocaleString('nb-NO') : '59 200+'}
+                {ssbData?.population != null ? ssbData.population.toLocaleString('nb-NO') : '–'}
               </p>
-              <p className="text-xs text-foreground-muted mt-1">Tønsberg kommune</p>
+              <p className="text-xs text-foreground-muted mt-1">
+                Tønsberg kommune{ssbData?.year ? ` (${ssbData.year})` : ''}
+              </p>
             </div>
             <p className="text-[11px] text-foreground-subtle border-t border-border pt-2">
-              Offisiell befolkningsstatistikk
+              {ssbData?.population != null
+                ? `Offisiell befolkningsstatistikk fra SSB${
+                    ssbData.populationUpdated
+                      ? ` – oppdatert ${new Date(ssbData.populationUpdated).toLocaleDateString('nb-NO')}`
+                      : ''
+                  }`
+                : 'SSB svarte ikke – ingen anslått verdi vises'}
             </p>
           </div>
 
@@ -385,18 +439,29 @@ export default function InsightsPage() {
               <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider flex items-center gap-1.5">
                 <Building2 className="w-4 h-4 text-indigo-500" /> Arbeidsplasser
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600">
-                SSB Tabell 07984
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  ssbData?.workplaces != null
+                    ? 'bg-indigo-500/10 text-indigo-600'
+                    : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                }`}
+              >
+                {ssbData?.workplaces != null ? 'SSB tabell 07984' : 'SSB ikke tilgjengelig'}
               </span>
             </div>
             <div>
               <p className="text-2xl font-black text-foreground">
-                {ssbData?.workplaces ? ssbData.workplaces.toLocaleString('nb-NO') : '33 000+'}
+                {ssbData?.workplaces != null ? ssbData.workplaces.toLocaleString('nb-NO') : '–'}
               </p>
-              <p className="text-xs text-foreground-muted mt-1">Registrerte arbeidsforhold</p>
+              <p className="text-xs text-foreground-muted mt-1">
+                Sysselsatte med arbeidssted i Tønsberg
+                {ssbData?.employmentYear ? ` (${ssbData.employmentYear})` : ''}
+              </p>
             </div>
             <p className="text-[11px] text-foreground-subtle border-t border-border pt-2">
-              Næringsmotor i Vestfold
+              {ssbData?.workplaces != null
+                ? 'Offisiell statistikk fra SSB – ikke et anslag'
+                : 'SSB svarte ikke – ingen anslått verdi vises'}
             </p>
           </div>
 

@@ -5,7 +5,11 @@ export async function GET() {
   try {
     const stats = await fetchSsbRegionStats();
     return NextResponse.json({
-      success: true,
+      // success gjenspeiler om SSB faktisk svarte for begge tabellene.
+      success: stats.isLive,
+      source: stats.source,
+      isLive: stats.isLive,
+      note: stats.note,
       data: stats
     });
   } catch (error: any) {

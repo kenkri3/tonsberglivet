@@ -32,52 +32,25 @@ export interface DuettExportResult {
   ehfBatchId: string;
 }
 
-// Standard fallback bookinggrunnlag dersom databasen er tom eller i lokal utvikling
-const defaultFinanceBookings = [
-  {
-    id: '1',
-    vendor: 'Helenes Bakeri AS',
-    orgNr: '928 411 029',
-    spot: 'Tønsberg Torv Sone A (Foodtruck)',
-    amountExVat: 5920,
-    ehfStatus: 'READY' as const,
-  },
-  {
-    id: '2',
-    vendor: 'Vestfold Media Group AS',
-    orgNr: '988 201 449',
-    spot: 'DoOH Storskjermannonsering Torvet & Kaldnes',
-    amountExVat: 12000,
-    ehfStatus: 'READY' as const,
-  },
-  {
-    id: '3',
-    vendor: 'Tønsberg Jazzfestival',
-    orgNr: '810 933 112',
-    spot: 'Kulturscene Riggleie Torvet Sone C',
-    amountExVat: 10800,
-    ehfStatus: 'READY' as const,
-  },
-  {
-    id: '4',
-    vendor: 'Kystens Ferske Reker AS',
-    orgNr: '914 832 990',
-    spot: 'Bryggestand Havnepromenade A3',
-    amountExVat: 5040,
-    ehfStatus: 'READY' as const,
-  },
-  {
-    id: '5',
-    vendor: 'Farmand Eiendom BA',
-    orgNr: '974 550 120',
-    spot: 'Næringspartner Medlemskap & Profilering',
-    amountExVat: 20000,
-    ehfStatus: 'READY' as const,
-  },
-];
+/**
+ * CSV-helper: kvoterer felt, escaper innebygde anførselstegn og nøytraliserer
+ * formelinjeksjon (=, +, -, @, tab og CR) slik at Excel/Duett ikke tolker
+ * kundenavn eller varelinjer som formler.
+ */
+function csvTextField(value: unknown): string {
+  let text = value === null || value === undefined ? '' : String(value);
+  // Linjeskift i et felt ville brutt radstrukturen i enkle ERP-importører
+  text = text.replace(/\r\n|\r|\n/g, ' ');
+  if (/^[=+\-@\t]/.test(text)) {
+    text = `'${text}`;
+  }
+  return `"${text.replace(/"/g, '""')}"`;
+}
 
 /**
  * Genererer standardisert fakturagrunnlag for Duett ERP og Peppol EHF 3.0.
+ * Inneholder KUN rader som faktisk finnes i databasen – aldri oppdiktet
+ * eksempeldata. Finner vi ingen bookinger, er eksporten tom.
  */
 export async function generateDuettInvoiceExport(bookingIds?: string[]): Promise<DuettExportResult> {
   const today = new Date();
@@ -90,78 +63,38 @@ export async function generateDuettInvoiceExport(bookingIds?: string[]): Promise
 
   const items: DuettInvoiceItem[] = [];
 
-  // 1. Forsøk oppslag mot Prisma databasen
-  let dbBookings: any[] = [];
-  try {
-    const query: any = {};
-    if (bookingIds && bookingIds.length > 0) {
-      query.where = { id: { in: bookingIds } };
-    }
-    dbBookings = await prisma.bookingRequest.findMany(query);
-  } catch {
-    // Database ikke migrert, bruk standardgrunnlag
+  // 1. Oppslag mot Prisma databasen (eneste kilde til fakturagrunnlag)
+  const query: any = {};
+  if (bookingIds && bookingIds.length > 0) {
+    query.where = { id: { in: bookingIds } };
   }
+  const dbBookings = await prisma.bookingRequest.findMany(query);
 
-  if (dbBookings.length > 0) {
-    dbBookings.forEach((b, idx) => {
-      const net = b.totalPrice || 2500;
-      const vat = Math.round(net * 0.25);
-      const gross = net + vat;
-      const cleanOrg = (b.orgNr || '999999999').replace(/\s+/g, '');
+  dbBookings.forEach((b, idx) => {
+    // Kun lagrede beløp. Mangler prisen, faktureres 0 – vi finner ikke på et beløp.
+    const net = typeof b.totalPrice === 'number' && Number.isFinite(b.totalPrice) ? b.totalPrice : 0;
+    const vat = Math.round(net * 0.25);
+    const gross = net + vat;
+    const cleanOrg = (b.orgNr || '').replace(/\s+/g, '');
 
-      items.push({
-        id: b.id,
-        invoiceNo: `F-2026-${String(idx + 90).padStart(3, '0')}`,
-        customerName: b.name,
-        orgNr: b.orgNr || '999 999 999',
-        invoiceDate: invoiceDateStr,
-        dueDate: dueDateStr,
-        lineItemDescription: `Leie av ${b.zone || 'Tønsberg Torv Sone A'}`,
-        netAmount: net,
-        vatRate: 25,
-        vatAmount: vat,
-        grossAmount: gross,
-        currency: 'NOK',
-        glAccount: '3000',
-        ehfStatus: 'READY',
-        peppolId: `0192:${cleanOrg}`,
-      });
+    items.push({
+      id: b.id,
+      invoiceNo: `F-2026-${String(idx + 90).padStart(3, '0')}`,
+      customerName: b.name,
+      orgNr: b.orgNr || '',
+      invoiceDate: invoiceDateStr,
+      dueDate: dueDateStr,
+      lineItemDescription: b.zone ? `Leie av ${b.zone}` : 'Leie av byrom/standplass',
+      netAmount: net,
+      vatRate: 25,
+      vatAmount: vat,
+      grossAmount: gross,
+      currency: 'NOK',
+      glAccount: '3000',
+      ehfStatus: 'READY',
+      peppolId: cleanOrg ? `0192:${cleanOrg}` : '',
     });
-  }
-
-  // Dersom ingen DB-oppføringer ble funnet, bruk fallback/initial data
-  if (items.length === 0) {
-    const filtered = (bookingIds && bookingIds.length > 0)
-      ? defaultFinanceBookings.filter((d) => bookingIds.includes(d.id))
-      : defaultFinanceBookings;
-
-    const source = filtered.length > 0 ? filtered : defaultFinanceBookings;
-
-    source.forEach((d, idx) => {
-      const net = d.amountExVat;
-      const vat = Math.round(net * 0.25);
-      const gross = net + vat;
-      const cleanOrg = d.orgNr.replace(/\s+/g, '');
-
-      items.push({
-        id: d.id,
-        invoiceNo: `F-2026-${String(idx + 85).padStart(3, '0')}`,
-        customerName: d.vendor,
-        orgNr: d.orgNr,
-        invoiceDate: invoiceDateStr,
-        dueDate: dueDateStr,
-        lineItemDescription: d.spot,
-        netAmount: net,
-        vatRate: 25,
-        vatAmount: vat,
-        grossAmount: gross,
-        currency: 'NOK',
-        glAccount: '3000',
-        ehfStatus: 'READY',
-        peppolId: `0192:${cleanOrg}`,
-      });
-    });
-  }
+  });
 
   // Beregn totaler
   const totalNet = items.reduce((acc, curr) => acc + curr.netAmount, 0);
@@ -188,20 +121,20 @@ export async function generateDuettInvoiceExport(bookingIds?: string[]): Promise
 
   const csvRows = items.map((i) =>
     [
-      i.invoiceNo,
-      `"${i.customerName}"`,
-      i.orgNr,
-      i.invoiceDate,
-      i.dueDate,
-      `"${i.lineItemDescription}"`,
+      csvTextField(i.invoiceNo),
+      csvTextField(i.customerName),
+      csvTextField(i.orgNr),
+      csvTextField(i.invoiceDate),
+      csvTextField(i.dueDate),
+      csvTextField(i.lineItemDescription),
       i.netAmount.toFixed(2),
       `${i.vatRate}%`,
       i.vatAmount.toFixed(2),
       i.grossAmount.toFixed(2),
-      i.currency,
-      i.glAccount,
-      i.peppolId,
-      i.ehfStatus,
+      csvTextField(i.currency),
+      csvTextField(i.glAccount),
+      csvTextField(i.peppolId),
+      csvTextField(i.ehfStatus),
     ].join(';')
   );
 

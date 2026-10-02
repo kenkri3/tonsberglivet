@@ -30,6 +30,7 @@ export default function BookingHubPage() {
   const [selectedZone, setSelectedZone] = useState('torvet');
   const [filterTab, setFilterTab] = useState<'all' | 'NEW' | 'APPROVED' | 'REJECTED'>('all');
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [duettConfigured, setDuettConfigured] = useState(false);
 
   const fetchBookings = async () => {
@@ -60,13 +61,14 @@ export default function BookingHubPage() {
 
   const handleUpdateStatus = async (id: string, newStatus: 'APPROVED' | 'REJECTED' | 'PROCESSING') => {
     try {
+      setActionError(null);
       const res = await fetch('/api/booking', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: newStatus }),
       });
-      const json = await res.json();
-      if (json.success) {
+      const json = await res.json().catch(() => null);
+      if (json?.success) {
         setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
         setActionFeedback(
           newStatus === 'APPROVED'
@@ -76,16 +78,28 @@ export default function BookingHubPage() {
             : 'Satt til under behandling.'
         );
         setTimeout(() => setActionFeedback(null), 5000);
+      } else {
+        // Statusen ble IKKE endret i databasen – vis det ærlig i stedet for å flippe badgen.
+        setActionError(
+          res.status === 404
+            ? 'Fant ingen søknad med denne ID-en. Status er ikke endret.'
+            : json?.error || `Kunne ikke oppdatere søknaden (HTTP ${res.status}). Status er ikke endret.`
+        );
+        setTimeout(() => setActionError(null), 8000);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Feil ved oppdatering av status:', err);
+      setActionError(`Nettverksfeil: kunne ikke oppdatere søknaden. Status er ikke endret.`);
+      setTimeout(() => setActionError(null), 8000);
     }
   };
 
   // Reelle beregninger fra faktiske data i databasen
   const pendingCount = requests.filter(r => r.status === 'NEW' || r.status === 'PROCESSING').length;
   const approvedBookings = requests.filter(r => r.status === 'APPROVED');
-  const totalApprovedRevenue = approvedBookings.reduce((sum, b) => sum + (b.totalPrice || 1850), 0);
+  // Kun lagrede beløp – ingen antatt dagspris. Mangler prisen, bidrar den med 0 kr.
+  const totalApprovedRevenue = approvedBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+  const approvedWithoutPrice = approvedBookings.filter(b => !b.totalPrice).length;
 
   const filteredRequests = requests.filter(r => {
     if (filterTab === 'all') return true;
@@ -131,6 +145,13 @@ export default function BookingHubPage() {
         </div>
       )}
 
+      {actionError && (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-400 flex items-center gap-2.5 text-xs font-semibold">
+          <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+          <span>{actionError}</span>
+        </div>
+      )}
+
       {/* ── SEKSJON 1: REELLE NØKKELTALL & DUETT STATUS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Leieinntekter */}
@@ -150,7 +171,9 @@ export default function BookingHubPage() {
             </p>
           </div>
           <p className="text-[11px] text-foreground-subtle border-t border-border pt-2">
-            Reell sum basert på søknader
+            {approvedWithoutPrice > 0
+              ? `Sum av lagrede beløp – ${approvedWithoutPrice} godkjente søknader mangler pris`
+              : 'Reell sum basert på lagrede beløp i søknadene'}
           </p>
         </div>
 

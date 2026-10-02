@@ -3,6 +3,8 @@
 
 const NAV_JOBS_URL = 'https://arbeidsplassen.nav.no/public-opendata/api/v1/ads';
 
+export type JobsSource = 'LIVE' | 'UNAVAILABLE';
+
 export interface JobVacancy {
   id: string;
   title: string;
@@ -19,89 +21,37 @@ export interface JobVacancy {
   sector?: string;
 }
 
-export const FALLBACK_TONSBERG_JOBS: JobVacancy[] = [
-  {
-    id: 'tbg-job-1',
-    title: 'Sykepleier / Spesialsykepleier - Medisinsk avdeling',
-    employer: 'Sykehuset i Vestfold HF',
-    location: 'Tønsberg',
-    municipality: 'Tønsberg',
-    engagementType: 'Fast',
-    extent: '100%',
-    applicationDeadline: 'Snarest',
-    published: 'I dag',
-    link: 'https://arbeidsplassen.nav.no',
-    isStudentFriendly: false,
-    descriptionSnippet: 'Spennende stilling ved et av Norges mest moderne akuttsykehus midt i Tønsberg.',
-    sector: 'Offentlig'
-  },
-  {
-    id: 'tbg-job-2',
-    title: 'Sommervert & Servitør - Sommersesongen',
-    employer: 'Foynhagen AS',
-    location: 'Tønsberg Brygge',
-    municipality: 'Tønsberg',
-    engagementType: 'Sesong / Deltid',
-    extent: 'Deltid / Sesong',
-    applicationDeadline: 'Løpende',
-    published: 'I dag',
-    link: 'https://arbeidsplassen.nav.no',
-    isStudentFriendly: true,
-    descriptionSnippet: 'Bli med på teamet på Norges mest populære konsertarena og uteservering på brygga!',
-    sector: 'Privat'
-  },
-  {
-    id: 'tbg-job-3',
-    title: 'Fullstack Utvikler / TypeScript & Cloud',
-    employer: 'Tech-Hub Tønsberg / Hi5',
-    location: 'Tønsberg Sentrum',
-    municipality: 'Tønsberg',
-    engagementType: 'Fast',
-    extent: '100%',
-    applicationDeadline: '15. november',
-    published: 'I går',
-    link: 'https://arbeidsplassen.nav.no',
-    isStudentFriendly: false,
-    descriptionSnippet: 'Arbeid med moderne skyteknologi fra nyoppussede lokaler i gründerkvartalet.',
-    sector: 'Privat'
-  },
-  {
-    id: 'tbg-job-4',
-    title: 'Deltidsmedarbeider butikk & kundeservice',
-    employer: 'Alti Farmandstredet',
-    location: 'Farmandstredet, Tønsberg',
-    municipality: 'Tønsberg',
-    engagementType: 'Deltid',
-    extent: '20-40%',
-    applicationDeadline: 'Snarest',
-    published: '3 dager siden',
-    link: 'https://arbeidsplassen.nav.no',
-    isStudentFriendly: true,
-    descriptionSnippet: 'Perfekt deltidsjobb for studenter ved USN Campus Vestfold. Fleksible kvelds- og helgevakter.',
-    sector: 'Privat'
-  },
-  {
-    id: 'tbg-job-5',
-    title: 'Lærer / Grunnskolelærer 1.-7. trinn',
-    employer: 'Tønsberg Kommune',
-    location: 'Sem skole',
-    municipality: 'Tønsberg',
-    engagementType: 'Fast',
-    extent: '100%',
-    applicationDeadline: '1. desember',
-    published: 'Denne uken',
-    link: 'https://arbeidsplassen.nav.no',
-    isStudentFriendly: false,
-    descriptionSnippet: 'Bli en del av det fremtidsrettede skolemiljøet i Tønsberg kommune med fokus på trivsel og mestring.',
-    sector: 'Kommune'
-  }
-];
+export interface JobsResult {
+  jobs: JobVacancy[];
+  source: JobsSource;
+  isLive: boolean;
+  /** Norsk forklaring når kilden ikke er tilgjengelig. */
+  note?: string;
+}
 
-export async function fetchLiveJobs(onlyStudent = false, limit = 10): Promise<JobVacancy[]> {
+// NAV avviklet det nøkkelfrie åpne stillingsfeedet 1. mai 2025. Endepunktet svarer nå 404,
+// og erstatteren krever Bearer JWT. Vi har derfor ingen kuratert «fallback»-liste lenger:
+// å vise oppdiktede stillinger som ekte ville vært verre enn å vise at kilden mangler.
+const NAV_UNAVAILABLE_NOTE =
+  'NAV Arbeidsplassen avviklet det åpne stillingsfeedet 1. mai 2025, og det nye API-et krever ' +
+  'Bearer-token som ikke er konfigurert. Vi viser derfor ingen stillinger i stedet for oppdiktede annonser. ' +
+  'Se arbeidsplassen.nav.no/stillinger.';
+
+export async function fetchLiveJobs(onlyStudent = false, limit = 10): Promise<JobsResult> {
+  // Clamp: negative eller enorme limit-verdier skal ikke kunne gi slice(0, -1) eller enorme svar.
+  const safeLimit = Math.min(Math.max(Math.trunc(limit) || 10, 1), 50);
+
+  const unavailable: JobsResult = {
+    jobs: [],
+    source: 'UNAVAILABLE',
+    isLive: false,
+    note: NAV_UNAVAILABLE_NOTE,
+  };
+
   try {
     const params = new URLSearchParams({
       municipalities: 'TØNSBERG,FÆRDER',
-      size: String(Math.max(limit * 2, 20)),
+      size: String(Math.min(Math.max(safeLimit * 2, 20), 100)),
     });
 
     const res = await fetch(`${NAV_JOBS_URL}?${params.toString()}`, {
@@ -109,56 +59,76 @@ export async function fetchLiveJobs(onlyStudent = false, limit = 10): Promise<Jo
         'Accept': 'application/json',
         'User-Agent': 'TonsberglivetPortal/1.0 (hei@tonsberglivet.no)'
       },
-      next: { revalidate: 3600 } // Cache 1 hour
+      cache: 'force-cache',
+      next: { revalidate: 3600 }, // Cache 1 hour
+      signal: AbortSignal.timeout(8000) // Bounded: a hung upstream must not park the handler
     });
 
-    if (res.ok) {
-      const data = await res.json();
-      const content = data?.content || [];
-
-      const formatted: JobVacancy[] = content.map((item: any) => {
-        const title = item.title || 'Ledig stilling';
-        const employer = item.businessName || item.employer?.name || 'Bedrift i Tønsberg';
-        const location = item.workLocations?.[0]?.city || item.locationList?.[0]?.city || 'Tønsberg';
-        const municipality = item.workLocations?.[0]?.municipal || 'Tønsberg';
-        const engagementType = item.engagementType || item.properties?.engagementtype || 'Fast';
-        const extent = item.extent || item.properties?.extent || '100%';
-        const deadline = item.applicationDeadline || item.properties?.applicationdue || 'Snarest';
-        const publishedDate = item.published ? new Date(item.published).toLocaleDateString('no-NO') : 'Nylig';
-
-        const isStudent =
-          engagementType.toLowerCase().includes('deltid') ||
-          extent.toLowerCase().includes('deltid') ||
-          title.toLowerCase().includes('student') ||
-          title.toLowerCase().includes('sommer') ||
-          title.toLowerCase().includes('ekstrahjelp');
-
-        return {
-          id: item.uuid || item.id || String(Math.random()),
-          title,
-          employer,
-          location,
-          municipality,
-          engagementType,
-          extent,
-          applicationDeadline: deadline,
-          published: publishedDate,
-          link: item.link || `https://arbeidsplassen.nav.no/stillinger/stilling/${item.uuid}`,
-          isStudentFriendly: isStudent,
-          descriptionSnippet: item.description?.replace(/<[^>]*>?/gm, '').slice(0, 140) + '...',
-          sector: item.properties?.sector || 'Privat'
-        };
-      });
-
-      const filtered = onlyStudent ? formatted.filter(j => j.isStudentFriendly) : formatted;
-      if (filtered.length > 0) {
-        return filtered.slice(0, limit);
-      }
+    if (!res.ok) {
+      console.warn(`NAV Arbeidsplassen svarte HTTP ${res.status} – ingen stillinger tilgjengelig.`);
+      return unavailable;
     }
-  } catch (error) {
-    console.warn('NAV Arbeidsplassen API feilet, bruker fallback stillinger:', error);
-  }
 
-  const fallback = onlyStudent ? FALLBACK_TONSBERG_JOBS.filter(j => j.isStudentFriendly) : FALLBACK_TONSBERG_JOBS;
-  return fallback.slice(0, limit);
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('json')) {
+      // Et HTML-svar er en feilside, ikke stillingsdata.
+      console.warn(`NAV Arbeidsplassen svarte med ikke-JSON (${contentType || 'ukjent'}) – avvises.`);
+      return unavailable;
+    }
+
+    const data = await res.json();
+    const content: any[] = Array.isArray(data?.content) ? data.content : [];
+
+    const formatted: JobVacancy[] = content.map((item: any) => {
+      const title = item.title || 'Ledig stilling';
+      const employer = item.businessName || item.employer?.name || 'Ikke oppgitt';
+      const location = item.workLocations?.[0]?.city || item.locationList?.[0]?.city || 'Tønsberg';
+      const municipality = item.workLocations?.[0]?.municipal || 'Tønsberg';
+      const engagementType = item.engagementType || item.properties?.engagementtype || 'Fast';
+      const extent = item.extent || item.properties?.extent || '100%';
+      const deadline = item.applicationDeadline || item.properties?.applicationdue || 'Snarest';
+      const publishedDate = item.published ? new Date(item.published).toLocaleDateString('no-NO') : 'Nylig';
+
+      const isStudent =
+        engagementType.toLowerCase().includes('deltid') ||
+        extent.toLowerCase().includes('deltid') ||
+        title.toLowerCase().includes('student') ||
+        title.toLowerCase().includes('sommer') ||
+        title.toLowerCase().includes('ekstrahjelp');
+
+      return {
+        id: item.uuid || item.id || String(Math.random()),
+        title,
+        employer,
+        location,
+        municipality,
+        engagementType,
+        extent,
+        applicationDeadline: deadline,
+        published: publishedDate,
+        link: item.link || `https://arbeidsplassen.nav.no/stillinger/stilling/${item.uuid}`,
+        isStudentFriendly: isStudent,
+        descriptionSnippet: typeof item.description === 'string'
+          ? item.description.replace(/<[^>]*>?/gm, '').slice(0, 140) + '...'
+          : undefined,
+        sector: item.properties?.sector || 'Privat'
+      };
+    });
+
+    const filtered = onlyStudent ? formatted.filter(j => j.isStudentFriendly) : formatted;
+
+    // Reelt tomt svar fra NAV er «live», men uten treff – det skal ikke se ut som en feil.
+    return {
+      jobs: filtered.slice(0, safeLimit),
+      source: 'LIVE',
+      isLive: true,
+    };
+  } catch (error: any) {
+    const timedOut = error?.name === 'TimeoutError' || error?.name === 'AbortError';
+    console.warn(
+      timedOut ? 'NAV Arbeidsplassen svarte ikke innen tidsfristen.' : 'NAV Arbeidsplassen API feilet:',
+      error?.message || error
+    );
+    return unavailable;
+  }
 }

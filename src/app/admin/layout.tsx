@@ -120,7 +120,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         const bRes = await fetch('/api/booking');
         const bData = await bRes.json();
         if (bData.success && Array.isArray(bData.data)) {
-          const pending = bData.data.filter((b: any) => b.status === 'PENDING').length;
+          // RequestStatus-enumet er NEW | PROCESSING | APPROVED | REJECTED – «PENDING» finnes ikke.
+          const pending = bData.data.filter(
+            (b: any) => b.status === 'NEW' || b.status === 'PROCESSING'
+          ).length;
           setPendingBookingsCount(pending);
         }
       } catch {

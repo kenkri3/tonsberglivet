@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Eye, Pencil, Sparkles, RefreshCw, FileText, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Sparkles, RefreshCw, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { SoMeModal } from '@/components/admin/SoMeModal';
 
 interface ArticleItem {
@@ -15,6 +15,15 @@ interface ArticleItem {
   published?: boolean;
 }
 
+/** Enum-verdiene fra Prisma (ArticleCategory) er fasit — visningsnavn mappes her. */
+const CATEGORY_LABELS: Record<string, string> = {
+  BYLIVET: 'Bylivet',
+  HVERDAGSLIVET: 'Hverdagslivet',
+  NAERINGSLIVET: 'Næringslivet',
+  REISELIVET: 'Reiselivet',
+  STUDENTLIVET: 'Studentlivet',
+};
+
 export default function ArtiklerPage() {
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +31,7 @@ export default function ArtiklerPage() {
   const [activeArticle, setActiveArticle] = useState<ArticleItem | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('Alle');
   const [aiAlert, setAiAlert] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const fetchArticles = async () => {
     try {
@@ -32,16 +42,22 @@ export default function ArtiklerPage() {
         const mapped = json.data.map((a: any) => ({
           id: a.id,
           title: a.title,
-          category: a.category || 'Bylivet',
+          category: typeof a.category === 'string' && a.category ? a.category : 'BYLIVET',
           status: a.published ? 'Publisert' : 'Utkast',
           date: a.createdAt ? new Date(a.createdAt).toISOString().split('T')[0] : 'Nylig',
           slug: a.slug,
           published: a.published,
         }));
         setArticles(mapped);
+        setLoadError(null);
+      } else {
+        setArticles([]);
+        setLoadError(json.error || 'Kunne ikke hente artikler fra databasen.');
       }
     } catch (err) {
       console.error('Feil ved henting av artikler:', err);
+      setArticles([]);
+      setLoadError('Nettverksfeil: kunne ikke hente artikler fra databasen.');
     } finally {
       setLoading(false);
     }
@@ -59,7 +75,7 @@ export default function ArtiklerPage() {
         const newArt: ArticleItem = {
           id: `ai-${Date.now()}`,
           title: title,
-          category: 'Bylivet',
+          category: 'BYLIVET',
           status: 'Utkast',
           date: new Date().toISOString().split('T')[0],
           published: false,
@@ -73,13 +89,21 @@ export default function ArtiklerPage() {
     return () => window.removeEventListener('tonsberg:action-completed', handleAction);
   }, []);
 
-  const categories = ['Alle', 'Bylivet', 'Næringslivet', 'Reiselivet', 'Studentlivet'];
+  // Filteret bruker enum-verdiene (BYLIVET, NAERINGSLIVET, …) — samme verdi som
+  // artikkelraden lagrer — mens etiketten vises for brukeren.
+  const categories: Array<{ value: string; label: string }> = [
+    { value: 'Alle', label: 'Alle' },
+    ...Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
+  ];
 
   const filtered = articles.filter((a) => {
-    const matchesCategory = selectedCategory === 'Alle' || a.category.toLowerCase() === selectedCategory.toLowerCase();
+    const label = CATEGORY_LABELS[a.category] || a.category;
+    const matchesCategory = selectedCategory === 'Alle' || a.category === selectedCategory;
+    const query = search.toLowerCase();
     const matchesSearch =
-      a.title.toLowerCase().includes(search.toLowerCase()) ||
-      a.category.toLowerCase().includes(search.toLowerCase());
+      a.title.toLowerCase().includes(query) ||
+      label.toLowerCase().includes(query) ||
+      a.category.toLowerCase().includes(query);
     return matchesCategory && matchesSearch;
   });
 
@@ -88,7 +112,7 @@ export default function ArtiklerPage() {
       {activeArticle && (
         <SoMeModal
           title={activeArticle.title}
-          category={activeArticle.category}
+          category={CATEGORY_LABELS[activeArticle.category] || activeArticle.category}
           onClose={() => setActiveArticle(null)}
         />
       )}
@@ -97,6 +121,13 @@ export default function ArtiklerPage() {
         <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 flex items-center gap-2.5 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-200">
           <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 animate-pulse" />
           <span>{aiAlert}</span>
+        </div>
+      )}
+
+      {loadError && (
+        <div className="p-3.5 rounded-2xl bg-error-light text-error border border-error/30 flex items-center gap-2.5 text-xs font-semibold">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{loadError}</span>
         </div>
       )}
 
@@ -145,15 +176,15 @@ export default function ArtiklerPage() {
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {categories.map((cat) => (
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              key={cat.value}
+              onClick={() => setSelectedCategory(cat.value)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                selectedCategory === cat
+                selectedCategory === cat.value
                   ? 'bg-primary text-primary-foreground shadow-xs'
                   : 'bg-surface border border-border text-foreground-muted hover:text-foreground hover:bg-surface-muted'
               }`}
             >
-              {cat}
+              {cat.label}
             </button>
           ))}
         </div>
@@ -201,7 +232,7 @@ export default function ArtiklerPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-2.5 py-1 text-xs font-semibold bg-primary/10 text-primary rounded-full">
-                      {art.category}
+                      {CATEGORY_LABELS[art.category] || art.category}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-foreground-muted text-xs font-mono">

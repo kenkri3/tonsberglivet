@@ -18,9 +18,28 @@ export async function GET() {
     info: {
       title: 'Tønsberglivet Agent Integration API',
       description:
-        'Verktøy og endepunkter for autonome agenter tilknyttet Tønsberglivet: arrangementer, bedrifter, artikler, torvleie og bykontekst.',
+        'Verktøy og endepunkter for autonome agenter tilknyttet Tønsberglivet: arrangementer, bedrifter, artikler, torvleie og bykontekst.\n\n' +
+        'AUTENTISERING: Begge endepunktene krever legitimasjon — de kan endre CMS-innhold, ' +
+        'bedriftsregisteret og torvleievedtak. Bruk enten «Authorization: Bearer <AGENT_WEBHOOK_SECRET / MCP_API_KEY>» ' +
+        'eller en innlogget administratorøkt. Slack kan i stedet signere med SLACK_SIGNING_SECRET.',
       version: '1.0.0',
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          description: 'Delt hemmelighet: AGENT_WEBHOOK_SECRET for /api/agent/webhook, MCP_API_KEY for /api/mcp.',
+        },
+        adminSession: {
+          type: 'apiKey',
+          in: 'cookie',
+          name: 'tonsberg_admin_session',
+          description: 'Innlogget administrator i adminpanelet.',
+        },
+      },
+    },
+    security: [{ bearerAuth: [] }, { adminSession: [] }],
     servers: [
       {
         url: 'https://tonsberglivet-production.up.railway.app',
@@ -31,6 +50,9 @@ export async function GET() {
       '/api/agent/webhook': {
         post: {
           summary: 'Kjør en handling eller oppdatering i Tønsberglivet backend',
+          description:
+            'Krever Bearer-token (AGENT_WEBHOOK_SECRET), gyldig Slack-signatur (SLACK_SIGNING_SECRET) ' +
+            'eller innlogget administrator. Uautorisert kall gir 401.',
           operationId: 'agent_webhook_action',
           requestBody: {
             required: true,
@@ -46,9 +68,9 @@ export async function GET() {
                       description: 'Handling som skal utføres',
                     },
                     title: { type: 'string', description: 'Tittel på arrangement eller artikkel' },
-                    startDate: { type: 'string', description: 'Startdato (YYYY-MM-DD)' },
+                    startDate: { type: 'string', description: 'Startdato (YYYY-MM-DD eller ISO)' },
                     location: { type: 'string', description: 'Sted' },
-                    category: { type: 'string', description: 'Kategori' },
+                    category: { type: 'string', description: 'Kategori (normaliseres til gyldig enum)' },
                     name: { type: 'string', description: 'Bedriftsnavn' },
                     openingHours: { type: 'string', description: 'Åpningstider' },
                     bookingId: { type: 'string', description: 'ID for torvleie som skal godkjennes' },
@@ -60,12 +82,17 @@ export async function GET() {
           },
           responses: {
             '200': { description: 'Handling utført' },
+            '400': { description: 'Ugyldig eller tom forespørsel' },
+            '401': { description: 'Manglende eller ugyldig autentisering' },
           },
         },
       },
       '/api/mcp': {
         post: {
           summary: 'MCP JSON-RPC 2.0 endpoint',
+          description:
+            'initialize og tools/list er åpne for oppdagelse. tools/call krever Bearer-token ' +
+            '(MCP_API_KEY) eller innlogget administrator, og svarer ellers med JSON-RPC-feil -32001.',
           operationId: 'mcp_json_rpc',
           requestBody: {
             required: true,
@@ -83,7 +110,7 @@ export async function GET() {
             },
           },
           responses: {
-            '200': { description: 'JSON-RPC response' },
+            '200': { description: 'JSON-RPC response (også ved JSON-RPC-feil)' },
           },
         },
       },

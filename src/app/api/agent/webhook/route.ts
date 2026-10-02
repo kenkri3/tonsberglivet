@@ -1,12 +1,51 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { getEffectiveGeminiApiKey } from '@/lib/ai-config';
 import { fetchLiveTicketmasterEvents } from '@/lib/ticketmaster';
 import { approveAndConfirmBooking } from '@/lib/email';
 import { sendAgentNotification } from '@/lib/notifications';
+import { requireAdmin } from '@/lib/auth';
 import { GoogleGenAI } from '@google/genai';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Beskriver det FAKTISKE e-postutfallet for en godkjent torvleiesøknad.
+ *
+ * `approveAndConfirmBooking` rapporterer ærlig `emailSent` og `emailMode`
+ * (se src/lib/email.ts). Uten denne oversettelsen påstod webhooken at
+ * bekreftelsen var sendt også når den bare var logget lokalt, eller da
+ * utsendingen feilet.
+ */
+type BookingEmailMode = Awaited<ReturnType<typeof approveAndConfirmBooking>>['emailMode'];
+
+function bookingEmailOutcome(
+  mode: BookingEmailMode,
+  sent: boolean,
+  email: string,
+): { text: string; level: 'success' | 'warning' } {
+  switch (mode) {
+    case 'resend':
+      return sent
+        ? { text: `E-postbekreftelse er sendt til ${email}.`, level: 'success' }
+        : { text: `E-postbekreftelse til ${email} ble avvist av Resend.`, level: 'warning' };
+    case 'smtp':
+      return {
+        text: `SMTP-utsending er ikke implementert – bekreftelsen til ${email} er kun logget på serveren.`,
+        level: 'warning',
+      };
+    case 'mock_logged':
+      return {
+        text: `Ingen e-posttjeneste er konfigurert – bekreftelsen til ${email} er kun logget på serveren.`,
+        level: 'warning',
+      };
+    case 'failed':
+      return { text: `E-postutsending til ${email} feilet.`, level: 'warning' };
+    default:
+      return { text: `E-postbekreftelse til ${email} ble ikke forsøkt sendt.`, level: 'warning' };
+  }
+}
 
 function cleanInputText(raw: any): string {
   if (!raw || typeof raw !== 'string') return '';
@@ -15,23 +54,134 @@ function cleanInputText(raw: any): string {
 }
 
 /**
+ * Verifiserer at kallet faktisk kommer fra Slack (v0-signatur med signeringshemmelighet).
+ */
+function verifySlackSignature(request: Request, rawBody: string): boolean {
+  const signingSecret = process.env.SLACK_SIGNING_SECRET;
+  if (!signingSecret) return false;
+
+  const timestamp = request.headers.get('x-slack-request-timestamp') || '';
+  const signature = request.headers.get('x-slack-signature') || '';
+  if (!timestamp || !signature) return false;
+
+  // Avvis replay-angrep eldre enn 5 minutter.
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!Number.isFinite(ageSeconds) || ageSeconds > 300) return false;
+
+  const expected =
+    'v0=' + crypto.createHmac('sha256', signingSecret).update(`v0:${timestamp}:${rawBody}`).digest('hex');
+
+  const expectedBuf = Buffer.from(expected);
+  const receivedBuf = Buffer.from(signature);
+  if (expectedBuf.length !== receivedBuf.length) return false;
+  return crypto.timingSafeEqual(expectedBuf, receivedBuf);
+}
+
+/**
+ * Autentisering for agent-webhooken.
+ *
+ * Endepunktet kan godkjenne torvleie (statusendring + kontrakt på e-post) og skrive
+ * til CMS og bedriftsregisteret. Det MÅ derfor ikke være åpent. Godkjente kallere:
+ *   1. Slack, med gyldig v0-signatur (SLACK_SIGNING_SECRET).
+ *   2. Eksterne agenter med delt hemmelighet (AGENT_WEBHOOK_SECRET) som Bearer
+ *      eller x-agent-secret.
+ *   3. Innlogget administrator — adminpanelet tester endepunktet herfra.
+ */
+async function isAuthorizedAgentRequest(request: Request, rawBody: string): Promise<boolean> {
+  if (verifySlackSignature(request, rawBody)) return true;
+
+  const sharedSecret = process.env.AGENT_WEBHOOK_SECRET;
+  if (sharedSecret) {
+    const authHeader = request.headers.get('authorization') || '';
+    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    const headerSecret = request.headers.get('x-agent-secret') || '';
+    if (bearer === sharedSecret || headerSecret === sharedSecret) return true;
+  }
+
+  return requireAdmin(request).authorized;
+}
+
+/** Gyldige Prisma-enumverdier. Ukjente verdier må normaliseres, ellers kaster Prisma. */
+const EVENT_CATEGORIES = ['ARRANGEMENT', 'KONSERT', 'MARKED', 'KURS', 'BARN', 'SPORT', 'KULTUR', 'FESTIVAL'] as const;
+const BUSINESS_CATEGORIES = ['SHOPPING', 'MAT_DRIKKE', 'AKTIVITET', 'OVERNATTING', 'FRISOR_VELVERE', 'KULTUR', 'BARN', 'ANNET'] as const;
+const BUSINESS_AREAS = ['TONSBERG_SENTRUM', 'TONSBERG_KOMMUNE', 'FAERDER_KOMMUNE'] as const;
+const ARTICLE_CATEGORIES = ['BYLIVET', 'HVERDAGSLIVET', 'NAERINGSLIVET', 'REISELIVET', 'STUDENTLIVET'] as const;
+
+/** Slår opp en enumverdi tolerant: godtar store/små bokstaver og norske etiketter. */
+function normalizeEnum<T extends readonly string[]>(
+  value: unknown,
+  allowed: T,
+  fallback: T[number],
+): T[number] {
+  if (value === undefined || value === null || value === '') return fallback;
+
+  const normalized = String(value)
+    .trim()
+    .toUpperCase()
+    .replace(/Æ/g, 'AE')
+    .replace(/Ø/g, 'O')
+    .replace(/Å/g, 'A')
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  const hit = allowed.find((v) => v === normalized);
+  return (hit ?? fallback) as T[number];
+}
+
+/** Stabil slug uten tidsstempel, slik at upsert faktisk oppdaterer i stedet for å duplisere. */
+function stableSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/æ/g, 'ae')
+    .replace(/ø/g, 'o')
+    .replace(/å/g, 'a')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
  * Autonom Agent Webhook mottak for Slack, Microsoft Teams, Discord og mobil-snarveier.
  */
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get('content-type') || '';
+
+    // Les rå kropp FØRST — Slack-signaturen regnes ut over den eksakte rå kroppen.
+    const rawBody = await request.text();
+
+    const authorized = await isAuthorizedAgentRequest(request, rawBody);
+    if (!authorized) {
+      return NextResponse.json(
+        { success: false, error: 'Uautorisert: Krever gyldig Slack-signatur, delt hemmelighet eller administratorinnlogging.' },
+        { status: 401 }
+      );
+    }
+
     let body: any = {};
 
     if (contentType.includes('application/x-www-form-urlencoded')) {
-      const formData = await request.formData();
-      const payloadStr = formData.get('payload');
+      const params = new URLSearchParams(rawBody);
+      const payloadStr = params.get('payload');
       if (payloadStr) {
-        body = JSON.parse(payloadStr.toString());
+        try {
+          body = JSON.parse(payloadStr);
+        } catch {
+          body = Object.fromEntries(params.entries());
+        }
       } else {
-        body = Object.fromEntries(formData.entries());
+        body = Object.fromEntries(params.entries());
       }
     } else {
-      body = await request.json().catch(() => ({}));
+      try {
+        body = rawBody ? JSON.parse(rawBody) : {};
+      } catch {
+        return NextResponse.json(
+          { success: false, error: 'Ugyldig JSON i forespørselen.' },
+          { status: 400 }
+        );
+      }
     }
 
     // 1. Slack URL Verification Challenge
@@ -47,12 +197,17 @@ export async function POST(request: Request) {
       if (actionValue.startsWith('approve_')) {
         const bookingId = actionValue.replace('approve_', '');
         const result = await approveAndConfirmBooking(bookingId);
+        const email = bookingEmailOutcome(
+          result.emailMode,
+          result.emailSent,
+          result.booking.email,
+        );
 
         await sendAgentNotification({
           type: 'NEW_BOOKING',
-          title: 'Torvleie Godkjent & E-post Sendt',
-          message: `Booking #${bookingId} for *${result.booking.name}* (${result.booking.zone}) er godkjent. E-postbekreftelse er sendt til ${result.booking.email}.`,
-          level: 'success',
+          title: result.emailSent ? 'Torvleie godkjent og e-post sendt' : 'Torvleie godkjent – e-post ikke sendt',
+          message: `Booking #${bookingId} for *${result.booking.name}* (${result.booking.zone}) er godkjent. ${email.text}`,
+          level: email.level,
           fields: [
             { label: 'Leietaker', value: result.booking.name },
             { label: 'Sone', value: result.booking.zone },
@@ -65,19 +220,33 @@ export async function POST(request: Request) {
         return NextResponse.json({
           response_type: 'in_channel',
           replace_original: false,
-          text: `✅ *Torvleie #${bookingId} (${result.booking.name}) er godkjent!* E-postbekreftelse og riggeregler er sendt til ${result.booking.email}, og fakturagrunnlag for Duett ERP er klargjort.`,
+          text: `✅ *Torvleie #${bookingId} (${result.booking.name}) er godkjent!* ${email.text} Riggeregler og fakturagrunnlag for Duett ERP er klargjort.`,
         });
       }
 
       if (actionValue.startsWith('reject_')) {
         const bookingId = actionValue.replace('reject_', '');
         try {
-          await (prisma as any).bookingRequest?.update({
+          const rejected = await (prisma as any).bookingRequest?.update({
             where: { id: bookingId },
             data: { status: 'REJECTED' },
           });
-        } catch (e) {
+
+          if (!rejected) {
+            return NextResponse.json({
+              response_type: 'ephemeral',
+              replace_original: false,
+              text: `⚠️ *Fant ingen torvleiesøknad med id ${bookingId}.* Ingen endring ble gjort.`,
+            });
+          }
+        } catch (e: any) {
+          // Tidligere ble feilen svelget og svaret påstod likevel at status var oppdatert.
           console.warn('[Agent Webhook] Kunne ikke avslå booking i DB:', e);
+          return NextResponse.json({
+            response_type: 'ephemeral',
+            replace_original: false,
+            text: `❌ *Kunne ikke avslå torvleie #${bookingId}.* Status er IKKE endret. (${e?.message || 'ukjent feil'})`,
+          });
         }
 
         return NextResponse.json({
@@ -123,16 +292,27 @@ export async function POST(request: Request) {
         );
       }
 
-      const cleanSlug =
-        userSlug ||
-        title
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '') + '-' + Date.now().toString().slice(-4);
+      // Stabil slug: uten tidsstempel treffer upsert den samme raden hver gang.
+      // Tidligere fikk slugen «-<siste 4 av Date.now()>», så upsert traff aldri
+      // og hvert kall opprettet et nytt, duplisert arrangement.
+      const cleanSlug = userSlug ? stableSlug(String(userSlug)) : stableSlug(String(title));
+
+      if (!cleanSlug) {
+        return NextResponse.json(
+          { success: false, error: 'Kunne ikke utlede en gyldig slug fra tittelen.' },
+          { status: 400 }
+        );
+      }
+
+      const eventCategory = normalizeEnum(category, EVENT_CATEGORIES, 'ARRANGEMENT');
 
       const parsedStartDate = new Date(startDate);
+      if (isNaN(parsedStartDate.getTime())) {
+        return NextResponse.json(
+          { success: false, error: `Ugyldig startDate: «${startDate}». Bruk ISO-format, f.eks. 2026-10-22.` },
+          { status: 400 }
+        );
+      }
       const parsedEndDate = endDate ? new Date(endDate) : undefined;
 
       const event = await (prisma as any).event.upsert({
@@ -146,7 +326,7 @@ export async function POST(request: Request) {
           endDate: parsedEndDate,
           startTime,
           endTime,
-          category,
+          category: eventCategory,
           externalUrl,
           published,
         },
@@ -160,7 +340,7 @@ export async function POST(request: Request) {
           endDate: parsedEndDate,
           startTime,
           endTime,
-          category,
+          category: eventCategory,
           externalUrl,
           published,
         },
@@ -192,14 +372,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: 'Mangler påkrevd felt: name' }, { status: 400 });
       }
 
-      const cleanSlug =
-        userSlug ||
-        name
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '');
+      const cleanSlug = userSlug ? stableSlug(String(userSlug)) : stableSlug(String(name));
+
+      if (!cleanSlug) {
+        return NextResponse.json(
+          { success: false, error: 'Kunne ikke utlede en gyldig slug fra bedriftsnavnet.' },
+          { status: 400 }
+        );
+      }
+
+      const businessCategory = normalizeEnum(category, BUSINESS_CATEGORIES, 'ANNET');
+      const businessArea = normalizeEnum(area, BUSINESS_AREAS, 'TONSBERG_SENTRUM');
 
       const business = await (prisma as any).business.upsert({
         where: { slug: cleanSlug },
@@ -211,8 +394,8 @@ export async function POST(request: Request) {
           email: email || undefined,
           website: website || undefined,
           openingHours: openingHours || undefined,
-          category: category || undefined,
-          area: area || undefined,
+          category: businessCategory,
+          area: businessArea,
           published,
         },
         create: {
@@ -224,8 +407,8 @@ export async function POST(request: Request) {
           email,
           website,
           openingHours,
-          category,
-          area,
+          category: businessCategory,
+          area: businessArea,
           published,
         },
       });
@@ -252,14 +435,12 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, error: 'Mangler påkrevde felter: title og content' }, { status: 400 });
       }
 
-      const cleanSlug =
-        userSlug ||
-        title
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '') + '-' + Date.now().toString().slice(-4);
+      // Artikler opprettes (ikke upsert), så sluggen må være unik. Vi bruker en
+      // tilfeldig suffiks i stedet for millisekunder, som kan kollidere.
+      const baseSlug = userSlug ? stableSlug(String(userSlug)) : stableSlug(String(title));
+      const cleanSlug = `${baseSlug || 'artikkel'}-${crypto.randomBytes(3).toString('hex')}`;
+
+      const articleCategory = normalizeEnum(category, ARTICLE_CATEGORIES, 'BYLIVET');
 
       const article = await (prisma as any).article.create({
         data: {
@@ -267,7 +448,7 @@ export async function POST(request: Request) {
           slug: cleanSlug,
           excerpt,
           content,
-          category,
+          category: articleCategory,
           published,
           featured,
         },
@@ -310,19 +491,27 @@ export async function POST(request: Request) {
     const rawText = body.text || body.command || body.message || '';
     const text = cleanInputText(rawText);
 
-    // Hjelpemeny
+    // Hjelpemeny. Et helt tomt kall er ikke «suksess» — det er ugyldig input,
+    // og skal ikke se ut som en vellykket agent-kjøring i overvåking.
     if (text === 'hjelp' || text === 'help' || text === '') {
-      return NextResponse.json({
-        response_type: 'ephemeral',
-        text: `🤖 *Hei fra Tønsberglivet Agent!*\n\n` +
-          `Du kan snakke til meg på vanlig norsk, eller bruke snarveier:\n` +
-          `• \`/tb status\` — Se uleste henvendelser, ventende torvleier og arrangementsstatus\n` +
-          `• \`/tb godkjenn [id]\` — Godkjenn torvleiesøknad, send leieavtale på e-post og klargjør Duett ERP faktura\n` +
-          `• \`/tb post [stikkord]\` — Generer komplett artikkel + Instagram/FB/LinkedIn + byskjerm-tekst\n` +
-          `• \`/tb arrangementer\` — Vis kommende konserter og kulturhendelser fra Ticketmaster\n` +
-          `• \`/tb test\` — Test agent-tilkoblingen\n\n` +
-          `_Tips: Du kan også bare skrive naturlig til meg, f.eks: «Skriv et innlegg om at vi har påskemarked på Torvet»!_`,
-      });
+      const helpText =
+        `🤖 *Hei fra Tønsberglivet Agent!*\n\n` +
+        `Du kan snakke til meg på vanlig norsk, eller bruke snarveier:\n` +
+        `• \`/tb status\` — Se uleste henvendelser, ventende torvleier og arrangementsstatus\n` +
+        `• \`/tb godkjenn [id]\` — Godkjenn torvleiesøknad, send leieavtale på e-post og klargjør Duett ERP faktura\n` +
+        `• \`/tb post [stikkord]\` — Generer komplett artikkel + Instagram/FB/LinkedIn + byskjerm-tekst\n` +
+        `• \`/tb arrangementer\` — Vis kommende konserter og kulturhendelser fra Ticketmaster\n` +
+        `• \`/tb test\` — Test agent-tilkoblingen\n\n` +
+        `_Tips: Du kan også bare skrive naturlig til meg, f.eks: «Skriv et innlegg om at vi har påskemarked på Torvet»!_`;
+
+      if (text === '') {
+        return NextResponse.json(
+          { success: false, error: 'Tom forespørsel: oppgi «text» eller en «action».', response_type: 'ephemeral', text: helpText },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json({ response_type: 'ephemeral', text: helpText });
     }
 
     // Statusrapport
@@ -330,23 +519,28 @@ export async function POST(request: Request) {
       let pendingBookings = 0;
       let unreadMessages = 0;
       let articleCount = 0;
+      let statsReadable = true;
 
       try {
         pendingBookings = (await (prisma as any).bookingRequest?.count({ where: { status: 'NEW' } })) || 0;
         unreadMessages = (await (prisma as any).contactMessage?.count({ where: { read: false } })) || 0;
         articleCount = (await (prisma as any).article?.count({ where: { published: true } })) || 0;
       } catch (e) {
-        pendingBookings = 2;
+        // Tidligere satte vi pendingBookings = 2 her, altså et oppdiktet tall
+        // presentert som fakta. Rapporter heller at tallene ikke kunne leses.
+        statsReadable = false;
+        console.warn('[Agent Webhook] Kunne ikke lese statistikk fra databasen:', e);
       }
 
       return NextResponse.json({
         response_type: 'in_channel',
         text: `📊 *Status Tønsberglivet i dag:*\n\n` +
-          `• 🏕️ *Ventende torvleier:* ${pendingBookings} søknader venter på godkjenning\n` +
-          `• ✉️ *Innboks:* ${unreadMessages} uleste publikumshenvendelser\n` +
-          `• 📰 *Publiserte artikler:* ${articleCount} aktive på nettsiden\n` +
+          `• 🏕️ *Ventende torvleier:* ${statsReadable ? `${pendingBookings} søknader venter på godkjenning` : 'kunne ikke leses fra databasen'}\n` +
+          `• ✉️ *Innboks:* ${statsReadable ? `${unreadMessages} uleste publikumshenvendelser` : 'kunne ikke leses fra databasen'}\n` +
+          `• 📰 *Publiserte artikler:* ${statsReadable ? `${articleCount} aktive på nettsiden` : 'kunne ikke leses fra databasen'}\n` +
           `• ⚓ *Byrom:* Torvet, Kaldnes og Brygga er klare for aktivitet\n\n` +
           `_Bruk \`/tb godkjenn [id]\` for å godkjenne en søknad._`,
+        statsReadable,
       });
     }
 
@@ -380,12 +574,17 @@ export async function POST(request: Request) {
     if (approvalMatch) {
       const bookingId = approvalMatch[1].trim();
       const result = await approveAndConfirmBooking(bookingId);
+      const email = bookingEmailOutcome(
+        result.emailMode,
+        result.emailSent,
+        result.booking.email,
+      );
 
       await sendAgentNotification({
         type: 'NEW_BOOKING',
-        title: 'Torvleie Godkjent via Webhook',
-        message: `Booking #${bookingId} er godkjent av agenten på vegne av Tønsberglivet.`,
-        level: 'success',
+        title: result.emailSent ? 'Torvleie godkjent og e-post sendt' : 'Torvleie godkjent – e-post ikke sendt',
+        message: `Booking #${bookingId} er godkjent av agenten på vegne av Tønsberglivet. ${email.text}`,
+        level: email.level,
         fields: [
           { label: 'Leietaker', value: result.booking.name },
           { label: 'Sone', value: result.booking.zone },
@@ -396,7 +595,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         response_type: 'in_channel',
-        text: `✅ *Torvleie #${bookingId} (${result.booking.name}) er godkjent!* E-postbekreftelse med leieavtale og riggeregler er sendt til ${result.booking.email}, og fakturagrunnlag for Duett ERP er klargjort.`,
+        text: `✅ *Torvleie #${bookingId} (${result.booking.name}) er godkjent!* ${email.text} Riggeregler og fakturagrunnlag for Duett ERP er klargjort.`,
         booking: result.booking,
       });
     }

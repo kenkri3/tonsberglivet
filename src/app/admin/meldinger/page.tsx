@@ -70,6 +70,7 @@ export default function AdminMeldingerPage() {
 
   const [loading, setLoading] = useState(true);
   const [sendingReply, setSendingReply] = useState(false);
+  const [contactActionMessage, setContactActionMessage] = useState<string | null>(null);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -226,6 +227,64 @@ export default function AdminMeldingerPage() {
 
   const selectedSession = chatSessions.find((s) => s.id === selectedSessionId);
   const unreadContactCount = contactMessages.filter((m) => !m.read).length;
+
+  // Marker kontaktskjemamelding som lest når den åpnes (PATCH /api/contact)
+  const handleSelectContact = async (id: string) => {
+    const isSelected = selectedContactId === id;
+    setSelectedContactId(isSelected ? null : id);
+
+    const target = contactMessages.find((m) => m.id === id);
+    if (isSelected || !target || target.read) return;
+
+    setContactMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)));
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, read: true }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        // Rull tilbake slik at ulest-badgen ikke lyver om at det er lagret.
+        setContactMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: false } : m)));
+        setContactActionMessage(
+          json?.error || `Kunne ikke markere meldingen som lest (HTTP ${res.status}).`
+        );
+        setTimeout(() => setContactActionMessage(null), 8000);
+      }
+    } catch {
+      setContactMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: false } : m)));
+      setContactActionMessage('Nettverksfeil: meldingen ble ikke markert som lest.');
+      setTimeout(() => setContactActionMessage(null), 8000);
+    }
+  };
+
+  // Marker alle kontaktskjemameldinger som lest
+  const handleMarkAllContactRead = async () => {
+    if (unreadContactCount === 0) return;
+    const previous = contactMessages;
+    setContactMessages((prev) => prev.map((m) => ({ ...m, read: true })));
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true, read: true }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        setContactMessages(previous);
+        setContactActionMessage(
+          json?.error || `Kunne ikke markere alle som lest (HTTP ${res.status}).`
+        );
+      } else {
+        setContactActionMessage(`${json.data?.updated ?? 0} melding(er) markert som lest.`);
+      }
+    } catch {
+      setContactMessages(previous);
+      setContactActionMessage('Nettverksfeil: ingen meldinger ble markert som lest.');
+    }
+    setTimeout(() => setContactActionMessage(null), 6000);
+  };
 
   return (
     <div className="space-y-6">
@@ -581,99 +640,123 @@ export default function AdminMeldingerPage() {
 
       {/* FANE 2: KONTAKTSKJEMA & E-POSTER */}
       {activeTab === 'contact' && (
-        <div className="bg-surface rounded-2xl border border-border overflow-hidden divide-y divide-border shadow-sm">
-          {contactMessages.length === 0 ? (
-            <div className="p-12 text-center text-xs text-foreground-muted">
-              Ingen kontaktskjemameldinger mottatt ennå.
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-surface rounded-2xl border border-border px-5 py-3.5 shadow-xs">
+            <span className="text-xs font-semibold text-foreground-muted">
+              {unreadContactCount > 0
+                ? `${unreadContactCount} uleste meldinger`
+                : 'Alle meldinger er lest'}
+            </span>
+            <div className="flex flex-wrap items-center gap-3">
+              {contactActionMessage && (
+                <span className="text-xs font-medium text-foreground">{contactActionMessage}</span>
+              )}
+              <button
+                type="button"
+                onClick={handleMarkAllContactRead}
+                disabled={unreadContactCount === 0}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-border bg-surface-muted hover:bg-border text-foreground transition-colors disabled:opacity-50"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                Merk alle som lest
+              </button>
             </div>
-          ) : (
-            contactMessages.map((m) => {
-              const isSelected = selectedContactId === m.id;
-              return (
-                <div key={m.id} className="transition-colors">
-                  <div
-                    onClick={() => setSelectedContactId(isSelected ? null : m.id)}
-                    className={`px-6 py-4 flex items-center gap-4 hover:bg-surface-muted cursor-pointer ${
-                      !m.read ? 'bg-primary-light/20' : ''
-                    }`}
-                  >
+          </div>
+
+          <div className="bg-surface rounded-2xl border border-border overflow-hidden divide-y divide-border shadow-sm">
+            {contactMessages.length === 0 ? (
+              <div className="p-12 text-center text-xs text-foreground-muted">
+                Ingen kontaktskjemameldinger mottatt ennå.
+              </div>
+            ) : (
+              contactMessages.map((m) => {
+                const isSelected = selectedContactId === m.id;
+                return (
+                  <div key={m.id} className="transition-colors">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                        !m.read
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-surface-muted text-foreground-muted'
+                      onClick={() => handleSelectContact(m.id)}
+                      className={`px-6 py-4 flex items-center gap-4 hover:bg-surface-muted cursor-pointer ${
+                        !m.read ? 'bg-primary-light/20' : ''
                       }`}
                     >
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-sm ${
-                            !m.read ? 'font-bold text-foreground' : 'font-medium text-foreground'
-                          }`}
-                        >
-                          {m.name}
-                        </span>
-                        <span className="text-xs text-foreground-subtle">
-                          {m.createdAt ? new Date(m.createdAt).toLocaleDateString('nb-NO') : 'Nylig'}
-                        </span>
-                      </div>
-                      <p
-                        className={`text-sm truncate ${
-                          !m.read ? 'text-foreground font-medium' : 'text-foreground-muted'
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          !m.read
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-surface-muted text-foreground-muted'
                         }`}
                       >
-                        {m.subject || 'Ingen emne'}
-                      </p>
-                      <p className="text-xs text-foreground-subtle">{m.email}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!m.read && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />}
-                      {isSelected ? (
-                        <ChevronUp className="w-4 h-4 text-foreground-subtle" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-foreground-subtle" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Fullt innhold */}
-                  {isSelected && (
-                    <div className="px-6 py-4 bg-surface-muted/60 border-t border-border/60 space-y-3 animate-slide-down">
-                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground-muted">
-                        <span className="flex items-center gap-1 font-semibold">
-                          <User className="w-3.5 h-3.5 text-primary" /> {m.name} &lt;{m.email}&gt;
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-primary" />{' '}
-                          {m.createdAt
-                            ? new Date(m.createdAt).toLocaleString('nb-NO', {
-                                dateStyle: 'short',
-                                timeStyle: 'short',
-                              })
-                            : 'Nylig'}
-                        </span>
+                        <Mail className="w-4 h-4" />
                       </div>
-                      <div className="p-4 bg-surface rounded-xl border border-border text-sm text-foreground leading-relaxed whitespace-pre-line">
-                        {m.message}
-                      </div>
-                      <div className="flex gap-2 justify-end pt-1">
-                        <a
-                          href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(
-                            m.subject || 'Henvendelse til Tønsberglivet'
-                          )}`}
-                          className="px-4 py-2 bg-primary text-primary-foreground font-medium text-xs rounded-xl hover:bg-primary-hover transition-colors"
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-sm ${
+                              !m.read ? 'font-bold text-foreground' : 'font-medium text-foreground'
+                            }`}
+                          >
+                            {m.name}
+                          </span>
+                          <span className="text-xs text-foreground-subtle">
+                            {m.createdAt ? new Date(m.createdAt).toLocaleDateString('nb-NO') : 'Nylig'}
+                          </span>
+                        </div>
+                        <p
+                          className={`text-sm truncate ${
+                            !m.read ? 'text-foreground font-medium' : 'text-foreground-muted'
+                          }`}
                         >
-                          Svar på e-post
-                        </a>
+                          {m.subject || 'Ingen emne'}
+                        </p>
+                        <p className="text-xs text-foreground-subtle">{m.email}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {!m.read && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />}
+                        {isSelected ? (
+                          <ChevronUp className="w-4 h-4 text-foreground-subtle" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-foreground-subtle" />
+                        )}
                       </div>
                     </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+
+                    {/* Fullt innhold */}
+                    {isSelected && (
+                      <div className="px-6 py-4 bg-surface-muted/60 border-t border-border/60 space-y-3 animate-slide-down">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground-muted">
+                          <span className="flex items-center gap-1 font-semibold">
+                            <User className="w-3.5 h-3.5 text-primary" /> {m.name} &lt;{m.email}&gt;
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-primary" />{' '}
+                            {m.createdAt
+                              ? new Date(m.createdAt).toLocaleString('nb-NO', {
+                                  dateStyle: 'short',
+                                  timeStyle: 'short',
+                                })
+                              : 'Nylig'}
+                          </span>
+                        </div>
+                        <div className="p-4 bg-surface rounded-xl border border-border text-sm text-foreground leading-relaxed whitespace-pre-line">
+                          {m.message}
+                        </div>
+                        <div className="flex gap-2 justify-end pt-1">
+                          <a
+                            href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(
+                              m.subject || 'Henvendelse til Tønsberglivet'
+                            )}`}
+                            className="px-4 py-2 bg-primary text-primary-foreground font-medium text-xs rounded-xl hover:bg-primary-hover transition-colors"
+                          >
+                            Svar på e-post
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
     </div>

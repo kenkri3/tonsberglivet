@@ -84,7 +84,7 @@ export default function InnstillingerPage() {
   const [webhookTestResult, setWebhookTestResult] = useState<string | null>(null);
 
   // Integrations (Cron & Duett ERP)
-  const [cronSecret, setCronSecret] = useState('tonsberg_cron_secret_2026');
+  const [cronSecret, setCronSecret] = useState('');
   const [duettWebhookUrl, setDuettWebhookUrl] = useState('');
   const [cronConfigured, setCronConfigured] = useState(false);
   const [duettConfigured, setDuettConfigured] = useState(false);
@@ -145,7 +145,10 @@ export default function InnstillingerPage() {
         setResendConfigured(json.data.resendConfigured);
         setSmtpUrl(json.data.smtpUrl || '');
         setSmtpConfigured(json.data.smtpConfigured);
-        setCronSecret(json.data.cronSecret || 'tonsberg_cron_secret_2026');
+        // Maskerte hemmeligheter skal aldri tilbake til serveren eller brukes som nøkkel
+        setCronSecret(
+          json.data.cronSecret && !json.data.cronSecret.includes('••••') ? json.data.cronSecret : ''
+        );
         setCronConfigured(json.data.cronConfigured);
         setDuettWebhookUrl(json.data.duettWebhookUrl || '');
         setDuettConfigured(json.data.duettConfigured);
@@ -303,15 +306,20 @@ export default function InnstillingerPage() {
     setIsSyncing(true);
     setSyncResult(null);
     try {
-      const secret = cronSecret || 'tonsberg_cron_secret_2026';
-      const res = await fetch(`/api/cron/daily-sync?key=${encodeURIComponent(secret)}`, {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (data.success) {
+      // Cron-ruten autoriseres med CRON_SECRET i miljø/innstillinger (eller en
+      // innlogget admin-sesjon). Vi sender ALDRI den maskerte verdien fra
+      // skjemaet som nøkkel – den er ikke hemmeligheten og ville alltid feile.
+      const res = await fetch('/api/cron/daily-sync', { method: 'POST' });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
         setSyncResult(`✅ Synk fullført på ${data.executionTimeMs}ms! ${data.data?.message || 'Arrangementer og spillelister oppdatert.'}`);
+      } else if (res.status === 401 || res.status === 403) {
+        setSyncResult(
+          `❌ Ikke autorisert (HTTP ${res.status}): ${data?.error || 'mangler gyldig CRON_SECRET'}. ` +
+            'Logg inn på nytt som admin, eller sett/oppdater CRON_SECRET og lagre innstillingene.'
+        );
       } else {
-        setSyncResult(`❌ Feil ved synk: ${data.error || 'Ukjent feil'}`);
+        setSyncResult(`❌ Feil ved synk (HTTP ${res.status}): ${data?.error || 'Ukjent feil'}`);
       }
     } catch (e: any) {
       setSyncResult(`❌ Kunne ikke kalle cron-rute: ${e?.message}`);
@@ -1154,7 +1162,7 @@ export default function InnstillingerPage() {
                   type={showCronSecret ? 'text' : 'password'}
                   value={cronSecret}
                   onChange={(e) => setCronSecret(e.target.value)}
-                  placeholder="tonsberg_cron_secret_2026"
+                  placeholder={cronConfigured ? 'Lagret hemmelighet (vises aldri i klartekst)' : 'Ingen hemmelighet satt – lim inn en ny verdi'}
                   className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
                 />
                 <button
@@ -1167,6 +1175,7 @@ export default function InnstillingerPage() {
               </div>
               <p className="text-xs text-foreground-muted">
                 Beskytter endepunktet <code className="bg-surface-muted px-1.5 py-0.5 rounded font-mono text-foreground">/api/cron/daily-sync</code> mot uautoriserte kall.
+                {cronConfigured && ' En lagret hemmelighet vises aldri i klartekst – la feltet stå tomt for å beholde den.'}
               </p>
             </div>
 

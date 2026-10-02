@@ -40,12 +40,16 @@ export default function ArrangementerPage() {
       const url = manualSync ? '/api/ticketmaster?refresh=true' : '/api/ticketmaster';
       const res = await fetch(url);
       const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
+      // `success` betyr nå «Ticketmaster svarte live», ikke «kallet gjennomførtes».
+      // Uten denne endringen ville listen blitt stående tom så snart feeden ikke er live.
+      if (Array.isArray(json.data)) {
         setEvents(json.data);
         if (json.source) setApiSource(json.source);
         if (manualSync) {
           setSyncedMessage(
-            `Sanntidssynk fullført! Hentet ${json.data.length} aktive arrangementer fra Ticketmaster.`
+            json.isLive
+              ? `Sanntidssynk fullført! Hentet ${json.data.length} aktive arrangementer fra Ticketmaster.`
+              : `Synk fullført, men Ticketmaster svarte ikke live. Viser ${json.data.length} bufrede arrangementer.`
           );
           setTimeout(() => setSyncedMessage(null), 4000);
         }
@@ -101,14 +105,16 @@ export default function ArrangementerPage() {
       </div>
 
       {/* Tilkoblingsstatus */}
-      {apiSource === 'LIVE_API' || apiSource === 'LIVE_TICKETMASTER_DIRECT' ? (
+      {events.length > 0 && (apiSource === 'LIVE_API' || apiSource === 'LIVE_TICKETMASTER_DIRECT') ? (
         <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 rounded-2xl text-xs sm:text-sm flex items-start gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
           <div className="flex-1">
             <div className="font-bold flex items-center gap-2">
               Ticketmaster Direktestrøm er aktiv
+              {/* Antallet kommer fra den faktiske listen. Badgen påstod tidligere
+                  «30+ Eventer» uavhengig av hvor mange vi faktisk hadde. */}
               <span className="text-[10px] uppercase font-extrabold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                Sanntid • 30+ Eventer
+                Sanntid • {events.length} eventer
               </span>
             </div>
             <div className="text-xs opacity-90 mt-1 leading-relaxed">

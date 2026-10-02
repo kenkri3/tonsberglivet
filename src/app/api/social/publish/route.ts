@@ -19,11 +19,28 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body: SocialPublishRequest = await request.json();
+    const body: SocialPublishRequest = await request.json().catch(() => null as any);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ success: false, error: 'Ugyldig JSON i forespørselen.' }, { status: 400 });
+    }
     const { targets, text, title, link, imageUrl } = body;
 
     if (!targets || !Array.isArray(targets) || targets.length === 0) {
       return NextResponse.json({ success: false, error: 'Minst én kanal må velges' }, { status: 400 });
+    }
+
+    // Ukjente kanalnavn skal ikke ignoreres i stillhet — da ser publiseringen ut
+    // som en suksess uten at noe ble sendt noe sted.
+    const VALID_TARGETS = ['facebook_page', 'facebook_group', 'instagram', 'google_business'];
+    const unknownTargets = targets.filter((t: string) => !VALID_TARGETS.includes(t));
+    if (unknownTargets.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Ukjent kanal: ${unknownTargets.join(', ')}. Gyldige kanaler: ${VALID_TARGETS.join(', ')}.`,
+        },
+        { status: 400 }
+      );
     }
 
     if (!text || text.trim() === '') {
@@ -46,9 +63,9 @@ export async function POST(request: Request) {
       if (target === 'facebook_page') {
         if (!metaAccessToken || !metaPageId) {
           results.facebook_page = {
-            success: true,
+            success: false,
             simulated: true,
-            message: 'Simulert publisering til Facebook-side (Koble til Meta Page ID & Token under Innstillinger for live API)',
+            message: 'Ikke publisert — Facebook-side mangler Page ID og/eller Access Token under Innstillinger.',
           };
           continue;
         }
@@ -77,9 +94,9 @@ export async function POST(request: Request) {
       if (target === 'facebook_group') {
         if (!metaAccessToken || !metaGroupId) {
           results.facebook_group = {
-            success: true,
+            success: false,
             simulated: true,
-            message: 'Simulert publisering til Facebook-gruppe (Koble til Meta Group ID & Token under Innstillinger for live API)',
+            message: 'Ikke publisert — Facebook-gruppe mangler Group ID og/eller Access Token under Innstillinger.',
           };
           continue;
         }
@@ -108,9 +125,9 @@ export async function POST(request: Request) {
       if (target === 'instagram') {
         if (!metaAccessToken || !metaInstagramId) {
           results.instagram = {
-            success: true,
+            success: false,
             simulated: true,
-            message: 'Simulert publisering til Instagram (Koble til Instagram Business ID & Token under Innstillinger for live API)',
+            message: 'Ikke publisert — Instagram mangler Business ID og/eller Access Token under Innstillinger.',
           };
           continue;
         }
@@ -154,9 +171,9 @@ export async function POST(request: Request) {
       if (target === 'google_business') {
         if (!googleAccessToken || !googleLocationId) {
           results.google_business = {
-            success: true,
+            success: false,
             simulated: true,
-            message: 'Simulert oppdatering til Google Business Profile (Koble til Google Location ID & OAuth under Innstillinger for live API)',
+            message: 'Ikke publisert — Google Business Profile mangler Location ID og/eller OAuth-token under Innstillinger.',
           };
           continue;
         }
@@ -193,9 +210,27 @@ export async function POST(request: Request) {
       }
     }
 
+    // En «simulert» kanal er IKKE en publisering. Kanalene over markerer derfor
+    // slike tilfeller som success:false med en tydelig årsak.
+    const channelResults = Object.values(results);
+    const publishedCount = channelResults.filter((r) => r.success && !r.simulated).length;
+    const simulatedCount = channelResults.filter((r) => r.simulated).length;
+    const failedCount = channelResults.filter((r) => !r.success && !r.simulated).length;
+
+    const summary =
+      publishedCount > 0
+        ? `Publisert til ${publishedCount} kanal${publishedCount === 1 ? '' : 'er'}.` +
+          (simulatedCount > 0 ? ` ${simulatedCount} kanal(er) er ikke tilkoblet og ble hoppet over.` : '')
+        : 'Ingenting ble publisert: ingen av de valgte kanalene er tilkoblet. ' +
+          'Legg inn gyldige API-token under Innstillinger og prøv igjen.';
+
     return NextResponse.json({
-      success: true,
-      message: 'Behandling av sosiale medier fullført',
+      // success reflekterer om noe FAKTISK ble publisert.
+      success: publishedCount > 0,
+      publishedCount,
+      simulatedCount,
+      failedCount,
+      message: summary,
       results,
     });
   } catch (error: any) {

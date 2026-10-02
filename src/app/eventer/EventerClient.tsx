@@ -19,7 +19,9 @@ export default function EventerClient() {
     fetch('/api/ticketmaster')
       .then((res) => res.json())
       .then((res) => {
-        if (res.success && Array.isArray(res.data)) {
+        // `success` betyr nå «Ticketmaster svarte live», ikke «kallet gjennomførtes».
+        // `data` er befolket også når feeden ikke er live, så vi må ikke filtrere på success.
+        if (Array.isArray(res.data)) {
           setTicketmasterEvents(res.data);
         }
       })

@@ -1,13 +1,25 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { fetchNewlyRegisteredCompanies } from '@/lib/brreg';
-import { getCachedTicketmasterEvents, fetchLiveTicketmasterEvents } from '@/lib/ticketmaster';
+import { requireEditorOrAdmin } from '@/lib/auth';
+import { fetchNewlyRegisteredCompanies, fetchTonsbergCompanyTotal } from '@/lib/brreg';
+import { fetchLiveTicketmasterFeed, getDoOHScreenPlaylist } from '@/lib/ticketmaster';
+import { fetchLiveTrafficStatus } from '@/lib/traffic';
+import { fetchLiveOceanConditions } from '@/lib/ocean';
 import { getUnreadChatCount, getAllChatSessions } from '@/lib/live-chat';
 import { getSetting } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+/**
+ * Dashboard-KPI-er og integrasjonsstatus er intern forretningsinformasjon.
+ * Middleware dekker bare /admin/:path*, ikke /api/admin/*, så sjekken må ligge her.
+ */
+export async function GET(request: Request) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
   try {
     // 1. Artikler (fra DB eller fallback)
     let articlesCount = 0;
@@ -27,29 +39,67 @@ export async function GET() {
     // 2. Arrangementer (Ticketmaster sanntidsdata)
     let eventsCount = 0;
     let liveEvents: any[] = [];
+    // Faktisk kilde-status fra Ticketmaster, ikke en antakelse. Brukes både til
+    // «siste synk»-tidspunktet og til integrasjonsstatusen lenger ned, slik at
+    // dashboardet ikke kan påstå «Live Sanntid» når feeden ikke svarte.
+    let ticketmasterIsLive = false;
+    let ticketmasterSource = 'UNAVAILABLE';
+    let ticketmasterNote: string | undefined;
     try {
-      const cached = getCachedTicketmasterEvents();
-      let eventsList = cached.events;
-      if (!eventsList || eventsList.length === 0) {
-        eventsList = await fetchLiveTicketmasterEvents();
-      }
-      eventsCount = eventsList.length;
-      liveEvents = eventsList.slice(0, 5);
+      const feed = await fetchLiveTicketmasterFeed();
+      eventsCount = feed.events.length;
+      liveEvents = feed.events.slice(0, 5);
+      ticketmasterIsLive = feed.isLive;
+      ticketmasterSource = feed.source;
+      ticketmasterNote = feed.note;
     } catch {
       eventsCount = 0;
     }
 
     // 3. Bedrifter & Nystartede (fra Brønnøysundregistrene OpenAPI)
     let newCompaniesCount = 0;
-    let totalBrregTonsberg = 13169; // Offisielt totaltall fra Brreg Enhetsregisteret for 3905 Tønsberg
+    // Tidligere: let totalBrregTonsberg = 13169 (hardkodet «offisielt» tall).
+    // Nå hentes det faktiske antallet fra Enhetsregisteret, og er null når
+    // registeret ikke svarer — da viser vi «–» i stedet for et udokumentert tall.
+    let totalBrregTonsberg: number | null = null;
+    let totalBrregTonsbergIsLive = false;
     let recentNewCompanies: any[] = [];
     try {
-      const brregData = await fetchNewlyRegisteredCompanies({ daysBack: 30, limit: 10 });
+      const [brregData, brregTotal] = await Promise.all([
+        fetchNewlyRegisteredCompanies({ daysBack: 30, limit: 10 }),
+        fetchTonsbergCompanyTotal(),
+      ]);
       newCompaniesCount = brregData.total || brregData.companies.length;
       recentNewCompanies = brregData.companies.slice(0, 5);
+      totalBrregTonsberg = brregTotal.total;
+      totalBrregTonsbergIsLive = brregTotal.isLive;
     } catch {
       newCompaniesCount = 0;
     }
+
+    // 3b. Ekstern kildehelse for integrasjonsstatusen lenger ned.
+    // Hver status utledes fra kilden selv — ingen hardkodede «Live Sanntid»-påstander.
+    let trafficIsLive = false;
+    let trafficNote: string | undefined;
+    try {
+      const traffic = await fetchLiveTrafficStatus();
+      trafficIsLive = traffic.isLive;
+      trafficNote = traffic.note;
+    } catch {
+      trafficIsLive = false;
+    }
+
+    let metIsLive = false;
+    try {
+      const ocean = await fetchLiveOceanConditions();
+      metIsLive = ocean.isLive;
+    } catch {
+      metIsLive = false;
+    }
+
+    // Antall konfigurerte byskjermer. Dette er en konfigurasjonstelling, ikke en
+    // helsemåling — derfor ordlyden «konfigurert», ikke «i drift».
+    const doohScreenCount = new Set(getDoOHScreenPlaylist().map((item) => item.screenId)).size;
 
     // 4. Booking & Torvleie (fra DB)
     let pendingBookingsCount = 0;
@@ -136,34 +186,63 @@ export async function GET() {
         actionHelp: 'Sett 1_MIN_AI i Railway eller BYOK under Admin > Innstillinger.',
       },
       brreg: {
-        configured: true,
+        configured: totalBrregTonsbergIsLive,
         label: 'Brønnøysundregistrene OpenAPI',
-        statusText: 'Live Sanntid (Tønsberg 3905)',
-        actionRequired: false,
+        statusText: totalBrregTonsbergIsLive
+          ? 'Live sanntid (Tønsberg 3905 + Færder 3911)'
+          : 'Registeret svarte ikke — antall enheter er ukjent',
+        actionRequired: !totalBrregTonsbergIsLive,
+        actionHelp: totalBrregTonsbergIsLive
+          ? undefined
+          : 'Enhetsregisteret svarte ikke ved siste henting. Tallene vises som «–» til registeret svarer igjen.',
       },
       ticketmaster: {
-        configured: true,
+        configured: ticketmasterIsLive,
         label: 'Ticketmaster OpenAPI',
-        statusText: 'Live Sanntid (Tønsberg & omegn)',
-        actionRequired: false,
+        statusText: ticketmasterIsLive
+          ? `Live sanntid (Tønsberg & omegn) – ${ticketmasterSource}`
+          : 'Ticketmaster svarte ikke — ingen arrangementer hentet',
+        actionRequired: !ticketmasterIsLive,
+        actionHelp: ticketmasterIsLive
+          ? undefined
+          : ticketmasterNote ||
+            'Ticketmaster svarte ikke ved siste henting. Vi viser ingen arrangementer i stedet for kuraterte eksempelarrangementer.',
       },
       vegvesen: {
-        configured: true,
+        // Ingen nøkkelfri kilde finnes for Kanalbrua (se src/lib/traffic.ts).
+        // Denne er derfor ærlig «ikke tilkoblet» helt til API-tilgang er satt opp.
+        configured: trafficIsLive,
         label: 'Statens Vegvesen Trafikk',
-        statusText: 'Live Sanntid (Kanalbrua sensor)',
-        actionRequired: false,
+        statusText: trafficIsLive
+          ? 'Live sanntid (Kanalbrua / E18)'
+          : 'Ikke tilkoblet — krever API-tilgang (DATEX II)',
+        actionRequired: !trafficIsLive,
+        actionHelp: trafficIsLive
+          ? undefined
+          : trafficNote ||
+            'Statens vegvesen krever API-tilgang for trafikkdata. Kanalbrua-status vises som «ukjent» inntil den er konfigurert.',
       },
       metNo: {
-        configured: true,
+        configured: metIsLive,
         label: 'Meteorologisk Institutt (Yr)',
-        statusText: 'Live Sanntid (Tønsberg havn)',
-        actionRequired: false,
+        statusText: metIsLive
+          ? 'Live sanntid (vær og havvarsel for Tønsberg)'
+          : 'MET Norway svarte ikke — vær og havdata er utilgjengelige',
+        actionRequired: !metIsLive,
+        actionHelp: metIsLive
+          ? undefined
+          : 'MET Norway svarte ikke ved siste henting. Vi viser ingen oppdiktede temperaturer i stedet.',
       },
       screens: {
         configured: true,
         label: 'Byskjermnettverk (DoOH)',
-        statusText: '3/3 Skjermer i drift',
-        actionRequired: false,
+        statusText: doohScreenCount > 0
+          ? `${doohScreenCount} skjermer konfigurert (innhold ikke helseverifisert)`
+          : 'Ingen skjermer konfigurert',
+        actionRequired: doohScreenCount === 0,
+        actionHelp: doohScreenCount > 0
+          ? undefined
+          : 'Spillelisten for byskjermene er tom. Kjør en synk for å fylle den.',
       },
     };
 
@@ -220,6 +299,7 @@ export async function GET() {
         eventsCount,
         newCompaniesCount,
         totalBrregTonsberg,
+        totalBrregTonsbergIsLive,
         totalBookingsCount,
         pendingBookingsCount,
         approvedBookingsRevenue,

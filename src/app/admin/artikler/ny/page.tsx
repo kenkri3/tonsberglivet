@@ -1,12 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, Save, Eye, Image as ImageIcon, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { SoMeModal } from '@/components/admin/SoMeModal';
 
+// Etikettene normaliseres til ArticleCategory-enumet i src/app/api/articles/route.ts.
 const categories = ['Bylivet', 'Hverdagslivet', 'Næringslivet', 'Reiselivet', 'Studentlivet'];
+
+interface BildeOption {
+  id: string;
+  title: string;
+  url: string;
+}
 
 export default function NyArtikkelPage() {
   const router = useRouter();
@@ -14,13 +21,35 @@ export default function NyArtikkelPage() {
   const [category, setCategory] = useState('Bylivet');
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageId, setImageId] = useState('');
+  const [images, setImages] = useState<BildeOption[]>([]);
   const [published, setPublished] = useState(true);
 
   const [loading, setLoading] = useState(false);
   const [aiWorking, setAiWorking] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showSoMeModal, setShowSoMeModal] = useState(false);
+
+  // Artikkelbildet er en ekte relasjon (Article.imageId) — hent valgene fra bildebanken.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/images');
+        const json = await res.json();
+        if (!cancelled && json.success && Array.isArray(json.data)) {
+          setImages(json.data);
+        }
+      } catch (e) {
+        console.error('Kunne ikke hente bildebanken:', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedImage = images.find((img) => img.id === imageId) || null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,14 +65,14 @@ export default function NyArtikkelPage() {
           category,
           excerpt,
           content,
-          imageUrl: imageUrl || undefined,
+          imageId: imageId || undefined,
           published,
         }),
       });
 
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok && data.success) {
         setStatusMessage({ type: 'success', text: 'Artikkelen er publisert!' });
         setTimeout(() => {
           router.push('/admin/artikler');
@@ -126,7 +155,7 @@ export default function NyArtikkelPage() {
           title={title.trim() || 'Ny artikkel'}
           category={category}
           excerpt={excerpt.trim() || content.trim().slice(0, 300)}
-          imageUrl={imageUrl}
+          imageUrl={selectedImage?.url || ''}
           onClose={() => setShowSoMeModal(false)}
         />
       )}
@@ -207,17 +236,31 @@ export default function NyArtikkelPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-2">Bilde URL (valgfri)</label>
+              <label className="block text-sm font-semibold text-foreground mb-2">Bilde fra bildebanken (valgfritt)</label>
               <div className="relative">
                 <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-subtle" />
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/..."
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
+                <select
+                  value={imageId}
+                  onChange={(e) => setImageId(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-sm text-foreground focus:ring-2 focus:ring-primary outline-none"
-                />
+                >
+                  <option value="">Ingen bilde valgt</option>
+                  {images.map((img) => (
+                    <option key={img.id} value={img.id}>
+                      {img.title}
+                    </option>
+                  ))}
+                </select>
               </div>
+              {images.length === 0 ? (
+                <p className="text-xs text-foreground-subtle mt-1.5">
+                  Bildebanken er tom. Last opp bilder under Bildebank for å knytte et bilde til saken.
+                </p>
+              ) : (
+                <p className="text-xs text-foreground-subtle mt-1.5">
+                  Bildet lagres som en ekte kobling til bildebanken.
+                </p>
+              )}
             </div>
           </div>
 

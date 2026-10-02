@@ -6,7 +6,15 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'Ugyldig JSON i forespørselen.' },
+        { status: 400 }
+      );
+    }
     const { email, password } = body;
 
     if (!email || !password) {
@@ -66,7 +74,14 @@ export async function POST(request: Request) {
         console.warn('[Auth]: Kunne ikke synkronisere admin-passord til DB, men godkjenner via miljøvariabel:', syncErr);
       }
     } else {
-      // 2. Standard database-autentisering
+      // 2. Standard database-autentisering.
+      //
+      // SIKKERHET: Vi oppretter eller endrer ikke kontoer her med mindre databasen
+      // er helt tom (førstegangsoppsett). Tidligere kunne hvem som helst logge inn
+      // som cecilie@/admin@ med et valgfritt passord, og dermed både opprette en
+      // ADMIN-konto og overta en eksisterende ADMIN-konto som manglet passord.
+      const BOOTSTRAP_EMAILS = ['cecilie@tonsberglivet.no', 'admin@tonsberglivet.no'];
+
       try {
         const dbUser = await prisma.user.findUnique({
           where: { email: cleanEmail },
@@ -86,46 +101,57 @@ export async function POST(request: Request) {
             email: dbUser.email,
             role: dbUser.role as any,
           };
-        } else if (!dbUser && (cleanEmail === 'cecilie@tonsberglivet.no' || cleanEmail === 'admin@tonsberglivet.no')) {
-          // Initialisering av standard admin-bruker ved første gangs innlogging
-          const newAdmin = await prisma.user.create({
-            data: {
-              email: cleanEmail,
-              name: cleanEmail === 'cecilie@tonsberglivet.no' ? 'Cecilie Bækken Dahl' : 'Tønsberglivet Admin',
+        } else {
+          const isFirstRun = (await prisma.user.count()) === 0;
+
+          if (isFirstRun && !dbUser && BOOTSTRAP_EMAILS.includes(cleanEmail)) {
+            // Tom database: opprett den første administratoren.
+            const newAdmin = await prisma.user.create({
+              data: {
+                email: cleanEmail,
+                name: cleanEmail === 'cecilie@tonsberglivet.no' ? 'Cecilie Bækken Dahl' : 'Tønsberglivet Admin',
+                role: 'ADMIN',
+                password: hashPassword(password),
+              },
+            });
+            user = {
+              id: newAdmin.id,
+              name: newAdmin.name,
+              email: newAdmin.email,
               role: 'ADMIN',
-              password: hashPassword(password),
-            },
-          });
-          user = {
-            id: newAdmin.id,
-            name: newAdmin.name,
-            email: newAdmin.email,
-            role: 'ADMIN',
-          };
-        } else if (dbUser && !dbUser.password && (cleanEmail === 'cecilie@tonsberglivet.no' || dbUser.role === 'ADMIN')) {
-          // Oppdater passord hvis bruker fantes uten passord
-          const updated = await prisma.user.update({
-            where: { id: dbUser.id },
-            data: { password: hashPassword(password) },
-          });
-          user = {
-            id: updated.id,
-            name: updated.name,
-            email: updated.email,
-            role: updated.role as any,
-          };
+            };
+          } else if (isFirstRun && dbUser && !dbUser.password) {
+            // Tom database og kontoen finnes uten passord: sett passordet nå.
+            const updated = await prisma.user.update({
+              where: { id: dbUser.id },
+              data: { password: hashPassword(password) },
+            });
+            user = {
+              id: updated.id,
+              name: updated.name,
+              email: updated.email,
+              role: updated.role as any,
+            };
+          } else {
+            // Systemet er i drift: ingen selvregistrering, ingen passordtilskrivning.
+            return NextResponse.json(
+              { success: false, error: 'Feil e-postadresse eller passord.' },
+              { status: 401 }
+            );
+          }
         }
-      } catch (dbError) {
-        console.warn('[Auth DB warning]: Fallback til sikker admin-sesjon dersom DB er under migrering', dbError);
-        // Fallback for Cecilie eller admin hvis DB er midlertidig offline
-        if (cleanEmail === 'cecilie@tonsberglivet.no' || cleanEmail === 'admin@tonsberglivet.no') {
-          user = {
-            id: 'admin-fallback-id',
-            name: 'Cecilie Bækken Dahl',
-            email: cleanEmail,
-            role: 'ADMIN',
-          };
-        }
+      } catch (dbError: any) {
+        // Databasen er utilgjengelig — da kan vi ikke verifisere noe passord og
+        // gir derfor ingen sesjon. (Tidligere ga dette en gyldig ADMIN-sesjon til
+        // cecilie@/admin@ med et vilkårlig passord.)
+        console.error('[Auth] Databasefeil under innlogging — avviser forespørselen:', dbError);
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Innlogging er midlertidig utilgjengelig fordi databasen ikke svarer. Prøv igjen om litt.',
+          },
+          { status: 503 }
+        );
       }
     }
 

@@ -1,8 +1,11 @@
 import { prisma } from './prisma';
 
-// Minnebuffer dersom databasetabellen ennå ikke er migrert i produksjon
+// Minnebuffer dersom databasetabellen ennå ikke er migrert i produksjon.
+// MERK: Ingen hemmeligheter her. En hardkodet cron_secret gjorde at
+// «fail-closed»-sjekken i /api/cron/daily-sync aldri slo inn, siden
+// getSetting('cron_secret') alltid returnerte en kjent, offentlig verdi.
+// Cron-hemmeligheten må settes via CRON_SECRET i miljøet eller i Innstillinger.
 const memorySettings: Record<string, string> = {
-  cron_secret: 'tonsberg_cron_secret_2026',
   notification_email: 'post@tonsberglivet.no',
   autonomy_mode: 'manual',
   auto_publish_articles: 'false',
