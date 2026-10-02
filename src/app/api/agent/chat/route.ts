@@ -84,7 +84,7 @@ const toolDeclarations: FunctionDeclaration[] = [
   },
   {
     name: 'skrap_nettside_apify',
-    description: 'Skrap og les fullt innhold fra en spesifikk URL (f.eks. konsertprogram fra foynhagen.no, osebergkulturhus.no, tonsberg.kommune.no) med Apify.',
+    description: 'Skrap og les fullt innhold fra en spesifikk URL (f.eks. konsertprogram fra foynhagen.no, nordicchoicehotels.no, tonsberg.kommune.no) med Apify.',
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -660,7 +660,7 @@ INSTRUKSJONER FOR SVAR:
                     `  *Kilde: ${e.source}*`
                 )
                 .join('\n\n')
-            : `Fant ingen oppførte arrangementer for ${sceneLabel} i den umiddelbare arrangementskalenderen for denne uken. Besøk [foynhagen.no](https://foynhagen.no) og [osebergkulturhus.no](https://osebergkulturhus.no) for oppdaterte sesongprogram.`) +
+            : `Fant ingen oppførte arrangementer for ${sceneLabel} i den umiddelbare arrangementskalenderen for denne uken. Besøk [foynhagen.no](https://foynhagen.no) og [Quality Hotel Tønsberg – Jahn Teigen Arena](https://www.nordicchoicehotels.no/hotell/norge/tonsberg/quality-hotel-tonsberg/) for oppdaterte sesongprogram.`) +
           `\n\n💡 *Vil du at jeg skal opprette en helgeguide-artikkel basert på dette i CMS?*`;
 
         quickReplies.push({ title: '📰 Opprett som artikkel i CMS', payload: 'Opprett som artikkel: Kommende konserter i Tønsberg' });
