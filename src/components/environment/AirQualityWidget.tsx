@@ -41,8 +41,9 @@ export function AirQualityWidget() {
           {unavailableNote ||
             'Henter luftkvalitetsdata …'}
         </p>
+        {/* Uten «www» i adressen: www-varianten løser ikke opp i DNS. */}
         <a
-          href="https://www.luftkvalitet.miljodirektoratet.no/"
+          href="https://luftkvalitet.miljodirektoratet.no/"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex text-xs font-bold text-primary hover:underline"

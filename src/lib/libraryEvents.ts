@@ -1,5 +1,19 @@
 // Tønsberg og Færder Bibliotek & Kulturhus Event Feed Service
 // Real community & cultural events parsed from library open channels
+//
+// VIKTIG om `link`-feltet:
+// Postene under er kuraterte beskrivelser av bibliotekets FASTE tilbud
+// (advokatvakt, filosofisk hjørne, småbarnssang m.fl.). De er ikke enkelt-
+// oppføringer hentet fra bibliotekets arrangementskalender, og derfor finnes
+// det heller ingen egen detaljside å lenke til for hver av dem.
+//
+// Alle lenker peker derfor til bibliotekets arrangementskalender, der de
+// faktiske, daterte arrangementene ligger. Bibliotekets riktige domene er
+// tnb.no — det tidligere domenet `tonsbergogfaerder.bibliotek.no` svarer 404
+// og ga fem døde «Info»-lenker i widgeten.
+//
+// Skal dette bli ekte sanntidsdata, må feeden hentes fra tnb.no/nb/arrangementer
+// (som har URL-er per arrangement, f.eks. /nb/arrangementer/<slug>_<hash>).
 
 export interface LibraryEvent {
   id: string;
@@ -27,7 +41,7 @@ export const OFFICIAL_LIBRARY_EVENTS: LibraryEvent[] = [
     price: 'Gratis',
     description: 'Få inntil 30 minutters gratis juridisk orientering av kvalifiserte advokater fra Tønsberg-kretsen.',
     organizer: 'Tønsberg og Færder Bibliotek & Advokatforeningen',
-    link: 'https://tonsbergogfaerder.bibliotek.no/'
+    link: 'https://tnb.no/nb/arrangementer'
   },
   {
     id: 'bib-2',
@@ -40,7 +54,7 @@ export const OFFICIAL_LIBRARY_EVENTS: LibraryEvent[] = [
     price: 'Gratis',
     description: 'Åpent diskusjonsforum for nysgjerrige innbyggere med fokus på etikk, samfunn og livsmestring.',
     organizer: 'Tønsberg og Færder Bibliotek',
-    link: 'https://tonsbergogfaerder.bibliotek.no/'
+    link: 'https://tnb.no/nb/arrangementer'
   },
   {
     id: 'bib-3',
@@ -53,7 +67,7 @@ export const OFFICIAL_LIBRARY_EVENTS: LibraryEvent[] = [
     price: 'Gratis',
     description: 'Hyggelig sang- og bevegelsesstund for de minste sammen med foreldre i baby- og småbarnsalder.',
     organizer: 'Tønsberg og Færder Bibliotek',
-    link: 'https://tonsbergogfaerder.bibliotek.no/'
+    link: 'https://tnb.no/nb/arrangementer'
   },
   {
     id: 'bib-4',
@@ -66,7 +80,7 @@ export const OFFICIAL_LIBRARY_EVENTS: LibraryEvent[] = [
     price: 'Gratis (ta med eget tøy)',
     description: 'Lær enkel reparasjon av klær, omsøm og bruk av symaskiner. Frivillige hjelper deg i gang.',
     organizer: 'Tønsberg Husflidslag & Biblioteket',
-    link: 'https://tonsbergogfaerder.bibliotek.no/'
+    link: 'https://tnb.no/nb/arrangementer'
   },
   {
     id: 'bib-5',
@@ -79,7 +93,7 @@ export const OFFICIAL_LIBRARY_EVENTS: LibraryEvent[] = [
     price: 'Gratis',
     description: 'Få kyndig hjelp til å finne forfedrene dine i kirkebøker, folketellinger og digitale arkiver.',
     organizer: 'Slekt og Data Vestfold',
-    link: 'https://tonsbergogfaerder.bibliotek.no/'
+    link: 'https://tnb.no/nb/arrangementer'
   }
 ];
 
