@@ -15,28 +15,28 @@ const hotels = [
     location: 'Nedre Langgate 49, Tønsberg', 
     category: 'Byhotell & Kultur', 
     desc: 'Legendarisk hotell midt på Brygga med moderne rom, anerkjent scene, konferansefasiliteter og fantastisk sjøutsikt over kanalen.',
-    image: '/images/tonsberg/brygga_full.jpg'
+    image: '/images/tonsberg/hotel-klubben-quality-hotel-tonsbe.jpg'
   },
   { 
     name: 'Quality Hotel Tønsberg', 
     location: 'Oseberg, Tønsberg Brygge', 
     category: 'Bryggehotell & Spa', 
     desc: 'Luksuriøst hotell ved vannkanten med spektakulært oppvarmet takbasseng, The Sense restaurant og førsteklasses velvære.',
-    image: '/images/tonsberg/quality_hotel_tonsberg.jpg'
+    image: '/images/tonsberg/quality-hotel-tonsberg-engo-gaard-.jpg'
   },
   { 
     name: 'Engø Gård Hotel & Restaurant', 
     location: 'Tjøme / Færder', 
     category: 'Eksklusivt & Historisk', 
     desc: 'Idyllisk herregård på Tjøme med stjerne-gastronomi, sjarmerende engelsk stil, ro og prisbelønte matopplevelser.',
-    image: '/images/tonsberg/ostre_bolarne.jpg'
+    image: '/images/tonsberg/engo-gaard-hotel-restaurant-havna-.jpg'
   },
   { 
     name: 'Havna Hotel Tjøme', 
     location: 'Havna, Tjøme', 
     category: 'Skjærgårdshotell', 
     desc: 'Hotell og leiligheter rett ved svabergene på Tjøme med gjestehavn, badestrand og umiddelbar adgang til Færder nasjonalpark.',
-    image: '/images/tonsberg/kajakk_faerder.jpg'
+    image: '/images/tonsberg/havna-hotel-tjome.jpg'
   },
 ];
 
@@ -48,7 +48,7 @@ export default function OvernattingPage() {
         subtitle="Byhotell & Skjærgårdsperler"
         description="Finn det perfekte stedet å bo – fra livlige bryggehoteller i Tønsberg sentrum til idylliske herregårder på Tjøme."
         backgroundGradient="linear-gradient(135deg, #b45309 0%, #d97706 50%, #16193d 100%)"
-        backgroundImage="/images/tonsberg/quality_hotel_tonsberg.jpg"
+        backgroundImage="/images/tonsberg/overnatting-byhotell-skjaergaardsp.jpg"
         imageAlt="Hotell ved brygga i Tønsberg"
         priority
         compact={true}

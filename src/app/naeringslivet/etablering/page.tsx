@@ -15,28 +15,28 @@ const areas = [
     type: 'Kollektivknutepunkt',
     status: 'Under utvikling',
     desc: 'Moderne kontorlokaler kun 1 time og 15 minutter fra Oslo S med tog.',
-    image: '/images/tonsberg/byen_fra_luften.jpg',
+    image: '/images/tonsberg/tonsberg-stasjonsomraade-foynkvart.jpg',
   },
   {
     name: 'Foynkvartalet & Bryggekanten',
     type: 'Sentrumskjerne',
     status: 'Ledige lokaler',
     desc: 'Prestige-adresse i Nedre Langgate med førsteklasses arkitektur og utsikt mot kanalen.',
-    image: '/images/tonsberg/brygga_full.jpg',
+    image: '/images/tonsberg/foynkvartalet-bryggekanten-kaldnes.jpg',
   },
   {
     name: 'Kaldnes Vest & Sjøfronten',
     type: 'Sjøfront & Næring',
     status: 'Under regulering',
     desc: 'Ny urban bydel med kombinasjon av høyteknologi, kontorfellesskap og sjønære boliger.',
-    image: '/images/tonsberg/kaldnes_havn.jpg',
+    image: '/images/tonsberg/kaldnes-vest-sjofronten-statens-pa.jpg',
   },
   {
     name: 'Statens Park',
     type: 'Helse & Offentlig',
     status: 'Etablert næringspark',
     desc: 'Regional klynge for helsebedrifter, konsulenter, rådgivere og offentlige organisasjoner.',
-    image: '/images/tonsberg/torvet_tonsberg.jpg',
+    image: '/images/tonsberg/statens-park-regional-klynge-for-h.jpg',
   },
 ];
 
@@ -48,7 +48,7 @@ export default function EtableringPage() {
         subtitle="Etabler bedrift i Tønsbergregionen"
         description="Få hjelp til oppstart via Gründerhuset Hi5, START-programmet og sjekk ledige næringsarealer."
         backgroundGradient="linear-gradient(135deg, #1E3A5F, #1D4ED8)"
-        backgroundImage="/images/tonsberg/byliv_gate.jpg"
+        backgroundImage="/images/tonsberg/etablering-naeringsarealer-etabler.jpg"
         imageAlt="Gatebildet i Tønsberg sentrum"
         priority
         compact={true}

@@ -7,6 +7,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // Fyller bildebanken med de ekte Tønsberg-bildene i public/images/tonsberg
+    seed: "node prisma/seed.mjs",
   },
   datasource: {
     url: process.env["DATABASE_URL"],

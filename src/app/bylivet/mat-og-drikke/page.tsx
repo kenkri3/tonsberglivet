@@ -26,7 +26,7 @@ export default function MatOgDrikkePage() {
         subtitle="Uteservering på Brygga & Lokale Smaker"
         description="Nyt nydelig mat fra byens beste restauranter, slapp av på koselige kaffebarer eller opplev den unike bryggestemningen i Tønsberg."
         backgroundGradient="linear-gradient(135deg, #b45309 0%, #d97706 50%, #16193d 100%)"
-        backgroundImage="/images/tonsberg/brygge_solnedgang.jpg"
+        backgroundImage="/images/tonsberg/mat-drikke-uteservering-paa-brygga.jpg"
         imageAlt="Kveldssol over brygga i Tønsberg"
         priority
         compact={true}
@@ -57,7 +57,7 @@ export default function MatOgDrikkePage() {
           </div>
           <div className="lg:col-span-5 relative aspect-[16/10] rounded-2xl overflow-hidden shadow-lg border border-border">
             <Image 
-              src="/images/tonsberg/mat_og_drikke_tonsberg.jpg" 
+              src="/images/tonsberg/familie-som-spiser-uteservering-pa.jpg" 
               alt="Familie som spiser uteservering på Tønsberg Brygge" 
               fill
               sizes="(max-width: 1024px) 100vw, 40vw"
@@ -69,10 +69,10 @@ export default function MatOgDrikkePage() {
         {/* Smakebiter fra byens matliv */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
           {[
-            { src: '/images/food.jpg', alt: 'Barista som lager kaffe på kafé i Tønsberg', caption: 'Kaffebarer' },
-            { src: '/images/tonsberg/marked_mat.jpg', alt: 'Kokk som lager mat på marked i Tønsberg', caption: 'Matmarkeder' },
-            { src: '/images/tonsberg/hostmarked.jpg', alt: 'Lokalproduserte grønnsaker fra marked i Tønsberg', caption: 'Lokale råvarer' },
-            { src: '/images/tonsberg/folkefest.jpg', alt: 'Folkefest med mat og musikk i Tønsberg', caption: 'Utearrangementer' },          ].map((p) => (
+            { src: '/images/tonsberg/barista-som-lager-kaffe-paa-kaf-i-.jpg', alt: 'Barista som lager kaffe på kafé i Tønsberg', caption: 'Kaffebarer' },
+            { src: '/images/tonsberg/barista-som-lager-kaffe-paa-kaf-i--2.jpg', alt: 'Kokk som lager mat på marked i Tønsberg', caption: 'Matmarkeder' },
+            { src: '/images/tonsberg/barista-som-lager-kaffe-paa-kaf-i--3.jpg', alt: 'Lokalproduserte grønnsaker fra marked i Tønsberg', caption: 'Lokale råvarer' },
+            { src: '/images/tonsberg/barista-som-lager-kaffe-paa-kaf-i--4.jpg', alt: 'Folkefest med mat og musikk i Tønsberg', caption: 'Utearrangementer' },          ].map((p) => (
             <figure key={p.src} className="group relative aspect-square rounded-2xl overflow-hidden border border-border shadow-sm">
               <Image
                 src={p.src}

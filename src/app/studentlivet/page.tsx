@@ -22,7 +22,7 @@ export default function StudentlivetPage() {
       <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/studentlivet_usn.jpg"
+            src="/images/tonsberg/studentlivet-usn.jpg"
             alt="Studentlivet ved USN Campus Vestfold i Tønsberg"
             fill
             priority
@@ -203,7 +203,7 @@ export default function StudentlivetPage() {
           subtitle="Bilder fra USN Campus Vestfold, student arrangementer og utelivet på Brygga."
           photos={[
             {
-              src: '/images/tonsberg/student_park.jpg',
+              src: '/images/tonsberg/studentlivet-i-bilder-bilder-fra-u.jpg',
               alt: 'Studenter som tilbringer tid sammen utendørs i Tønsberg',
               caption: 'Studentmiljøet utendørs',
               location: 'Campus Vestfold',
@@ -211,7 +211,7 @@ export default function StudentlivetPage() {
               photographer: 'USN Arkiv',
             },
             {
-              src: '/images/tonsberg/student_tonsberg.jpg',
+              src: '/images/tonsberg/studentliv-og-samhold-i-tonsberg-s.jpg',
               alt: 'Studentliv og samhold i Tønsberg',
               caption: 'Studentfellesskapet i Tønsberg',
               location: 'Tønsberg Sentrum',
@@ -219,7 +219,7 @@ export default function StudentlivetPage() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/brygge_kveldsstemning.jpg',
+              src: '/images/tonsberg/kveldsliv-og-samling-paa-brygga-st.jpg',
               alt: 'Kveldsliv og samling på Brygga',
               caption: 'Kveldsstemning på Brygga',
               location: 'Tønsberg Brygge',

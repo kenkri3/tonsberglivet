@@ -15,25 +15,25 @@ const shoppingCategories = [
     title: 'Nisjebutikker & Mote',
     desc: 'Bogart, Klara, Mondi & Seven, lokal kvalitet og unik mote i koselige sentrumsgater.',
     count: '45+ butikker',
-    image: '/images/tonsberg/fotograf_varpe_tonsberg.jpg',
+    image: '/images/tonsberg/nisjebutikker-mote-farmandstredet-.jpg',
   },
   {
     title: 'Farmandstredet Kjøpesenter',
     desc: 'Vestfolds største kjøpesenter midt i hjertet av Tønsberg med over 80 spennende butikker.',
     count: '80+ butikker',
-    image: '/images/tonsberg/torvet_tonsberg.jpg',
+    image: '/images/tonsberg/farmandstredet-kjopesenter-tonsber.jpg',
   },
   {
     title: 'Tønsberg Torv & Markedsplass',
     desc: 'Bonde- og sesongmarkeder, blomster, lokalt håndverk og yrende folkeliv hele uken.',
     count: 'Torvhandel',
-    image: '/images/tonsberg/handel_marked.jpg',
+    image: '/images/tonsberg/tonsberg-torv-markedsplass-matgled.jpg',
   },
   {
     title: 'Matglede, Interiør & Design',
     desc: 'Skandinavisk interiør, håndverk og delikatesser i gågater og historiske kvartaler.',
     count: '25+ butikker',
-    image: '/images/food.jpg',
+    image: '/images/tonsberg/matglede-interior-design-skandinav.jpg',
   },
 ];
 
@@ -45,7 +45,7 @@ export default function ShoppingPage() {
         subtitle="Unike nisjebutikker & Farmandstredet"
         description="I Tønsberg finner du en perfekt miks av tradisjonsrik sentrumshandel, spennende nisjebutikker og moderne kjøpesentre."
         backgroundGradient="linear-gradient(135deg, #1D4ED8, #0E7490)"
-        backgroundImage="/images/shopping.jpg"
+        backgroundImage="/images/tonsberg/shopping-i-tonsberg-unike-nisjebut.jpg"
         imageAlt="Folkeliv og handel i Tønsberg sentrum"
         priority
         compact={true}

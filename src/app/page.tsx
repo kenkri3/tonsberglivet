@@ -30,7 +30,7 @@ export default async function Home() {
         {/* Bakgrunnsbilde med cinematic dybde */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/hero.jpg"
+            src="/images/tonsberg/tonsberg-brygge-og-havn-relative-m.jpg"
             alt="Tønsberg Brygge og Havn"
             fill
             priority
@@ -130,7 +130,7 @@ export default async function Home() {
               {/* Bilde med spillested-badge */}
               <div className="relative aspect-[16/9] overflow-hidden bg-slate-950">
                 <Image
-                  src={ev.imageUrl || '/images/kultur.jpg'}
+                  src={ev.imageUrl || '/images/tonsberg/relative-aspect-16-9-overflow-hidd.jpg'}
                   alt={ev.title}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -220,7 +220,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl hover:shadow-2xl transition-all group">
           <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
             <Image
-              src="/images/slottsfjellet.jpg"
+              src="/images/tonsberg/slottsfjellet.jpg"
               alt="Slottsfjellet Tønsberg"
               fill
               sizes="(max-width: 1024px) 100vw, 60vw"
@@ -377,7 +377,7 @@ export default async function Home() {
           subtitle="Opplev atmosfæren i Norges eldste kystby, på Brygga, Slottsfjellet og Færder-skjærgården."
           photos={[
             {
-              src: '/images/hero-aerial.jpg',
+              src: '/images/tonsberg/hero-aerial.jpg',
               alt: 'Tønsberg sett fra luften med brygge, kanal og byfjord',
               caption: 'Tønsberg fra luften',
               location: 'Tønsberg Brygge & Kanalen',
@@ -385,7 +385,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/hostfest_slottsfjell.png',
+              src: '/images/tonsberg/slottsfjellstaarnet-og-ruinene-i-t.jpg',
               alt: 'Slottsfjellstårnet og ruinene i Tønsberg',
               caption: 'Slottsfjellet & Tårnet',
               location: 'Slottsfjellet, Tønsberg',
@@ -393,7 +393,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/brygge_kveldsstemning.jpg',
+              src: '/images/tonsberg/tonsberg-brygge-om-kvelden-slottsf.jpg',
               alt: 'Tønsberg Brygge om kvelden',
               caption: 'Stemning på Tønsberg Brygge',
               location: 'Bryggekanten',
@@ -401,7 +401,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/ostre_bolarne.jpg',
+              src: '/images/tonsberg/skjaergaarden-og-faerder-nasjonalp.jpg',
               alt: 'Skjærgården og Færder nasjonalpark',
               caption: 'Østre Bolærne & Skjærgården',
               location: 'Færder Nasjonalpark',
@@ -409,7 +409,7 @@ export default async function Home() {
               photographer: 'Visit Færder',
             },
             {
-              src: '/images/tonsberg/mat_og_drikke_tonsberg.jpg',
+              src: '/images/tonsberg/uteservering-og-matkultur-paa-bryg.jpg',
               alt: 'Uteservering og matkultur på brygga',
               caption: 'Lokal mat & Uteservering',
               location: 'Tønsberg Brygge',
@@ -417,7 +417,7 @@ export default async function Home() {
               photographer: 'Fotograf Varpe',
             },
             {
-              src: '/images/tonsberg/byliv_gate.jpg',
+              src: '/images/tonsberg/gate-med-lys-og-folk-i-tonsberg-se-2.jpg',
               alt: 'Gate med lys og folk i Tønsberg sentrum',
               caption: 'Gateliv i sentrum',
               location: 'Storgaten, Tønsberg',
@@ -425,7 +425,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/hostmarked.jpg',
+              src: '/images/tonsberg/lokalproduserte-varer-fra-marked-i.jpg',
               alt: 'Lokalproduserte varer fra marked i Tønsberg',
               caption: 'Høstmarked på Torvet',
               location: 'Tønsberg Torv',
@@ -433,7 +433,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/barn_aktivitet.jpg',
+              src: '/images/tonsberg/barn-som-lager-kunst-i-tonsberg-ho.jpg',
               alt: 'Barn som lager kunst i Tønsberg',
               caption: 'Barn i byen',
               location: 'Tønsberg Sentrum',
@@ -441,7 +441,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/studentlivet_usn.jpg',
+              src: '/images/tonsberg/student-park.jpg',
               alt: 'Studenter ved USN Campus Vestfold',
               caption: 'Studentmiljøet ved USN',
               location: 'Campus Vestfold',

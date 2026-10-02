@@ -14,25 +14,25 @@ const studentOffers = [
     title: 'Studentsamskipnaden (SSN)',
     category: 'Bolig & Velferd',
     desc: 'SSN tilbyr moderne studentboliger på Campus Vestfold og Eik, samt generøs helserefusjonsordning for studenter.',
-    image: '/images/tonsberg/studentlivet_usn.jpg',
+    image: '/images/tonsberg/studentsamskipnaden-ssn-studentrab.jpg',
   },
   {
     title: 'Studentrabatter i Sentrum',
     category: 'Handel & Kafé',
     desc: 'Vis gyldig studentbevis og få eksklusive studentrabatter hos over 40 butikker, kaffebarer og treningssentre.',
-    image: '/images/tonsberg/fotograf_varpe_tonsberg.jpg',
+    image: '/images/tonsberg/studentrabatter-i-sentrum-ung-aren.jpg',
   },
   {
     title: 'Ung Arena+ Tønsberg',
     category: 'Helse & Møteplass',
     desc: 'Lavterskel helsetilbud, rådgivning, karriereveiledning og sosiale kvelder for unge og studenter.',
-    image: '/images/tonsberg/student_tonsberg.jpg',
+    image: '/images/tonsberg/ung-arena-tonsberg-kollektivtransp.jpg',
   },
   {
     title: 'Kollektivtransport & Tog',
     category: 'VKT & Vy',
     desc: 'Svært gode bussforbindelser mellom Tønsberg sentrum, Bakkenteigen og direkte togforbindelse mot Oslo.',
-    image: '/images/tonsberg/byen_fra_luften.jpg',
+    image: '/images/tonsberg/kollektivtransport-tog.jpg',
   },
 ];
 
@@ -44,7 +44,7 @@ export default function StudentBoligOgRabatterPage() {
         subtitle="Studere ved USN Campus Vestfold / Tønsberg"
         description="Få full oversikt over SSN sine studentboliger, studentrabatter i byen og gratis helsetjenester."
         backgroundGradient="linear-gradient(135deg, #DC2626, #EF4444)"
-        backgroundImage="/images/tonsberg/student_park.jpg"
+        backgroundImage="/images/tonsberg/studentbolig-rabatter-studere-ved-.jpg"
         imageAlt="Studenter i Tønsberg"
         priority
         compact={true}

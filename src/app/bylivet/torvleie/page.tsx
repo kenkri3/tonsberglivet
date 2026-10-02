@@ -18,7 +18,7 @@ export default function TorvleiePage() {
         subtitle="Tønsberg Torv"
         description="Tønsberg Torv er hjertet av byen og en fantastisk arena for handel, utstillinger og profilering. Her møtes byens befolkning til hverdags og fest."
         backgroundGradient="linear-gradient(135deg, #0F2847, #1D4ED8)"
-        backgroundImage="/images/tonsberg/marked_mat.jpg"
+        backgroundImage="/images/tonsberg/torvleie-tonsberg-torv-torvhandler.jpg"
         imageAlt="Torvhandler som selger lokal mat på Tønsberg Torv"
         priority
       />
@@ -38,7 +38,7 @@ export default function TorvleiePage() {
               <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-8">
                 <figure className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border">
                   <Image
-                    src="/images/tonsberg/handel_marked.jpg"
+                    src="/images/tonsberg/markedsboder-paa-tonsberg-torv-gri.jpg"
                     alt="Markedsboder på Tønsberg Torv"
                     fill
                     sizes="(max-width: 1024px) 50vw, 25vw"
@@ -47,7 +47,7 @@ export default function TorvleiePage() {
                 </figure>
                 <figure className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border">
                   <Image
-                    src="/images/tonsberg/hostmarked.jpg"
+                    src="/images/tonsberg/lokalproduserte-varer-til-salgs-pa.jpg"
                     alt="Lokalproduserte varer til salgs på torvet"
                     fill
                     sizes="(max-width: 1024px) 50vw, 25vw"

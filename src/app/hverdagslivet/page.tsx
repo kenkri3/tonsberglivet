@@ -23,7 +23,7 @@ export default function HverdagslivetPage() {
       <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/ostre_bolarne.jpg"
+            src="/images/tonsberg/bo-og-leve-i-tonsbergregionen-min-.jpg"
             alt="Bo og leve i Tønsbergregionen"
             fill
             priority
@@ -156,7 +156,7 @@ export default function HverdagslivetPage() {
           subtitle="Glimt fra nabolagene, skjærgården, parkene og kulturen i hverdagen."
           photos={[
             {
-              src: '/images/tonsberg/local-20.jpg',
+              src: '/images/tonsberg/hverdagslivet-i-tonsberg-i-bilder-.jpg',
               alt: 'Nabolag og gatemiljø i Tønsberg',
               caption: 'Nabolag & Nærmiljø',
               location: 'Tønsberg',
@@ -164,7 +164,7 @@ export default function HverdagslivetPage() {
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/barnas_dag.jpg',
+              src: '/images/tonsberg/aktiviteter-for-barnefamilier-i-to.jpg',
               alt: 'Aktiviteter for barnefamilier i Tønsberg',
               caption: 'Barnevennlige Tønsberg',
               location: 'Tønsberg Sentrum',
@@ -172,7 +172,7 @@ export default function HverdagslivetPage() {
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/sommer_tonsberg.png',
+              src: '/images/tonsberg/sommer-i-tonsberg-barnevennlige-to.jpg',
               alt: 'Sommer i Tønsberg',
               caption: 'Sommerdager i regionen',
               location: 'Tønsberg & Færder',

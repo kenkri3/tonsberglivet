@@ -28,7 +28,7 @@ const prosjekter = [
     desc: 'Kunst- og kulturprosjekter i samarbeid med lokale barnehager og skoler for å inkludere barna aktivt i byrommet.', 
     status: 'Pågår',
     icon: Palette,
-    image: '/images/tonsberg/borggardsfest.png'
+    image: '/images/tonsberg/barn-i-byen.jpg'
   },
   { 
     id: 2, 
@@ -36,7 +36,7 @@ const prosjekter = [
     desc: 'Lokale matprodusenter fyller Tønsberg Torv med ferske grønnsaker, ost, bakst og kortreiste spesialiteter.', 
     status: 'Årlig',
     icon: ShoppingBag,
-    image: '/images/tonsberg/marked_mat.jpg'
+    image: '/images/tonsberg/bondens-marked-paa-torvet.jpg'
   },
   { 
     id: 3, 
@@ -44,7 +44,7 @@ const prosjekter = [
     desc: 'Feiring av høsten med markedsboder, musikk, historiske innslag og aktiviteter for hele storfamilien.', 
     status: 'Årlig',
     icon: Leaf,
-    image: '/images/tonsberg/hostfest_slottsfjell.png'
+    image: '/images/tonsberg/hostfest-paa-slottsfjellet.jpg'
   },
   { 
     id: 4, 
@@ -52,7 +52,7 @@ const prosjekter = [
     desc: 'Årets største handels- og folkefest med tradisjoner helt tilbake til 1974. Yrende liv fra tidlig morgen til kveld.', 
     status: 'Årlig',
     icon: CalendarDays,
-    image: '/images/tonsberg/brygga_folk.jpg'
+    image: '/images/tonsberg/tonsbergdagen.jpg'
   },
   { 
     id: 5, 
@@ -60,7 +60,7 @@ const prosjekter = [
     desc: 'Mat- og opplevelsesuker som feirer den rike gastronomien i Tønsberg med spesialmenyer og felles måltider.', 
     status: 'Gjennomført',
     icon: UtensilsCrossed,
-    image: '/images/tonsberg/spisuteuka.jpg'
+    image: '/images/tonsberg/nyt-tonsberg-spis-ute-uka.jpg'
   },
   { 
     id: 6, 
@@ -68,7 +68,7 @@ const prosjekter = [
     desc: 'Skaper magisk førjulsstemning med glitrende lysgater, julemarked på Torvet, skøytebane og julekonserter.', 
     status: 'Årlig',
     icon: Sparkles,
-    image: '/images/tonsberg/brygge_kveldsstemning.jpg'
+    image: '/images/tonsberg/jul-i-tonsberg.jpg'
   },
   { 
     id: 7, 
@@ -76,7 +76,7 @@ const prosjekter = [
     desc: 'Gode sommertilbud, underholdning og aktiviteter som støtter de unike butikkene i sentrum.', 
     status: 'Årlig',
     icon: Store,
-    image: '/images/shopping.jpg'
+    image: '/images/tonsberg/handelens-dager-gode-sommertilbud-.jpg'
   },
   { 
     id: 8, 
@@ -84,7 +84,7 @@ const prosjekter = [
     desc: 'Bærekraftige markeder med gjenbruk av klær, vintage og redesign som samler både unge og voksne.', 
     status: 'Pågår',
     icon: Recycle,
-    image: '/images/tonsberg/handel_marked.jpg'
+    image: '/images/tonsberg/gjenbruksmarked.jpg'
   },
   { 
     id: 9, 
@@ -92,7 +92,7 @@ const prosjekter = [
     desc: 'En varm og uformell velkomstfest for alle som nylig har flyttet til Tønsberg- og Færderregionen.', 
     status: 'Planlagt',
     icon: HeartHandshake,
-    image: '/images/tonsberg/folkefest.jpg'
+    image: '/images/tonsberg/innflytterfesten.jpg'
   }
 ];
 
@@ -104,7 +104,7 @@ export default function ProsjekterPage() {
         subtitle="Tønsberglivet"
         description="Vi initierer, støtter og gjennomfører små og store prosjekter som gjør Tønsbergregionen til et mer levende, attraktivt og samlende sted å bo, besøke og drive næring i."
         backgroundGradient="linear-gradient(135deg, #16193d 0%, #1D4ED8 100%)"
-        backgroundImage="/images/tonsberg/folkefest.jpg"
+        backgroundImage="/images/tonsberg/vaare-prosjekter-tonsberglivet-fol.jpg"
         imageAlt="Folkefest i Tønsberg"
         priority
         compact={true}

@@ -17,25 +17,25 @@ const attractions = [
     name: 'Verdens Ende & Vippefyret',
     area: 'Tjøme / Færder',
     desc: 'Ikonisk fyrtårn og værbitte svaberg på spissen av Tjøme med mektig panoramautsikt mot Skagerrak og Færder fyr.',
-    image: '/images/skjaergard.jpg',
+    image: '/images/tonsberg/verdens-ende-vippefyret-faerder-na.jpg',
   },
   {
     name: 'Færder Nasjonalpark',
     area: 'Skjærgården',
     desc: 'En av Norges mest fantastiske marine nasjonalparker for padling, dykking, bading og spektakulære kyststier.',
-    image: '/images/tonsberg/kajakk_faerder.jpg',
+    image: '/images/tonsberg/faerder-nasjonalpark-bolaerne-oyen.jpg',
   },
   {
     name: 'Bolærne Øyene',
     area: 'Nøtterøy Skjærgård',
     desc: 'Historiske øyer med kystfort, uberørte turstier, gjestehavn og rutebåt direkte fra Tønsberg Brygge.',
-    image: '/images/tonsberg/ostre_bolarne.jpg',
+    image: '/images/tonsberg/bolaerne-oyene-moutmarka-bekkevika.jpg',
   },
   {
     name: 'Moutmarka & Bekkevika',
     area: 'Sør-Tjøme',
     desc: 'Fredet kystområde med rullesteinstrender, unikt planteliv, spennende geologi og uforglemmelige kveldssolnedganger.',
-    image: '/images/tonsberg/brygge_kveldsstemning.jpg',
+    image: '/images/tonsberg/moutmarka-bekkevika.jpg',
   },
 ];
 
@@ -47,7 +47,7 @@ export default function OpplevelserPage() {
         subtitle="Fra Vikingtid til Færder Nasjonalpark"
         description="Opplev Norges vakreste skjærgård, historiske middelalderborger, ikoniske svaberg og levende kystkultur."
         backgroundGradient="linear-gradient(135deg, #D97706, #0E7490)"
-        backgroundImage="/images/skjaergard.jpg"
+        backgroundImage="/images/tonsberg/opplevelser-kulturarv-natur-fra-vi.jpg"
         imageAlt="Verdens Ende og Færder fyr"
         priority
         compact={true}

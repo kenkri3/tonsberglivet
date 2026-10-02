@@ -18,7 +18,7 @@ export default function GavekortPage() {
         subtitle="Gaven som gleder alle"
         description="Med Sentrumsgavekortet gir du ikke bare en fantastisk gave, du støtter også det lokale næringslivet i byen vår. Gavekortet kan brukes hos over 300 butikker, serveringssteder og opplevelser i Tønsberg."
         backgroundGradient="linear-gradient(135deg, #B45309 0%, #F59E0B 100%)"
-        backgroundImage="/images/tonsberg/byliv_gate.jpg"
+        backgroundImage="/images/tonsberg/sentrumsgavekortet-gaven-som-glede.jpg"
         imageAlt="Stemning i gatebildet i Tønsberg sentrum"
         priority
       />
@@ -116,9 +116,9 @@ export default function GavekortPage() {
       <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {[
-            { src: '/images/tonsberg/handel_marked.jpg', alt: 'Markedsboder med klær og håndverk i Tønsberg sentrum', caption: 'Handel i sentrum' },
-            { src: '/images/tonsberg/marked_mat.jpg', alt: 'Kokk som serverer lokal mat i Tønsberg', caption: 'Kafé og servering' },
-            { src: '/images/tonsberg/hostmarked.jpg', alt: 'Lokalproduserte varer fra marked i Tønsberg', caption: 'Lokale varer' },          ].map((p) => (
+            { src: '/images/tonsberg/markedsboder-med-klaer-og-haandver.jpg', alt: 'Markedsboder med klær og håndverk i Tønsberg sentrum', caption: 'Handel i sentrum' },
+            { src: '/images/tonsberg/markedsboder-med-klaer-og-haandver-2.jpg', alt: 'Kokk som serverer lokal mat i Tønsberg', caption: 'Kafé og servering' },
+            { src: '/images/tonsberg/markedsboder-med-klaer-og-haandver-3.jpg', alt: 'Lokalproduserte varer fra marked i Tønsberg', caption: 'Lokale varer' },          ].map((p) => (
             <figure key={p.src} className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-border shadow-sm group">
               <Image
                 src={p.src}

@@ -30,7 +30,7 @@ export const TONSBERG_HERITAGE_SITES: HeritageSite[] = [
     fullDesc: 'Castrum Tunsbergis var et mektig befestet kongesete med ringmurer, teglkastell og Mikaelskirken. Ruinene på fjellet vitner om Tønsbergs posisjon som Norges politiske maktsentrum i høymiddelalderen.',
     location: 'Slottsfjellet, 3126 Tønsberg',
     coordinates: { lat: 59.2715, lng: 10.4060 },
-    imageUrl: '/images/slottsfjellet.jpg',
+    imageUrl: '/images/tonsberg/nordens-storste-middelalderborg-og.jpg',
     heritageId: 'Kulturminne-ID: 86022',
     tips: 'Nyt 360-graders utsikt over hele Tønsberg og fjorden. Tårnet er åpent i sommersesongen.'
   },
@@ -44,7 +44,7 @@ export const TONSBERG_HERITAGE_SITES: HeritageSite[] = [
     fullDesc: 'Her ble to mektige vikingkvinner gravlagt i år 834 sammen med et praktfullt, utskåret vikingskip, hester, hunder, vogner og tekstiler. Skipet ble gravd ut i 1904 og er et globalt ikon for vikingtiden.',
     location: 'Slagendalen, 3115 Tønsberg',
     coordinates: { lat: 59.3050, lng: 10.4633 },
-    imageUrl: '/images/hero.jpg',
+    imageUrl: '/images/tonsberg/generelt-heritage.jpg',
     heritageId: 'Kulturminne-ID: 41829',
     tips: 'Besøk også Vikingodden på Tønsberg Brygge for å se det fullskala rekonstruerte Osebergskipet Saga Oseberg!'
   },
@@ -58,7 +58,7 @@ export const TONSBERG_HERITAGE_SITES: HeritageSite[] = [
     fullDesc: 'Olavsklostret var et mektig klosteranlegg innviet til Olav den hellige. Deler av klosteret og den unike rundkirken ligger bevart under Tønsberg bibliotek og ved Storgaten.',
     location: 'Storgaten / Biblioteket, 3126 Tønsberg',
     coordinates: { lat: 59.2688, lng: 10.4095 },
-    imageUrl: '/images/slottsfjellet.jpg',
+    imageUrl: '/images/tonsberg/nordens-storste-bevarte-rundkirke-.jpg',
     heritageId: 'Kulturminne-ID: 21394',
     tips: 'Se de bevarte hvelvingene og klosterveggene integrert inne i Tønsberg og Færder bibliotek.'
   },
@@ -72,7 +72,7 @@ export const TONSBERG_HERITAGE_SITES: HeritageSite[] = [
     fullDesc: 'Søndre Hella ligger idyllisk til langs kyststien på Nøtterøy. Her vandrer du blant århundregamle eiketrær og synlige gravhauger med spektakulær utsikt mot fjorden.',
     location: 'Hella, Nøtterøy / Færder',
     coordinates: { lat: 59.2250, lng: 10.3750 },
-    imageUrl: '/images/skjaergard.jpg',
+    imageUrl: '/images/tonsberg/generelt-heritage-2.jpg',
     heritageId: 'Kulturminne-ID: 12948',
     tips: 'Perfekt turmål for barnefamilier som vil kombinere norgeshistorie med bading fra svabergene.'
   },
@@ -86,7 +86,7 @@ export const TONSBERG_HERITAGE_SITES: HeritageSite[] = [
     fullDesc: 'Sem kirke ble reist i naturstein i første halvdel av 1100-tallet. Kirken var opprinnelig fylkeskirke og knyttet til kongsgården Sæheim, senere setegård for grevene på Jarlsberg.',
     location: 'Sem, 3170 Tønsberg',
     coordinates: { lat: 59.2842, lng: 10.3831 },
-    imageUrl: '/images/slottsfjellet.jpg',
+    imageUrl: '/images/tonsberg/generelt-heritage-3.jpg',
     heritageId: 'Kulturminne-ID: 85412',
     tips: 'Kombiner med en spasertur i den historiske alleen ved Jarlsberg Hovedgård.'
   }

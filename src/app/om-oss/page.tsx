@@ -90,7 +90,7 @@ export default function OmOssPage() {
         subtitle="Hvem er vi?" 
         description="Tønsberglivet AS er et non-profit bysamarbeid som samler kommune, næringsliv og innbyggere for å utvikle regionen til et enda mer pulserende og attraktivt sted."
         backgroundGradient="linear-gradient(135deg, #16193d 0%, #1e3a5f 50%, #0c0e24 100%)"
-        backgroundImage="/images/hero-aerial.jpg"
+        backgroundImage="/images/tonsberg/om-tonsberglivet-hvem-er-vi-tonsbe.jpg"
         imageAlt="Tønsberg by og havn sett fra luften"
         priority
         compact={true}
@@ -120,7 +120,7 @@ export default function OmOssPage() {
           
           <div className="lg:col-span-5 relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border border-border">
             <Image 
-              src="/images/tonsberg/byen_fra_luften.jpg" 
+              src="/images/tonsberg/utsikt-over-tonsberg-by-og-brygge-.jpg" 
               alt="Utsikt over Tønsberg by og brygge" 
               fill
               sizes="(max-width: 1024px) 100vw, 40vw"

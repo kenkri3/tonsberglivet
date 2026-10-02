@@ -15,28 +15,28 @@ const activities = [
     title: 'Slottsfjellet & Tårnet',
     desc: 'Norges største ruinepark fra middelalderen med fantastisk panoramautsikt over hele byfjorden.',
     icon: Landmark,
-    image: '/images/slottsfjellet.jpg',
+    image: '/images/tonsberg/slottsfjellet-taarnet.jpg',
     tag: 'Historisk landemerke',
   },
   {
     title: 'Oseberg Kulturhus',
     desc: 'Teater, standup, konserter og store nasjonale forestillinger på bryggekanten midt i sentrum.',
     icon: Drama,
-    image: '/images/tonsberg/kultur_tonsberg.jpg',
+    image: '/images/tonsberg/oseberg-kulturhus.jpg',
     tag: 'Scene & Konserter',
   },
   {
     title: 'Kajakk & Padling',
     desc: 'Padle gjennom Kanalen, rundt Kaldnes og ut mot den fantastiske Færder Nasjonalpark.',
     icon: Compass,
-    image: '/images/tonsberg/kajakk_faerder.jpg',
+    image: '/images/tonsberg/kajakk-padling-padle-gjennom-kanal.jpg',
     tag: 'Fjordsafari',
   },
   {
     title: 'Tønsberg Bibliotek & Byliv',
     desc: 'Bynære kulturarrangementer, forfatterkvelder, språktrening, brettspill og barneaktiviteter.',
     icon: Users,
-    image: '/images/tonsberg/fotograf_varpe_tonsberg.jpg',
+    image: '/images/tonsberg/tonsberg-bibliotek-byliv.jpg',
     tag: 'Kulturmøteplass',
   },
   {
@@ -50,7 +50,7 @@ const activities = [
     title: 'Barnas Tønsberg',
     desc: 'Kunstprosjekter, verksteder og familieaktiviteter som setter farger på hele byen.',
     icon: Music,
-    image: '/images/tonsberg/barn_aktivitet.jpg',
+    image: '/images/tonsberg/barnas-tonsberg-kunstprosjekter-ve.jpg',
     tag: 'For hele familien',
   },
 ];
@@ -63,7 +63,7 @@ export default function AktiviteterPage() {
         subtitle="Historie, Teater & Opplevelser"
         description="Fra tusenårig historie på Slottsfjellet til sprudlende kulturliv og vannaktiviteter på Kanalen."
         backgroundGradient="linear-gradient(135deg, #4C1D95, #7C3AED)"
-        backgroundImage="/images/tonsberg/local-25.jpg"
+        backgroundImage="/images/tonsberg/kultur-aktiviteter-historie-teater.jpg"
         imageAlt="Vikingodden i Tønsberg"
         priority
         compact={true}

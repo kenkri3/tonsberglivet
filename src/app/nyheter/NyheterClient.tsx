@@ -13,7 +13,7 @@ const demoNews = [
     category: 'Bylivet', 
     date: '15. aug 2026', 
     excerpt: 'En spektakulær musikk- og kulturfestival inntar Tønsberg brygge med kjente artister og fantastisk stemning.', 
-    imageUrl: '/images/tonsberg/slottsfjell_festival.png' 
+    imageUrl: '/images/tonsberg/ny-festival-og-storsatsing-paa-bry.jpg' 
   },
   { 
     id: 2, 
@@ -21,7 +21,7 @@ const demoNews = [
     category: 'Næringslivet', 
     date: '12. aug 2026', 
     excerpt: 'Spennende kompetansebedrift velger Tønsberg framfor Oslo for sine 40 ansatte.', 
-    imageUrl: '/images/tonsberg/fotograf_varpe_tonsberg.jpg' 
+    imageUrl: '/images/tonsberg/ny-kreativ-tech-bedrift-etablerer-.jpg' 
   },
   { 
     id: 3, 
@@ -29,7 +29,7 @@ const demoNews = [
     category: 'Reiselivet', 
     date: '10. aug 2026', 
     excerpt: 'Slik får du mest ut av en helg fylt med matopplevelser, kyststier og båtliv i Norges eldste by.', 
-    imageUrl: '/images/tonsberg/brygge_solnedgang.jpg' 
+    imageUrl: '/images/tonsberg/tips-til-den-perfekte-helgen-ved-k.jpg' 
   },
   { 
     id: 4, 
@@ -37,7 +37,7 @@ const demoNews = [
     category: 'Hverdagslivet', 
     date: '05. aug 2026', 
     excerpt: 'Gjør deg klar for årets store høstmarked med ferske lokale råvarer fra hele Vestfold.', 
-    imageUrl: '/images/tonsberg/hostmarked.jpg' 
+    imageUrl: '/images/tonsberg/bondens-marked-og-hostfest-paa-tor.jpg' 
   },
   { 
     id: 5, 
@@ -45,7 +45,7 @@ const demoNews = [
     category: 'Næringslivet', 
     date: '01. aug 2026', 
     excerpt: 'Bedrifter og Tønsberg kommune går sammen for nullutslipp og renere bykjerne.', 
-    imageUrl: '/images/tonsberg/byen_fra_luften.jpg' 
+    imageUrl: '/images/tonsberg/gront-loft-felles-baerekraftsprosj.jpg' 
   },
   { 
     id: 6, 
@@ -53,7 +53,7 @@ const demoNews = [
     category: 'Bylivet', 
     date: '28. jul 2026', 
     excerpt: 'Gallerier, utstillinger og utendørsscener skaper en levende kulturarena for hele familien.', 
-    imageUrl: '/images/tonsberg/barnas_faerderfest.jpg' 
+    imageUrl: '/images/tonsberg/kultursommer-i-tonsberg-med-nye-ar.jpg' 
   },
 ];
 
@@ -70,7 +70,7 @@ export default function NyheterClient() {
         title="Nyheter" 
         subtitle="Siste nytt fra Tønsberg" 
         backgroundGradient="linear-gradient(135deg, #1E293B, #334155)"
-        backgroundImage="/images/tonsberg/byliv_gate.jpg"
+        backgroundImage="/images/tonsberg/nyheter-siste-nytt-fra-tonsberg-ga.jpg"
         imageAlt="Gatebildet i Tønsberg sentrum"
         priority
         compact={true}

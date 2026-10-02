@@ -155,7 +155,7 @@ async function handleDailySync(request: Request) {
           ? `${topConcert.venueName} • ${topConcert.date} kl. ${topConcert.time}`
           : 'Opplev Norges eldste kystby',
         durationSeconds: 20,
-        imageUrl: topConcert?.imageUrl || '/images/hero.jpg',
+        imageUrl: topConcert?.imageUrl || '/images/tonsberg/kultursommer-i-tonsberg.jpg',
         eventDate: topConcert?.date,
       },
       {
@@ -165,7 +165,7 @@ async function handleDailySync(request: Request) {
         spotTitle: topCulture ? topCulture.title : 'Færderbiennalen & Havneliv',
         headline: 'Smak på byen og nyt kveldsstemningen',
         durationSeconds: 15,
-        imageUrl: topCulture?.imageUrl || '/images/brygge.jpg',
+        imageUrl: topCulture?.imageUrl || '/images/tonsberg/faerderbiennalen-havneliv-smak-paa.jpg',
         eventDate: topCulture?.date,
       },
       {
@@ -175,7 +175,7 @@ async function handleDailySync(request: Request) {
         spotTitle: 'Matmarked & Torvleie i helgen',
         headline: 'Kortreist mat, håndverk og ferske bakervarer',
         durationSeconds: 15,
-        imageUrl: '/images/food.jpg',
+        imageUrl: '/images/tonsberg/matmarked-torvleie-i-helgen-kortre.jpg',
       },
     ];
 

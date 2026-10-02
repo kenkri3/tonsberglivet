@@ -134,7 +134,7 @@ export function formatDisplayTime(dateInput: string, explicitTime?: string): str
  * Fallback-bilde når Ticketmaster ikke leverer artwork.
  * Skal alltid være et ekte bilde fra Tønsberg – aldri et internasjonalt arkivbilde.
  */
-export const TONSBERG_EVENT_FALLBACK_IMAGE = '/images/tonsberg/folkefest.jpg';
+export const TONSBERG_EVENT_FALLBACK_IMAGE = '/images/tonsberg/generelt-ticketmaster.jpg';
 
 /** Normalizes raw Ticketmaster API response into standardized portal event objects.
  */
@@ -515,7 +515,7 @@ let activeScreenPlaylist: DoOHPlaylistItem[] = [
     spotTitle: 'Dagens Program på Torvet',
     headline: 'Sommer & Kultur i Norges eldste by',
     durationSeconds: 20,
-    imageUrl: '/images/hero.jpg',
+    imageUrl: '/images/tonsberg/dagens-program-paa-torvet-sommer-k.jpg',
   },
   {
     screenId: 'kanalen-2',
@@ -524,7 +524,7 @@ let activeScreenPlaylist: DoOHPlaylistItem[] = [
     spotTitle: 'Konsert i Foynhagen',
     headline: 'Livemusikk ved bryggekanten kl. 20:00',
     durationSeconds: 15,
-    imageUrl: '/images/brygge.jpg',
+    imageUrl: '/images/tonsberg/konsert-i-foynhagen-livemusikk-ved.jpg',
   },
   {
     screenId: 'kaldnes-3',
@@ -533,7 +533,7 @@ let activeScreenPlaylist: DoOHPlaylistItem[] = [
     spotTitle: 'Matmarked & Lokale Råvarer',
     headline: 'Besøk bodene og spisestedene i sentrum',
     durationSeconds: 15,
-    imageUrl: '/images/food.jpg',
+    imageUrl: '/images/tonsberg/matmarked-lokale-raavarer-besok-bo.jpg',
   },
 ];
 

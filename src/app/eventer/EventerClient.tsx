@@ -57,7 +57,7 @@ export default function EventerClient() {
         title="Hva skjer i Tønsberg?"
         subtitle="Arrangementer, show, konserter & kultur i Norges eldste by"
         backgroundGradient="linear-gradient(135deg, #1D4ED8, #7C3AED)"
-        backgroundImage="/images/tonsberg/kultur_tonsberg.jpg"
+        backgroundImage="/images/tonsberg/hva-skjer-i-tonsberg-arrangementer.jpg"
         imageAlt="Konsertscene i Tønsberg"
         priority
         compact={true}
