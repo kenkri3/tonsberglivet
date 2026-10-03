@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Calendar, MapPin, Clock, Ticket, ArrowRight } from 'lucide-react';
+import { SafeImage } from '@/components/ui/SafeImage';
 
 /**
  * Tønsberglivets egen arrangementskalender.
@@ -87,13 +88,9 @@ export function EgenKalender({
             className="group bg-surface rounded-3xl border border-border/80 overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all flex flex-col"
           >
             {a.bilde ? (
-              // Vanlig <img>: bildene kommer fra ulike kilder og er ikke
-              // nødvendigvis kjent for next/image på forhånd.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <SafeImage
                 src={a.bilde}
                 alt={a.tittel}
-                loading="lazy"
                 className="w-full h-40 object-cover group-hover:scale-[1.03] transition-transform duration-500"
               />
             ) : (
