@@ -67,6 +67,17 @@ try {
   await client.query('BEGIN');
   try {
     await client.query(sql);
+
+    // Sikre kolonner på eksisterende tabeller (f.eks. utvidede User-felter)
+    const ensureColumns = [
+      'ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "title" TEXT;',
+      'ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT;',
+      'ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "active" BOOLEAN NOT NULL DEFAULT true;',
+      'ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastActiveAt" TIMESTAMP(3);',
+    ];
+    for (const q of ensureColumns) {
+      await client.query(q);
+    }
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');

@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && npx prisma db push --accept-data-loss && next build",
+    "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "npx prisma generate",
     "db:migrate": "npx prisma migrate deploy",
-    "db:seed": "npx prisma db seed"
+    "db:seed": "npx prisma db seed",
+    "db:baseline": "prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > prisma/.baseline.raw.sql && node scripts/generate-baseline.mjs",
+    "db:ensure": "node scripts/ensure-schema.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.17.0",

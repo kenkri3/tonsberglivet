@@ -167,6 +167,17 @@ export function getSessionFromRequest(request: NextRequest | Request): SessionUs
 /**
  * Verifiserer at forespørselen har gyldig admin-rettighet
  */
+/**
+ * Verifiserer at forespørselen har gyldig innlogging (ADMIN, EDITOR eller VIEWER)
+ */
+export function requireAuth(request: Request): { authorized: boolean; user?: SessionUser; error?: string } {
+  const user = getSessionFromRequest(request);
+  if (!user) {
+    return { authorized: false, error: "Uautorisert: Krever innlogging." };
+  }
+  return { authorized: true, user };
+}
+
 export function requireAdmin(request: Request): { authorized: boolean; user?: SessionUser; error?: string } {
   const user = getSessionFromRequest(request);
   if (!user) {

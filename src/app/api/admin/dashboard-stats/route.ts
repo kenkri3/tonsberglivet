@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireEditorOrAdmin } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth';
 import { fetchNewlyRegisteredCompanies, fetchTonsbergCompanyTotal } from '@/lib/brreg';
 import { fetchLiveTicketmasterFeed, getDoOHScreenPlaylist } from '@/lib/ticketmaster';
 import { fetchLiveTrafficStatus } from '@/lib/traffic';
@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
  * Middleware dekker bare /admin/:path*, ikke /api/admin/*, så sjekken må ligge her.
  */
 export async function GET(request: Request) {
-  const auth = requireEditorOrAdmin(request);
+  const auth = requireAuth(request);
   if (!auth.authorized) {
     return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
   }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireEditorOrAdmin } from '@/lib/auth';
+import { requireEditorOrAdmin, requireAuth } from '@/lib/auth';
 import { sanitizeInput } from '@/lib/validations';
 import { logActivity } from '@/lib/activity';
 import { TaskStatus, TaskPriority } from '@prisma/client';
@@ -8,7 +8,7 @@ import { TaskStatus, TaskPriority } from '@prisma/client';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  const auth = requireEditorOrAdmin(request);
+  const auth = requireAuth(request);
   if (!auth.authorized) {
     return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
   }

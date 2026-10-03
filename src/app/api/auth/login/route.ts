@@ -89,6 +89,12 @@ export async function POST(request: Request) {
         });
 
         if (dbUser && dbUser.password) {
+          if (dbUser.active === false) {
+            return NextResponse.json(
+              { success: false, error: "Denne brukerkontoen er deaktivert. Kontakt administrator." },
+              { status: 403 }
+            );
+          }
           const isValid = verifyPassword(password, dbUser.password);
           if (!isValid) {
             return NextResponse.json(

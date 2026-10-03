@@ -80,6 +80,18 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+-- CreateEnum
+DO $$ BEGIN
+  CREATE TYPE "TaskStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- CreateEnum
+DO $$ BEGIN
+  CREATE TYPE "TaskPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL,
@@ -88,7 +100,11 @@ CREATE TABLE IF NOT EXISTS "User" (
     "emailVerified" TIMESTAMP(3),
     "password" TEXT,
     "role" "Role" NOT NULL DEFAULT 'EDITOR',
+    "title" TEXT,
+    "phone" TEXT,
+    "active" BOOLEAN NOT NULL DEFAULT true,
     "image" TEXT,
+    "lastActiveAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -358,6 +374,50 @@ CREATE TABLE IF NOT EXISTS "job_vacancies" (
     CONSTRAINT "job_vacancies_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "ActivityLog" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT,
+    "userName" TEXT,
+    "userEmail" TEXT,
+    "userRole" TEXT,
+    "action" TEXT NOT NULL,
+    "details" TEXT NOT NULL,
+    "targetType" TEXT,
+    "targetId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ActivityLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "TeamTask" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT,
+    "status" "TaskStatus" NOT NULL DEFAULT 'PENDING',
+    "priority" "TaskPriority" NOT NULL DEFAULT 'MEDIUM',
+    "dueDate" TIMESTAMP(3),
+    "assignedToId" TEXT,
+    "createdById" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "TeamTask_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE IF NOT EXISTS "InternalNote" (
+    "id" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "pinned" BOOLEAN NOT NULL DEFAULT false,
+    "authorId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "InternalNote_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
 
@@ -436,6 +496,21 @@ CREATE INDEX IF NOT EXISTS "job_vacancies_navStatus_municipality_idx" ON "job_va
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "job_vacancies_expires_idx" ON "job_vacancies"("expires");
 
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "ActivityLog_createdAt_idx" ON "ActivityLog"("createdAt");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "ActivityLog_userId_idx" ON "ActivityLog"("userId");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "TeamTask_status_idx" ON "TeamTask"("status");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "TeamTask_assignedToId_idx" ON "TeamTask"("assignedToId");
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "InternalNote_createdAt_idx" ON "InternalNote"("createdAt");
+
 -- AddForeignKey
 DO $$ BEGIN
   ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -499,6 +574,30 @@ END $$;
 -- AddForeignKey
 DO $$ BEGIN
   ALTER TABLE "ImageFolder" ADD CONSTRAINT "ImageFolder_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "ImageFolder"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- AddForeignKey
+DO $$ BEGIN
+  ALTER TABLE "ActivityLog" ADD CONSTRAINT "ActivityLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- AddForeignKey
+DO $$ BEGIN
+  ALTER TABLE "TeamTask" ADD CONSTRAINT "TeamTask_assignedToId_fkey" FOREIGN KEY ("assignedToId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- AddForeignKey
+DO $$ BEGIN
+  ALTER TABLE "TeamTask" ADD CONSTRAINT "TeamTask_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- AddForeignKey
+DO $$ BEGIN
+  ALTER TABLE "InternalNote" ADD CONSTRAINT "InternalNote_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

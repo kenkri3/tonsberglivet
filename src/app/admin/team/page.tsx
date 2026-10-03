@@ -432,13 +432,15 @@ export default function TeamManagementPage() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <button
-            onClick={openCreateUserModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm shadow-sm transition"
-          >
-            <UserPlus className="w-4 h-4" />
-            Ny bruker
-          </button>
+          {currentUser?.role === "ADMIN" && (
+            <button
+              onClick={openCreateUserModal}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm shadow-sm transition"
+            >
+              <UserPlus className="w-4 h-4" />
+              Ny bruker
+            </button>
+          )}
         </div>
       </div>
 
@@ -712,6 +714,7 @@ export default function TeamManagementPage() {
                           </td>
 
                           <td className="px-6 py-4 text-right">
+                            {currentUser?.role === "ADMIN" ? (
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => openEditUserModal(u)}
@@ -739,6 +742,9 @@ export default function TeamManagementPage() {
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">Kun visning</span>
+                          )}
                           </td>
                         </tr>
                       );
