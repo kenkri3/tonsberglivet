@@ -36,7 +36,7 @@ export * from '@/lib/news-meta';
  */
 const LOCAL_IMAGE_CACHE = new Map<string, string>();
 
-function resolveLocalImage(src: string | undefined): string | undefined {
+export function resolveLocalImage(src: string | undefined): string | undefined {
   if (!src) return undefined;
   if (!src.startsWith('/images/')) return src;
 

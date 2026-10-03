@@ -8,6 +8,7 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { resolveLocalImage } from '@/lib/news';
 import {
   ARCHIVED_NEWS,
   categoryLabelOf,
@@ -110,7 +111,12 @@ function mapDbArticle(row: DbArticleRow): NewsArticle | undefined {
     // Artikkelmodellen har ingen tagger; kategorien vises som eget merke i UI-et.
     tags: [],
     readTime: estimateReadTime(row.content ?? ''),
-    imageUrl: safeImageUrl(row.image?.url),
+    // Databasen kan peke på en filendelse som ikke finnes på disk – en tidligere
+    // import skrev .webp der filen er .jpg. resolveLocalImage velger filen som
+    // faktisk ligger i public/, ellers svarer next/image 400 og kortet viser et
+    // brutt bildeikon. Uten dette steget var fiksen i news.ts verdiløs for
+    // artikler som kommer fra databasen, altså alle de 124 migrerte.
+    imageUrl: resolveLocalImage(safeImageUrl(row.image?.url)),
     imageAlt: row.image?.alt?.trim() || title,
     origin: 'database',
   };
