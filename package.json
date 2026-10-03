@@ -11,7 +11,11 @@
     "db:migrate": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
     "db:baseline": "prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > prisma/.baseline.raw.sql && node scripts/generate-baseline.mjs",
-    "db:ensure": "node scripts/ensure-schema.mjs"
+    "db:ensure": "node scripts/ensure-schema.mjs",
+    "legacy:survey": "node scripts/import-legacy.mjs survey",
+    "legacy:fetch": "node scripts/import-legacy.mjs fetch",
+    "legacy:parse": "node scripts/import-legacy.mjs parse",
+    "legacy:seed": "node scripts/seed-legacy-content.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.17.0",

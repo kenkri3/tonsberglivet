@@ -22,7 +22,7 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const CACHE_DIR = path.join(ROOT, 'scratch', 'legacy-html');
 const IMAGE_DIR = path.join(ROOT, 'public', 'images', 'legacy');
-const DATA_PATH = path.join(ROOT, 'scratch', 'legacy-data.json');
+const DATA_PATH = path.join(ROOT, 'prisma', 'legacy-content.json');
 const SURVEY_PATH = path.join(ROOT, 'scratch', 'legacy-urls.json');
 
 const SITE = 'https://tonsberglivet.no';

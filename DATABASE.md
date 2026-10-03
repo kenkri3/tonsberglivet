@@ -6,11 +6,34 @@ Skjemaet holdes i synk av **`npm run db:ensure`**, som kjører automatisk som
 pre-deploy-steg på Railway (se `railway.json`). Den oppretter det som mangler i
 databasen og rører ingenting som finnes. Du trenger ikke gjøre noe manuelt.
 
+Innholdet fra kundens tidligere nettsted skrives av **`npm run legacy:seed`**, som
+kjører i samme pre-deploy-steg. Den hopper over hvis innholdet allerede er der,
+så den er gratis å ha stående.
+
 | Kommando | Gjør |
 |---|---|
 | `npm run db:ensure` | Bringer databasen i synk med `prisma/schema.prisma`. Trygg å kjøre når som helst, også mot produksjon. |
+| `npm run legacy:seed` | Skriver migrert innhold fra `prisma/legacy-content.json` inn i databasen. Idempotent, `--force` og `--dry-run` støttes. |
 | `npm run db:baseline` | Genererer `prisma/migrations/20261003120000_baseline/migration.sql` på nytt fra skjemaet. |
 | `npm run db:migrate` | `prisma migrate deploy` – for vanlig migrasjonsdrift senere. |
+
+## Innholdet fra det gamle nettstedet
+
+`prisma/legacy-content.json` (1,6 MB) inneholder alt som er hentet fra
+tonsberglivet.no: 1121 arrangementer, 358 bedrifter, 59 sider og 25 prosjekter.
+Filene er versjonert, så migreringen krever verken nettverk eller skraping når
+den først er gjort – den kan derfor kjøre som en del av deployen.
+
+Skrapingen gjøres én gang lokalt, og bare hvis kilden skal hentes på nytt:
+
+```
+npm run legacy:survey   # kartlegger alle URL-er fra kildens sitemap
+npm run legacy:fetch    # laster ned alle sider (cachet i scratch/legacy-html)
+npm run legacy:parse    # tolker HTML -> prisma/legacy-content.json
+```
+
+Artiklene ligger i `src/data/news-archive.json` og ble hentet av
+`scripts/import-wp-news.mjs`.
 
 ## Hvorfor det ser sånn ut
 
