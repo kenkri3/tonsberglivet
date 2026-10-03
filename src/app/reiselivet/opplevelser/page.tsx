@@ -80,8 +80,9 @@ export default async function OpplevelserPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {attractions.map((a, idx) => (
-              <div
+              <Link
                 key={idx}
+                href="#opplevelser"
                 className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-cyan-500/40 transition-all duration-300 flex flex-col"
               >
                 <div className="relative h-56 w-full overflow-hidden bg-surface-muted">
@@ -103,13 +104,13 @@ export default async function OpplevelserPage() {
                 <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                   <p className="text-sm text-foreground-muted leading-relaxed">{a.desc}</p>
                   <div className="pt-2">
-                    <span className="inline-flex items-center text-xs font-bold text-cyan-600 dark:text-cyan-400 group-hover:gap-2 gap-1.5 transition-all">
-                      Se turbeskrivelse & kart &rarr;
-                    </span>
+                      <span className="inline-flex items-center text-xs font-bold text-cyan-600 dark:text-cyan-400 group-hover:gap-2 gap-1.5 transition-all">
+                        Se opplevelser i registeret &rarr;
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </Link>
+              ))}
           </div>
         </div>
 
@@ -136,7 +137,7 @@ export default async function OpplevelserPage() {
         </div>
       </div>
       {/* ── Fra bedriftsregisteret ── */}
-      <section className="container mx-auto px-4 max-w-7xl">
+      <section id="opplevelser" className="container mx-auto px-4 max-w-7xl scroll-mt-24">
         <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">

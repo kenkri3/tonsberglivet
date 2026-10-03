@@ -82,8 +82,9 @@ export default async function AktiviteterPage() {
           {activities.map((act, idx) => {
             const Icon = act.icon;
             return (
-              <div
+              <Link
                 key={idx}
+                href="#aktiviteter"
                 className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-purple-500/40 transition-all duration-300 flex flex-col"
               >
                 <div className="relative h-52 sm:h-60 w-full overflow-hidden bg-surface-muted">
@@ -109,11 +110,11 @@ export default async function AktiviteterPage() {
                   <p className="text-sm text-foreground-muted leading-relaxed">{act.desc}</p>
                   <div className="pt-2">
                     <span className="inline-flex items-center text-xs font-bold text-purple-600 dark:text-purple-400 group-hover:gap-2 gap-1.5 transition-all">
-                      Les mer om opplevelsen &rarr;
+                      Se aktiviteter i registeret &rarr;
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
@@ -138,7 +139,7 @@ export default async function AktiviteterPage() {
         </div>
       </div>
       {/* ── Fra bedriftsregisteret ── */}
-      <section className="container mx-auto px-4 max-w-7xl">
+      <section id="aktiviteter" className="container mx-auto px-4 max-w-7xl scroll-mt-24">
         <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">

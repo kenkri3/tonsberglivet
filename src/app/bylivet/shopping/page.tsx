@@ -83,8 +83,9 @@ export default async function ShoppingPage() {
         {/* Kategorier med ekte foto */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {shoppingCategories.map((cat, idx) => (
-            <div
+            <Link
               key={idx}
+              href="#butikker"
               className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col"
             >
               <div className="relative h-56 w-full overflow-hidden bg-surface-muted">
@@ -107,16 +108,16 @@ export default async function ShoppingPage() {
                 <p className="text-sm text-foreground-muted leading-relaxed">{cat.desc}</p>
                 <div className="pt-2">
                   <span className="inline-flex items-center text-xs font-bold text-primary group-hover:gap-2 gap-1.5 transition-all">
-                    Utforsk utvalg &rarr;
+                    Se butikkene i registeret &rarr;
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
         {/* Butikkene fra bedriftsregisteret */}
-        <section className="space-y-5">
+        <section id="butikker" className="space-y-5 scroll-mt-24">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-2xl font-extrabold text-foreground tracking-tight">

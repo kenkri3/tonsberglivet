@@ -65,8 +65,9 @@ export default async function StudentBoligOgRabatterPage() {
       <div className="container mx-auto px-4 mt-12 space-y-12 max-w-6xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {studentOffers.map((o, idx) => (
-            <div
+            <Link
               key={idx}
+              href="#steder"
               className="group bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:border-red-500/40 transition-all duration-300 flex flex-col"
             >
               <div className="relative h-56 w-full overflow-hidden bg-surface-muted">
@@ -89,11 +90,11 @@ export default async function StudentBoligOgRabatterPage() {
                 <p className="text-sm text-foreground-muted leading-relaxed">{o.desc}</p>
                 <div className="pt-2">
                   <span className="inline-flex items-center text-xs font-bold text-red-600 dark:text-red-400 group-hover:gap-2 gap-1.5 transition-all">
-                    Les mer om ordningen &rarr;
+                    Se steder og tilbud &rarr;
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -113,7 +114,7 @@ export default async function StudentBoligOgRabatterPage() {
         </div>
       </div>
       {/* ── Fra bedriftsregisteret ── */}
-      <section className="container mx-auto px-4 max-w-7xl">
+      <section id="steder" className="container mx-auto px-4 max-w-7xl scroll-mt-24">
         <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
