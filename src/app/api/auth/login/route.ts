@@ -39,19 +39,42 @@ export async function POST(request: Request) {
     //
     // Grensene er romslige nok for en som taster feil noen ganger, og stramme
     // nok til at gjetting blir upraktisk. Vinduet er 15 minutter.
+    //
+    // To feller er rettet her, begge oppdaget ved at en ekte bruker ble låst ute
+    // på FØRSTE forsøk:
+    //
+    // 1. Klarer vi ikke å identifisere klienten sikkert, deler alle samme bøtte.
+    //    Med grense 10 ville ti tilfeldige forespørsler fra hvem som helst låse
+    //    ute hele redaksjonen. Delt bøtte krever derfor en romslig grense.
+    //
+    // 2. Den globale grensen på 60 gjaldt HELE nettstedet. Automatiske skannere
+    //    treffer /api/auth/login kontinuerlig, så den ble fylt av andre enn den
+    //    som faktisk prøvde å logge inn – og da hjelper det ikke at man selv
+    //    taster riktig. Den er hevet kraftig; det er per-e-post som er det
+    //    reelle vernet mot brute force mot én konto.
     const client = getClientIdentity(request);
+    const perClientGrense = client.identified ? 10 : 200;
     const [perClient, perEmail, global] = await Promise.all([
-      checkRateLimit(`login_client_${client.id}`, 10, 900, client.identified),
+      checkRateLimit(`login_client_${client.id}`, perClientGrense, 900, client.identified),
       checkRateLimit(`login_email_${cleanEmail}`, 20, 900, true),
-      checkRateLimit('login_global', 60, 900, true),
+      checkRateLimit('login_global', 600, 900, true),
     ]);
 
     if (!perClient.allowed || !perEmail.allowed || !global.allowed) {
       const retryAfter = Math.max(perClient.resetSeconds, perEmail.resetSeconds, global.resetSeconds);
+      // Si hvilken grense som slo inn. Uten det er meldingen umulig å handle på:
+      // en låst ute vet ikke om det gjelder deres egne forsøk eller andres.
+      const hvilken = !perEmail.allowed
+        ? 'for mange forsøk på denne e-postadressen'
+        : !perClient.allowed
+          ? 'for mange forsøk fra denne tilkoblingen'
+          : 'for mange forsøk på nettstedet samlet';
       return NextResponse.json(
         {
           success: false,
-          error: `For mange innloggingsforsøk. Prøv igjen om ${Math.ceil(retryAfter / 60)} minutt(er).`,
+          error: `For mange innloggingsforsøk (${hvilken}). Prøv igjen om ${Math.ceil(retryAfter / 60)} minutt(er).`,
+          reason: !perEmail.allowed ? 'email' : !perClient.allowed ? 'client' : 'global',
+          retryAfterSeconds: retryAfter,
         },
         { status: 429, headers: { 'Retry-After': String(retryAfter) } }
       );

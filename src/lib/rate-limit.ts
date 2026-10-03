@@ -66,9 +66,16 @@ function isBehindTrustedProxy(): boolean {
   if (explicit === 'true') return true;
   if (explicit === 'false') return false;
 
+  // Railway setter flere av disse. Sjekker vi bare RAILWAY_ENVIRONMENT, risikerer
+  // vi å tro at vi står uten proxy – og da deler alle klienter én bøtte, slik at
+  // én persons forsøk låser ute alle andre.
   return Boolean(
     process.env.VERCEL ||
       process.env.RAILWAY_ENVIRONMENT ||
+      process.env.RAILWAY_ENVIRONMENT_ID ||
+      process.env.RAILWAY_ENVIRONMENT_NAME ||
+      process.env.RAILWAY_PROJECT_ID ||
+      process.env.RAILWAY_SERVICE_ID ||
       process.env.FLY_APP_NAME ||
       process.env.RENDER ||
       process.env.K_SERVICE
