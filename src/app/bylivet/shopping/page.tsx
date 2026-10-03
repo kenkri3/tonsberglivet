@@ -2,13 +2,19 @@ import { Metadata } from 'next';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { ShoppingBag, Gift, MapPin, Sparkles, Store, CreditCard } from 'lucide-react';
 import Link from 'next/link';
-
 import Image from 'next/image';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
 
 export const metadata: Metadata = {
   title: 'Shopping & Sentrumshandel | Tønsberglivet',
   description: 'Utforsk over 300 butikker, koselige nisjebutikker og Farmandstredet i Tønsberg sentrum.',
 };
+
+// Butikkene hentes fra databasen ved hvert besøk, så endringer i
+// bedriftsregisteret slår inn med en gang.
+export const dynamic = 'force-dynamic';
 
 const shoppingCategories = [
   {
@@ -37,7 +43,9 @@ const shoppingCategories = [
   },
 ];
 
-export default function ShoppingPage() {
+export default async function ShoppingPage() {
+  const butikker = await hentBedrifter(BusinessCategory.SHOPPING, 60);
+
   return (
     <main className="min-h-screen pb-20">
       <HeroSection
@@ -106,6 +114,34 @@ export default function ShoppingPage() {
             </div>
           ))}
         </div>
+
+        {/* Butikkene fra bedriftsregisteret */}
+        <section className="space-y-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
+                Butikker i Tønsberg og Færder
+              </h2>
+              <p className="text-sm text-foreground-muted mt-1">
+                {butikker.length > 0
+                  ? `${butikker.length} butikker hentet fra Tønsberglivets bedriftsregister.`
+                  : 'Butikkene hentes fra Tønsberglivets bedriftsregister.'}
+              </p>
+            </div>
+            <Link
+              href="/naeringslivet/bedrifter"
+              className="text-sm font-semibold text-primary hover:underline"
+            >
+              Se hele registeret &rarr;
+            </Link>
+          </div>
+
+          <BusinessGrid
+            bedrifter={butikker}
+            visKategori={false}
+            tomTekst="Ingen butikker er publisert ennå. De dukker opp her så snart de legges inn i bedriftsregisteret."
+          />
+        </section>
 
         {/* Torvleie & Næring CTA */}
         <div className="bg-surface-muted border border-border rounded-3xl p-8 text-center space-y-4">

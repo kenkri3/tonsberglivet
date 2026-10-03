@@ -3,22 +3,22 @@ import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Utensils, Coffee, Sun, Wine, Star } from 'lucide-react';
 import Link from 'next/link';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
 
 export const metadata: Metadata = {
   title: 'Mat & Drikke i Tønsberg | Tønsberglivet',
   description: 'Bryggeservering, koselige kaffebarer og prisvinnende restauranter i Tønsberg.',
 };
 
-const venues = [
-  { name: 'Kafé Nansen', category: 'Kafé & Lunsj', desc: 'Nyåpnet hyggelig møteplass midt på Torvet med fantastisk kaffe og bakevarer.', area: 'Torvet' },
-  { name: 'Esmeralda', category: 'Restaurant & Uteservering', desc: 'Italiensk gastronomi og klassiske retter rett ved Bryggekanten.', area: 'Tønsberg Brygge' },
-  { name: 'Havariet', category: 'Bar & Gastropub', desc: 'Levende stemning, god mat og drikke hele uken.', area: 'Brygga' },
-  { name: 'Foynhagen', category: 'Uteservering & Konsert', desc: 'Byens mest kjente sommerarena for utendørs konsertopplevelser og god mat.', area: 'Brygga' },
-  { name: 'Papirhuset', category: 'Kultur & Spisested', desc: 'Koselig atmosfære og deilige lunsjretter.', area: 'Sentrum' },
-  { name: 'Roar i Bua', category: 'Sjømat', desc: 'Fersk sjømat, reker og fiskekaker direkte fra bryggekanten.', area: 'Kaldnes / Brygga' },
-];
+// Serveringsstedene hentes fra databasen ved hvert besøk, så nye og endrede
+// bedrifter vises med en gang uten ny deploy.
+export const dynamic = 'force-dynamic';
 
-export default function MatOgDrikkePage() {
+export default async function MatOgDrikkePage() {
+  const bedrifter = await hentBedrifter(BusinessCategory.MAT_DRIKKE, 90);
+
   return (
     <main className="min-h-screen pb-20 bg-background">
       <HeroSection
@@ -48,7 +48,10 @@ export default function MatOgDrikkePage() {
             </p>
             <div className="pt-2 flex flex-wrap gap-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface-muted text-foreground-muted">
-                <Utensils className="w-3.5 h-3.5 text-amber-500" /> Over 40 serveringssteder
+                <Utensils className="w-3.5 h-3.5 text-amber-500" />
+                {bedrifter.length > 0
+                  ? `${bedrifter.length} serveringssteder i registeret`
+                  : 'Serveringssteder i Tønsberg'}
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface-muted text-foreground-muted">
                 <Sun className="w-3.5 h-3.5 text-amber-500" /> Kveldssol på brygga
@@ -90,26 +93,12 @@ export default function MatOgDrikkePage() {
         </div>
 
         {/* Venues Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {venues.map((v, idx) => (
-            <div key={idx} className="bg-surface rounded-3xl border border-border/80 p-6 sm:p-7 space-y-3 hover:shadow-xl hover:border-amber-500/30 transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-amber-600 bg-amber-500/10 px-3 py-1 rounded-full uppercase tracking-wider">
-                    {v.category}
-                  </span>
-                  <span className="text-xs font-semibold text-foreground-subtle">{v.area}</span>
-                </div>
-                <h3 className="font-bold text-xl text-foreground mb-2">{v.name}</h3>
-                <p className="text-sm text-foreground-muted leading-relaxed font-light">{v.desc}</p>
-              </div>
-              <div className="pt-4 border-t border-border/40 flex items-center justify-between text-xs text-foreground-subtle">
-                <span>Sentrum / Brygga</span>
-                <span className="text-primary font-semibold">Tønsberglivet partner</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <BusinessGrid
+          bedrifter={bedrifter}
+          visKategori={false}
+          aksent="text-amber-600"
+          tomTekst="Ingen serveringssteder er publisert ennå. De dukker opp her så snart de legges inn i bedriftsregisteret."
+        />
 
         {/* CTA for Arrangementer */}
         <div className="bg-gradient-to-r from-primary via-blue-700 to-indigo-900 text-white rounded-3xl p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
