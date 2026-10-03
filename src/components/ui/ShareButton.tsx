@@ -24,8 +24,26 @@ export function ShareButton({ title, text, className }: Props) {
   const del = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
 
-    // 1. Innfødt delingsark der det er tilgjengelig.
-    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    // 1. Innfødt delingsark – men BARE der det faktisk gir mening.
+    //
+    // Chrome og Edge på Windows har navigator.share selv om de ikke har et
+    // brukbart delingsark. Kallet lykkes uten å vise noe, og fordi det ikke
+    // kaster, falt vi aldri tilbake til å kopiere. For brukeren så knappen da
+    // død ut: ingenting skjedde.
+    //
+    // Vi bruker derfor det innfødte arket bare på berøringsenheter, der det
+    // alltid vises, og kopierer lenken ellers. Da får man alltid en synlig
+    // reaksjon.
+    const erBeroringsenhet =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(pointer: coarse)').matches;
+
+    if (
+      erBeroringsenhet &&
+      typeof navigator !== 'undefined' &&
+      typeof navigator.share === 'function'
+    ) {
       try {
         await navigator.share({ title, text, url });
         return;
@@ -36,7 +54,7 @@ export function ShareButton({ title, text, className }: Props) {
       }
     }
 
-    // 2. Fallback: kopier lenken.
+    // 2. Kopier lenken. Dette er hovedveien på desktop.
     try {
       await navigator.clipboard.writeText(url);
       setKopiert(true);
