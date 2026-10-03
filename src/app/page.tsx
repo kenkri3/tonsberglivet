@@ -445,7 +445,7 @@ export default async function Home() {
           subtitle="Opplev atmosfæren i Norges eldste kystby, på Brygga, Slottsfjellet og Færder-skjærgården."
           photos={[
             {
-              src: '/images/tonsberg/hero-aerial.jpg',
+              src: '/images/legacy/brygga1-scaled-e1779878998864.jpg',
               alt: 'Tønsberg Brygge og byfjorden sett fra luften',
               caption: 'Tønsberg fra luften',
               location: 'Tønsberg Brygge & Kanalen',
@@ -469,7 +469,7 @@ export default async function Home() {
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/picnic-paa-svabergene-i-faerder-na.jpg',
+              src: '/images/legacy/Oversiktsbilde-faerderdagen-2019.jpg',
               alt: 'Picnic på svabergene i Færder nasjonalpark',
               caption: 'Østre Bolærne & Skjærgården',
               location: 'Færder Nasjonalpark',
@@ -477,7 +477,7 @@ export default async function Home() {
               photographer: 'Visit Færder',
             },
             {
-              src: '/images/tonsberg/familie-som-spiser-uteservering-pa.jpg',
+              src: '/images/legacy/celebration-nationalday-restaurant-quality-hotel-tonsberg.jpg',
               alt: 'Familie som spiser uteservering på brygga',
               caption: 'Lokal mat & Uteservering',
               location: 'Tønsberg Brygge',

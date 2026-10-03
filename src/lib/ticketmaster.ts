@@ -558,7 +558,7 @@ let activeScreenPlaylist: DoOHPlaylistItem[] = [
     spotTitle: 'Matmarked & Lokale Råvarer',
     headline: 'Besøk bodene og spisestedene i sentrum',
     durationSeconds: 15,
-    imageUrl: '/images/tonsberg/matmarked-lokale-raavarer-besok-bo.jpg',
+    imageUrl: '/images/legacy/streetfoodfestival.jpg',
   },
 ];
 

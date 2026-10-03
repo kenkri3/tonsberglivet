@@ -10,7 +10,10 @@ import { findNewsArticle } from '@/lib/news-server';
 import type { NewsBlock } from '@/lib/news';
 
 const SITE_URL = 'https://tonsberglivet.no';
-const FALLBACK_OG_IMAGE = '/images/tonsberg/nyheter-siste-nytt-fra-tonsberg-ga.jpg';
+// Filen heter -fo.jpg, ikke -ga.jpg. Feilstavingen gjorde at reservebildet for
+// deling på sosiale medier pekte på en fil som ikke finnes, så en sak uten eget
+// bilde delte seg uten forhåndsvisning.
+const FALLBACK_OG_IMAGE = '/images/tonsberg/nyheter-siste-nytt-fra-tonsberg-fo.jpg';
 
 // Saken hentes fra databasen (CMS) eller det redaksjonelle arkivet ved hvert
 // kall, slik at en nypublisert sak er tilgjengelig med én gang.

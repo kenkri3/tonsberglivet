@@ -60,7 +60,7 @@ const prosjekter = [
     desc: 'Mat- og opplevelsesuker som feirer den rike gastronomien i Tønsberg med spesialmenyer og felles måltider.', 
     status: 'Gjennomført',
     icon: UtensilsCrossed,
-    image: '/images/tonsberg/nyt-tonsberg-spis-ute-uka.jpg'
+    image: '/images/legacy/streetfoodfestival.jpg'
   },
   { 
     id: 6, 

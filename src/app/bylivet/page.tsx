@@ -127,7 +127,7 @@ export default async function BylivetPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
             <div className="relative aspect-[16/10] overflow-hidden">
-              <Image src="/images/tonsberg/tonsberg-torv-med-domkirken-i-bakg.jpg" alt="Tønsberg Torv med Domkirken i bakgrunnen" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500" />
+              <Image src="/images/legacy/barnasdag.jpg" alt="Tønsberg Torv med Domkirken i bakgrunnen" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500" />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
                 Trehus & Kultur
               </span>

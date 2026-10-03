@@ -206,7 +206,11 @@ export function ArticleJsonLd({
         mainEntityOfPage: url,
         datePublished: datePublished || new Date().toISOString(),
         dateModified: new Date().toISOString(),
-        image: imageUrl || 'https://tonsberglivet.no/images/hero.jpg',
+        // Reservebildet pekte på /images/hero.jpg, som ble fjernet fordi det var
+        // et aksjebilde av en annen by. Strukturerte data viste derfor et bilde
+        // som ikke finnes. Dette er et dokumentert ekte foto av Tønsberg
+        // (Per Christian Hestnæs, 2022) med lesbar SLOTTSFJELL- teksti i bildet.
+        image: imageUrl || 'https://tonsberglivet.no/images/tonsberg/slottsfjellet-luftfoto-festomraadet.jpg',
         author: {
           '@type': 'Person',
           name: authorName,

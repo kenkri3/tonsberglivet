@@ -20,7 +20,7 @@ const studentOffers = [
     title: 'Studentsamskipnaden (SSN)',
     category: 'Bolig & Velferd',
     desc: 'SSN tilbyr moderne studentboliger på Campus Vestfold og Eik, samt generøs helserefusjonsordning for studenter.',
-    image: '/images/tonsberg/studentsamskipnaden-ssn-student-so.jpg',
+    image: '/images/tonsberg/studentlivet-usn.jpg',
     imageAlt: 'Student som leser en bok',
   },
   {
@@ -56,7 +56,7 @@ export default async function StudentBoligOgRabatterPage() {
         subtitle="Studere ved USN Campus Vestfold / Tønsberg"
         description="Få full oversikt over SSN sine studentboliger, studentrabatter i byen og gratis helsetjenester."
         backgroundGradient="linear-gradient(135deg, #DC2626, #EF4444)"
-        backgroundImage="/images/tonsberg/studentbolig-rabatter-studere-ved-.jpg"
+        backgroundImage="/images/tonsberg/student-park.jpg"
         imageAlt="Strandpromenade med studentboliger i Tønsberg"
         priority
         compact={true}

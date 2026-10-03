@@ -166,7 +166,7 @@ export default async function HverdagslivetPage() {
           subtitle="Glimt fra nabolagene, skjærgården, parkene og kulturen i hverdagen."
           photos={[
             {
-              src: '/images/tonsberg/hverdagslivet-i-tonsberg-i-bilder-.jpg',
+              src: '/images/legacy/barnas-bylordag.jpg',
               alt: 'Boligområde med bekk og lekende barn i Tønsberg',
               caption: 'Nabolag & Nærmiljø',
               location: 'Tønsberg',

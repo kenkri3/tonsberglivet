@@ -133,7 +133,10 @@ export async function POST(request: Request) {
         }
 
         try {
-          const effectiveImageUrl = imageUrl || 'https://tonsberglivet.no/images/og-default.jpg';
+          // Reservebildet pekte på /images/og-default.jpg, som ikke finnes.
+          // Instagram-kallet ville da fått 404 og innlegget feilet.
+          const effectiveImageUrl =
+            imageUrl || 'https://tonsberglivet.no/images/tonsberg/slottsfjellet-luftfoto-festomraadet.jpg';
           const containerRes = await fetch(`https://graph.facebook.com/v19.0/${metaInstagramId}/media`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

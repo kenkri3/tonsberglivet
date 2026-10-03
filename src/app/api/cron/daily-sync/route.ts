@@ -175,7 +175,7 @@ async function handleDailySync(request: Request) {
         spotTitle: 'Matmarked & Torvleie i helgen',
         headline: 'Kortreist mat, håndverk og ferske bakervarer',
         durationSeconds: 15,
-        imageUrl: '/images/tonsberg/matmarked-torvleie-i-helgen-kortre.jpg',
+        imageUrl: '/images/legacy/torvet.jpg',
       },
     ];
 

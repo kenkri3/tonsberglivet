@@ -90,7 +90,7 @@ export default function OmOssPage() {
         subtitle="Hvem er vi?" 
         description="Tønsberglivet AS er et non-profit bysamarbeid som samler kommune, næringsliv og innbyggere for å utvikle regionen til et enda mer pulserende og attraktivt sted."
         backgroundGradient="linear-gradient(135deg, #16193d 0%, #1e3a5f 50%, #0c0e24 100%)"
-        backgroundImage="/images/tonsberg/om-tonsberglivet-hvem-er-vi-bolige.jpg"
+        backgroundImage="/images/legacy/1_Oversiktsbilde-1600x900-1.jpg"
         imageAlt="Boliger langs kanalen i Tønsberg"
         priority
         compact={true}

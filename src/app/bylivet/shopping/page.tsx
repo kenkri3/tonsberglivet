@@ -39,7 +39,7 @@ const shoppingCategories = [
     title: 'Matglede, Interiør & Design',
     desc: 'Skandinavisk interiør, håndverk og delikatesser i gågater og historiske kvartaler.',
     count: '25+ butikker',
-    image: '/images/tonsberg/matglede-interior-design-skandinav.jpg',
+    image: '/images/legacy/fEUMER-1-e1790754573502.jpg',
   },
 ];
 
