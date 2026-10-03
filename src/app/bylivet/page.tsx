@@ -8,13 +8,20 @@ import { PublicTransportWidget } from '@/components/transit/PublicTransportWidge
 import { TrafficWidget } from '@/components/traffic/TrafficWidget';
 import { OceanConditionsWidget } from '@/components/weather/OceanConditionsWidget';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
+
+// Innholdet hentes fra databasen ved hvert besøk.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Bylivet | Tønsberglivet',
   description: 'Opplev Tønsberg! Her finner du en oversikt over shopping, spisesteder, overnatting og opplevelser midt i hjertet av byen.',
 };
 
-export default function BylivetPage() {
+export default async function BylivetPage() {
+  const steder = await hentBedrifter(undefined, 12);
+
   return (
     <main className="min-h-screen space-y-16 pb-20">
       {/* ── Bilde-Hero Banner ── */}
@@ -310,6 +317,28 @@ export default function BylivetPage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* ── Steder fra bedriftsregisteret ── */}
+      <section className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Steder i byen
+            </h2>
+            <p className="text-sm text-foreground-muted mt-1">
+              Hentet fra Tønsberglivets bedriftsregister og oppdatert fortløpende.
+            </p>
+          </div>
+          <Link href="/naeringslivet/bedrifter" className="text-sm font-semibold text-primary hover:underline">
+            Se hele registeret &rarr;
+          </Link>
+        </div>
+
+        <BusinessGrid
+          bedrifter={steder}
+          tomTekst="Ingen steder er publisert i registeret ennå."
+        />
       </section>
     </main>
   );

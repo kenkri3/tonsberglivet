@@ -3,11 +3,17 @@ import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Hotel, Bed, Sun, MapPin, Star } from 'lucide-react';
 import Link from 'next/link';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
 
 export const metadata: Metadata = {
   title: 'Overnatting i Tønsberg & Færder | Tønsberglivet',
   description: 'Hoteller, bryggehotell, Engø Gård og Havna Hotell på Tjøme.',
 };
+
+// Overnattingsstedene hentes fra databasen ved hvert besøk.
+export const dynamic = 'force-dynamic';
 
 const hotels = [
   { 
@@ -40,7 +46,9 @@ const hotels = [
   },
 ];
 
-export default function OvernattingPage() {
+export default async function OvernattingPage() {
+  const overnatting = await hentBedrifter(BusinessCategory.OVERNATTING, 60);
+
   return (
     <main className="min-h-screen pb-20 bg-background">
       <HeroSection
@@ -100,6 +108,27 @@ export default function OvernattingPage() {
             </div>
           ))}
         </div>
+
+        {/* Alle overnattingssteder fra bedriftsregisteret */}
+        <section className="space-y-5">
+          <div>
+            <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
+              Flere steder å bo
+            </h2>
+            <p className="text-sm text-foreground-muted mt-1">
+              {overnatting.length > 0
+                ? `${overnatting.length} overnattingssteder hentet fra Tønsberglivets bedriftsregister.`
+                : 'Overnattingsstedene hentes fra Tønsberglivets bedriftsregister.'}
+            </p>
+          </div>
+
+          <BusinessGrid
+            bedrifter={overnatting}
+            visKategori={false}
+            aksent="text-amber-600"
+            tomTekst="Ingen overnattingssteder er publisert i registeret ennå."
+          />
+        </section>
 
         <div className="bg-gradient-to-r from-primary via-blue-700 to-indigo-900 text-white rounded-3xl p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="space-y-2 text-center md:text-left">
