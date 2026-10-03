@@ -2,14 +2,14 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Store, Gift, CalendarDays, PlusCircle, Filter, Sparkles, ChevronRight, ArrowRight, MapPin, Clock } from 'lucide-react';
-import { SectionCard, BusinessCard } from '@/components/ui/Cards';
+import { SectionCard } from '@/components/ui/Cards';
 import { BylivetLogo } from '@/components/brand/BrandLogos';
 import { PublicTransportWidget } from '@/components/transit/PublicTransportWidget';
 import { TrafficWidget } from '@/components/traffic/TrafficWidget';
 import { OceanConditionsWidget } from '@/components/weather/OceanConditionsWidget';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
 import { hentBedrifter } from '@/lib/business-directory';
-import { BusinessGrid } from '@/components/business/BusinessGrid';
+import { CategoryFilterGrid } from '@/components/business/CategoryFilterGrid';
 
 // Innholdet hentes fra databasen ved hvert besøk.
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BylivetPage() {
-  const steder = await hentBedrifter(undefined, 12);
+  // Henter hele registeret slik at kategorifiltrene har noe å filtrere på.
+  const steder = await hentBedrifter(undefined, 60);
 
   return (
     <main className="min-h-screen space-y-16 pb-20">
@@ -170,69 +171,14 @@ export default async function BylivetPage() {
         </div>
       </section>
 
-      {/* ── Utforsk sentrum (Bedrifter & Lokasjoner) ── */}
+      {/* ── Utforsk sentrum (Bedrifter & Lokasjoner) ──
+          Seksjonen hadde tidligere seks kategoriknapper uten onClick – den
+          første så «valgt» ut uansett – og seks håndskrevne eksempelkort
+          («Kafé Nansen», «Farmannstredet» …) i stedet for innholdet som allerede
+          ble hentet fra bedriftsregisteret. Filtreringen og registeret er nå
+          slått sammen i én komponent, så brikkene faktisk filtrerer. */}
       <section className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-border pb-4">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-foreground">Utforsk sentrum</h2>
-            <p className="text-foreground-muted text-sm mt-0.5">Steder å besøke og ting å oppleve</p>
-          </div>
-          
-          <div className="tap-target-list flex items-center gap-2 overflow-x-auto pb-2 w-full md:w-auto scrollbar-none">
-            {['Alle', 'Shopping', 'Mat & drikke', 'Aktivitet', 'Overnatting', 'Kultur'].map((category, i) => (
-              <button 
-                key={category}
-                className={`px-4 py-2.5 sm:py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${
-                  i === 0 
-                    ? 'bg-primary text-white' 
-                    : 'bg-surface text-foreground hover:bg-surface-muted border border-border'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Grid med aktører */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <BusinessCard
-            name="Kafé Nansen"
-            category="Mat & drikke"
-            address="Storgaten 32, Tønsberg"
-            description="Koselig kafé med ferske bakevarer, deilig kaffe og lunsjretter. Perfekt for en pust i bakken."
-          />
-          <BusinessCard
-            name="Farmannstredet"
-            category="Shopping"
-            address="Jernbanegaten 1D, Tønsberg"
-            description="Fylkets største kjøpesenter med over 70 spennende butikker og spisesteder midt i hjertet av byen."
-          />
-          <BusinessCard
-            name="Quality Hotel Klubben"
-            category="Overnatting"
-            address="Nedre Langgate 49, Tønsberg"
-            description="Moderne hotell med fantastisk beliggenhet ved brygga. Konsertsal, restaurant og flotte konferansefasiliteter."
-          />
-          <BusinessCard
-            name="Bogart"
-            category="Shopping"
-            address="Storgaten 38, Tønsberg"
-            description="Eksklusiv klesbutikk for kvalitetsbevisste menn og kvinner, med et bredt utvalg av kjente merkevarer."
-          />
-          <BusinessCard
-            name="Slottsfjellsmuseet"
-            category="Kultur"
-            address="Farmannsveien 30, Tønsberg"
-            description="Opplev Tønsbergs rike middelalderhistorie og sjøfartshistorie gjennom spennende utstillinger."
-          />
-          <BusinessCard
-            name="Klara"
-            category="Frisør & velvære"
-            address="Rådhusgaten 4, Tønsberg"
-            description="Moderne frisørsalong som tilbyr klipp, farge, og styling i avslappende og lekre omgivelser."
-          />
-        </div>
+        <CategoryFilterGrid steder={steder} />
       </section>
 
       {/* ── Fotogalleri fra Bylivet ── */}
@@ -317,28 +263,6 @@ export default async function BylivetPage() {
             </Link>
           </div>
         </div>
-      </section>
-
-      {/* ── Steder fra bedriftsregisteret ── */}
-      <section className="container mx-auto px-4 max-w-7xl">
-        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              Steder i byen
-            </h2>
-            <p className="text-sm text-foreground-muted mt-1">
-              Hentet fra Tønsberglivets bedriftsregister og oppdatert fortløpende.
-            </p>
-          </div>
-          <Link href="/naeringslivet/bedrifter" className="text-sm font-semibold text-primary hover:underline">
-            Se hele registeret &rarr;
-          </Link>
-        </div>
-
-        <BusinessGrid
-          bedrifter={steder}
-          tomTekst="Ingen steder er publisert i registeret ennå."
-        />
       </section>
     </main>
   );

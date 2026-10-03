@@ -109,12 +109,24 @@ export default async function GavekortPage() {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary-hover transition-colors text-sm shadow-sm">
+              {/* Ekte butikklenker, verifisert 200. Knappene her var tidligere
+                  <button> uten onClick, så de gjorde ingenting. */}
+              <a
+                href="https://apps.apple.com/no/app/mine-gavekort/id1164006405"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary-hover transition-colors text-sm shadow-sm text-center"
+              >
                 App Store
-              </button>
-              <button className="px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary-hover transition-colors text-sm shadow-sm">
+              </a>
+              <a
+                href="https://play.google.com/store/apps/details?id=no.igive.gavekort"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary-hover transition-colors text-sm shadow-sm text-center"
+              >
                 Google Play
-              </button>
+              </a>
             </div>
           </div>
         </div>

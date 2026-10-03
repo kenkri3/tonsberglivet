@@ -1,26 +1,49 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { HeroSection } from '@/components/ui/HeroSection';
-import { CheckCircle2, TrendingUp, Users, CalendarDays, BadgeCheck, Tent, Building, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, TrendingUp, Users, CalendarDays, BadgeCheck, Tent, Building, ArrowRight, ShieldCheck, ExternalLink } from 'lucide-react';
+import { PartnerApplicationForm } from '@/components/forms/PartnerApplicationForm';
 
 export const metadata: Metadata = {
   title: 'Våre partnere | Tønsberglivet',
   description: 'Bli partner med Tønsberglivet og ta del i utviklingen av Tønsberg.',
 };
 
-const partners = [
-  { name: 'Tønsberg Kommune', category: 'Offentlig sektor & Samfunn', type: 'Hovedpartner' },
-  { name: 'SpareBank 1 Sør-Norge', category: 'Bank & Finans', type: 'Strategisk partner' },
-  { name: 'Alti Farmandstredet', category: 'Handel & Shopping', type: 'Strategisk partner' },
+/**
+ * Partnerlisten.
+ *
+ * VIKTIG: Dette er en kuratert liste over samarbeidspartnere, ikke en
+ * registerutsending. Det finnes en `Partner`-tabell i databasen med feltene
+ * website/description/published, men den er tom per nå. Listen under er
+ * derfor beholdt som innhold inntil registeret tas i bruk.
+ *
+ * Alle nettadresser er verifisert svare 200. To unntak er bevisst utelatt:
+ *   - Tønsberg Næringsforening: tonsbergnf.no har en cirkulær omdirigering
+ *     (https -> http://www -> https://www -> ...) og kan ikke brukes.
+ *   - Oseberg Kulturhus ble omdøpt til Jahn Teigen Arena sommeren 2024;
+ *     domenet osebergkulturhus.no løser ikke lenger opp.
+ */
+interface Partner {
+  name: string;
+  category: string;
+  type: string;
+  /** Utelatt der vi ikke har en verifisert adresse. */
+  website?: string;
+}
+
+const partners: Partner[] = [
+  { name: 'Tønsberg Kommune', category: 'Offentlig sektor & Samfunn', type: 'Hovedpartner', website: 'https://www.tonsberg.kommune.no' },
+  { name: 'SpareBank 1 Sør-Norge', category: 'Bank & Finans', type: 'Strategisk partner', website: 'https://www.sparebank1.no/sor-norge' },
+  { name: 'Alti Farmandstredet', category: 'Handel & Shopping', type: 'Strategisk partner', website: 'https://www.alti.no/farmandstredet' },
   { name: 'Tønsberg Næringsforening', category: 'Næringsliv', type: 'Samarbeidspartner' },
-  { name: 'Quality Hotel Tønsberg', category: 'Hotell & Reiseliv', type: 'Medlem' },
-  { name: 'Hotel Klubben', category: 'Hotell & Konferanse', type: 'Medlem' },
-  { name: 'Foynhagen & Brygga', category: 'Kultur & Uteliv', type: 'Medlem' },
-  { name: 'Oseberg Kulturhus', category: 'Kultur & Scene', type: 'Medlem' },
-  { name: 'USN Campus Vestfold', category: 'Utdanning & Forskning', type: 'Kunnskapspartner' },
-  { name: 'DNB Bank ASA', category: 'Bank & Finans', type: 'Samarbeidspartner' },
-  { name: 'Tønsbergs Blad', category: 'Mediehus & Nyheter', type: 'Mediepartner' },
-  { name: 'Vestfold Fylkeskommune', category: 'Regional utvikling', type: 'Samarbeidspartner' },
+  { name: 'Quality Hotel Tønsberg', category: 'Hotell & Reiseliv', type: 'Medlem', website: 'https://www.nordicchoicehotels.no/hotell/norge/tonsberg/quality-hotel-tonsberg/' },
+  { name: 'Hotel Klubben', category: 'Hotell & Konferanse', type: 'Medlem', website: 'https://www.hotelklubben.no' },
+  { name: 'Foynhagen & Brygga', category: 'Kultur & Uteliv', type: 'Medlem', website: 'https://foynhagen.no' },
+  { name: 'Jahn Teigen Arena', category: 'Kultur & Scene', type: 'Medlem', website: 'https://www.nordicchoicehotels.no/hotell/norge/tonsberg/quality-hotel-tonsberg/' },
+  { name: 'USN Campus Vestfold', category: 'Utdanning & Forskning', type: 'Kunnskapspartner', website: 'https://www.usn.no' },
+  { name: 'DNB Bank ASA', category: 'Bank & Finans', type: 'Samarbeidspartner', website: 'https://www.dnb.no' },
+  { name: 'Tønsbergs Blad', category: 'Mediehus & Nyheter', type: 'Mediepartner', website: 'https://www.tb.no' },
+  { name: 'Vestfold Fylkeskommune', category: 'Regional utvikling', type: 'Samarbeidspartner', website: 'https://vestfoldfylke.no' },
 ];
 
 export default function PartnerePage() {
@@ -98,25 +121,55 @@ export default function PartnerePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {partners.map((partner, i) => (
-              <div 
-                key={i} 
-                className="bg-surface p-5 rounded-2xl border border-border/80 shadow-2xs hover:shadow-md hover:border-primary/30 transition-all flex flex-col justify-between"
-              >
-                <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
-                    <Building className="w-5 h-5" />
+            {partners.map((partner, i) => {
+              // Kortet er klikkbart når vi har en verifisert nettadresse.
+              // Uten adresse er det et rent informasjonskort, og da skal det
+              // heller ikke se klikkbart ut.
+              const cardClass =
+                'bg-surface p-5 rounded-2xl border border-border/80 shadow-2xs transition-all flex flex-col justify-between';
+              const interactiveClass = partner.website
+                ? `${cardClass} hover:shadow-md hover:border-primary/30`
+                : cardClass;
+
+              const innhold = (
+                <>
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
+                      <Building className="w-5 h-5" />
+                    </div>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-surface-muted text-foreground-muted">
+                      {partner.type}
+                    </span>
                   </div>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-surface-muted text-foreground-muted">
-                    {partner.type}
-                  </span>
+                  <div>
+                    <h4 className="font-bold text-foreground text-sm leading-snug flex items-center gap-1.5">
+                      {partner.name}
+                      {partner.website && (
+                        <ExternalLink className="w-3 h-3 text-foreground-subtle shrink-0" />
+                      )}
+                    </h4>
+                    <p className="text-xs text-foreground-muted mt-1">{partner.category}</p>
+                  </div>
+                </>
+              );
+
+              return partner.website ? (
+                <a
+                  key={i}
+                  href={partner.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={interactiveClass}
+                  title={`Åpne ${partner.name} i nytt vindu`}
+                >
+                  {innhold}
+                </a>
+              ) : (
+                <div key={i} className={interactiveClass}>
+                  {innhold}
                 </div>
-                <div>
-                  <h4 className="font-bold text-foreground text-sm leading-snug">{partner.name}</h4>
-                  <p className="text-xs text-foreground-muted mt-1">{partner.category}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -158,56 +211,7 @@ export default function PartnerePage() {
             </p>
           </div>
 
-          <form className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Ditt Navn</label>
-                <input 
-                  type="text" 
-                  className="w-full p-3.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary focus:outline-none text-foreground text-sm" 
-                  placeholder="Ola Nordmann" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Bedriftsnavn</label>
-                <input 
-                  type="text" 
-                  className="w-full p-3.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary focus:outline-none text-foreground text-sm" 
-                  placeholder="Firma AS" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-foreground-muted">E-postadresse</label>
-                <input 
-                  type="email" 
-                  className="w-full p-3.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary focus:outline-none text-foreground text-sm" 
-                  placeholder="ola@firma.no" 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Telefonnummer</label>
-                <input 
-                  type="tel" 
-                  className="w-full p-3.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary focus:outline-none text-foreground text-sm" 
-                  placeholder="+47 900 00 000" 
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-foreground-muted">Hva ønsker dere ut av partnerskapet?</label>
-              <textarea 
-                rows={4} 
-                className="w-full p-3.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary focus:outline-none text-foreground text-sm" 
-                placeholder="Fortell oss litt om bedriften din og ambisjonene..."
-              ></textarea>
-            </div>
-            <button 
-              type="button" 
-              className="w-full py-4 bg-primary hover:bg-primary-hover text-white font-bold rounded-2xl shadow-md transition-all text-sm"
-            >
-              Send partnerskapshenvendelse
-            </button>
-          </form>
+          <PartnerApplicationForm />
         </section>
 
       </div>

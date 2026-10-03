@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
 import { HeroSection } from '@/components/ui/HeroSection';
-import { Calendar, Clock, MapPin, Share2, ArrowLeft, Ticket, CheckCircle2, Compass, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, ArrowLeft, Ticket, CheckCircle2, Compass, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { permanentRedirect, notFound } from 'next/navigation';
 import { EventJsonLd } from '@/components/seo/JsonLd';
+import { ShareButton } from '@/components/ui/ShareButton';
 
 /**
  * Slår opp et arrangement på id ELLER slug.
@@ -213,12 +214,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
               <div className="pt-4 border-t border-border flex items-center justify-between">
                 <span className="text-xs text-foreground-muted">Arrangert av {event.organizer}</span>
-                <button
-                  type="button"
+                <ShareButton
+                  title={event.title}
+                  text={event.description?.slice(0, 120)}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground-muted hover:text-foreground"
-                >
-                  <Share2 className="w-3.5 h-3.5" /> Del arrangement
-                </button>
+                />
               </div>
             </div>
           </div>

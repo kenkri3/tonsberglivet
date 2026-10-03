@@ -1,10 +1,11 @@
 import { Metadata } from 'next';
 import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
-import { Calendar, User, ArrowLeft, Share2, Compass, Ticket, BookOpen, ExternalLink } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Compass, Ticket, BookOpen, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
+import { ShareButton } from '@/components/ui/ShareButton';
 import { findNewsArticle } from '@/lib/news-server';
 import type { NewsBlock } from '@/lib/news';
 
@@ -249,12 +250,11 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
                 <BookOpen className="w-4 h-4 text-primary" />
                 <span>Publisert av Tønsberglivet forvaltning</span>
               </div>
-              <button 
-                type="button"
+              <ShareButton
+                title={article.title}
+                text={article.excerpt ?? undefined}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-surface-muted hover:bg-border text-foreground font-bold rounded-xl text-xs transition-colors border border-border"
-              >
-                <Share2 className="w-4 h-4" /> Del denne saken
-              </button>
+              />
             </div>
           </article>
 

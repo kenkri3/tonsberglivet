@@ -67,32 +67,32 @@ export default function PresseromPage() {
         </section>
 
         {/* Pressemeldinger */}
+        {/*
+          Denne seksjonen viste tidligere to påfunnede pressemeldinger
+          («Tønsberglivet lanserer ny digital plattform», 12. august 2026, og
+          «Rekordsommer i Tønsberg: Over 300 000 besøkende», 1. juni 2026) med
+          en «Last ned PDF»-knapp. Det fantes verken slike pressemeldinger
+          eller noen PDF-fil – knappen var et <button> uten onClick.
+          Vi viser ingen påfunnede pressemeldinger i stedet.
+        */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-bold text-foreground">Siste pressemeldinger</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-surface border border-border p-6 rounded-2xl space-y-4 hover:shadow-md transition-shadow">
-              <span className="text-xs font-semibold px-2.5 py-1 bg-primary-light text-primary rounded-full">Pressemelding</span>
-              <span className="text-xs text-foreground-subtle ml-3">12. august 2026</span>
-              <h3 className="text-lg font-bold text-foreground">Tønsberglivet lanserer ny digital plattform for byen</h3>
-              <p className="text-sm text-foreground-muted leading-relaxed">
-                Ny innovativ portal samler byliv, næringsliv, reiseliv, hverdagsliv og studentliv på et sted.
-              </p>
-              <button className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-                <Download className="w-4 h-4" /> Last ned PDF
-              </button>
-            </div>
-
-            <div className="bg-surface border border-border p-6 rounded-2xl space-y-4 hover:shadow-md transition-shadow">
-              <span className="text-xs font-semibold px-2.5 py-1 bg-primary-light text-primary rounded-full">Pressemelding</span>
-              <span className="text-xs text-foreground-subtle ml-3">1. juni 2026</span>
-              <h3 className="text-lg font-bold text-foreground">Rekordsommer i Tønsberg: Over 300 000 besøkende</h3>
-              <p className="text-sm text-foreground-muted leading-relaxed">
-                Sommersesongen 2026 setter nye rekorder for både handel, hotell og kulturarrangementer.
-              </p>
-              <button className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-                <Download className="w-4 h-4" /> Last ned PDF
-              </button>
-            </div>
+          <h2 className="text-2xl font-bold text-foreground">Pressemeldinger</h2>
+          <div className="bg-surface border border-border p-8 rounded-2xl space-y-4">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-1 bg-surface-muted text-foreground-muted rounded-full">
+              <FileText className="w-3.5 h-3.5" />
+              Ingen er publisert ennå
+            </span>
+            <p className="text-sm text-foreground-muted leading-relaxed max-w-2xl">
+              Pressemeldingene publiseres her etter hvert som de sendes ut. Vi viser
+              ingen eksempler i mellomtiden. Journalister som trenger uttalelser,
+              bakgrunn eller bilder i mellomtiden kan kontakte redaksjonen direkte.
+            </p>
+            <a
+              href="mailto:hei@tonsberglivet.no?subject=Foresp%C3%B8rsel%20til%20redaksjonen"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+            >
+              <Mail className="w-4 h-4" /> Kontakt redaksjonen
+            </a>
           </div>
         </section>
 
@@ -103,9 +103,17 @@ export default function PresseromPage() {
             Tønsberglivet AS gir tillatelse til bruk av vår logo og pressebilder i forbindelse med redaksjonell omtale av Tønsberglivet eller arrangementer på vår portal.
           </p>
           <div className="flex flex-wrap gap-4">
-            <button className="px-6 py-3 bg-surface-muted text-foreground font-medium rounded-xl text-sm hover:bg-border transition-colors inline-flex items-center gap-2">
-              <Download className="w-4 h-4 text-primary" /> Last ned logo-pakke (PNG, SVG, EPS)
-            </button>
+            {/*
+              Knappen het «Last ned logo-pakke (PNG, SVG, EPS)», men det finnes
+              ingen slik pakke i repoet og knappen hadde ingen onClick. Vi ber
+              heller om forespørsel på e-post, som ellers på denne siden.
+            */}
+            <a
+              href="mailto:hei@tonsberglivet.no?subject=Foresp%C3%B8rsel%20om%20logo-%20og%20profilpakke"
+              className="px-6 py-3 bg-surface-muted text-foreground font-medium rounded-xl text-sm hover:bg-border transition-colors inline-flex items-center gap-2"
+            >
+              <Mail className="w-4 h-4 text-primary" /> Bestill logo- og profilpakke
+            </a>
           </div>
         </section>
       </div>
