@@ -30,8 +30,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (can opt-in for committing if needed).
+# .env.example SKAL deles: den inneholder bare plassholdere, og uten den
+# vet ingen hvilke variabler (AGENT_API, MCP_API_KEY, …) som må settes i Railway.
 .env*
+!.env.example
 
 # vercel
 .vercel
