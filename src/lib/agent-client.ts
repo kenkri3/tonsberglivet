@@ -10,6 +10,8 @@
  * stedet for å vise brukeren en unnskyldning som om den var et svar.
  */
 
+import { probeSetting } from './settings';
+
 export interface AgentResponse {
   success: boolean;
   reply: string;
@@ -42,6 +44,149 @@ export interface AgentProbeResult {
 }
 
 const DEFAULT_MCP_URL = ['https://mcp.', 'bot', 'sify', '.com/agent/mcp'].join('');
+
+/**
+ * Miljøvariablene som må være satt for at den autonome agenten i det hele tatt
+ * kan nås. Rekkefølgen er den vi oppgir dem til brukeren.
+ */
+const AGENT_KEY_ENV = ['AGENT_API', 'NEXT_PUBLIC_AGENT_API'] as const;
+const AGENT_WEBHOOK_ENV = 'WEBHOOK_AGENT';
+
+/** Er en nøkkel satt i miljøet? Tom streng og bare mellomrom teller som «nei». */
+function envSet(name: string): boolean {
+  return Boolean((process.env[name] || '').trim());
+}
+
+/**
+ * Er en web-intelligens-nøkkel satt – i miljøet ELLER i databasen?
+ *
+ * Verktøyene selv leser nøkkelen fra `SystemSetting` først og miljøet etterpå
+ * (se `lib/web-intelligence.ts`). Sjekket vi bare miljøet, ville en nøkkel som
+ * ligger i databasen – og som altså virker – blitt rapportert som manglende, og
+ * da lyver «ærlighetsmeldingen» i chatten om nøklene.
+ *
+ * Returnerer `null` når databasen ikke kunne svare: da vet vi ikke, og da sier
+ * vi ikke at nøkkelen mangler.
+ */
+async function webKeySet(settingKey: string, ...envNames: string[]): Promise<boolean | null> {
+  if (envNames.some((n) => envSet(n))) return true;
+
+  const probe = await probeSetting(settingKey);
+  if (probe.status === 'found') return true;
+  if (probe.status === 'missing') return false;
+  return null;
+}
+
+export interface AgentCapabilityEnvVar {
+  name: string;
+  /**
+   * `true` = satt, `false` = beviselig ikke satt, `null` = vi kunne ikke avgjøre
+   * det (typisk fordi nøkkelen kan ligge i databasen og databasen ikke svarte).
+   *
+   * Tre tilstander er nødvendige: uten `null` ville en DB-feil blitt rapportert
+   * som «nøkkelen mangler», altså en usann påstand i motsatt retning av den vi
+   * ryddet bort.
+   */
+  set: boolean | null;
+}
+
+export interface AgentCapabilityReport {
+  /** Minst én utgående transport er satt opp. */
+  configured: boolean;
+  /** Fantes en nøkkel for MCP-transporten? */
+  hasMcpKey: boolean;
+  /** Var webhook-URL-en en brukbar http(s)-URL? */
+  hasWebhook: boolean;
+  /** Miljøvariablene som avgjør saken, med satt/ikke satt. */
+  env: AgentCapabilityEnvVar[];
+  /** De som mangler, klar til å vises i en feilmelding. */
+  missing: string[];
+  /** De som beviselig er satt, klar til å navngis i en melding. */
+  configuredEnv: string[];
+  /** Krever vårt eget MCP-endepunkt token for verktøykall? */
+  inboundMcpRequiresKey: boolean;
+  /** Finnes en lese-only nøkkel for innkommende verktøykall? */
+  inboundMcpReadOnlyKey: boolean;
+  /** Hvilke web-intelligens-nøkler er satt (Brave/Tavily/Apify). */
+  webIntelligence: AgentCapabilityEnvVar[];
+  /**
+   * Nøkler for de andre motorene grensesnittet viser status for.
+   *
+   * MERK: dette er BEVISST bare miljøvariabler. `GEMINI_API_KEY` og
+   * `1_MIN_AI*` kan også ligge i databasen (se `lib/ai-config.ts`), og da ville
+   * en «ikke satt opp»-påstand basert på miljøet alene vært usann. Grensesnittet
+   * skal derfor si «ukjent» – ikke «mangler» – når bare dette svarer nei.
+   */
+  integrations: AgentCapabilityEnvVar[];
+}
+
+/**
+ * Rapporterer hva som FAKTISK er konfigurert, i stedet for hva vi skulle ønske.
+ *
+ * Grunnen til at dette ligger her og ikke bare i status-ruten: chat-ruten trenger
+ * de samme fakta for å kunne svare ærlig når agenten ikke svarer. To steder som
+ * hver for seg gjettet på konfigurasjonen, var nettopp hvordan panelet kunne vise
+ * «Frakoblet» samtidig som chatten påsto at alt var koblet til.
+ */
+export async function getAgentCapabilityReport(): Promise<AgentCapabilityReport> {
+  const mcpKey =
+    AGENT_KEY_ENV.map((name) => (process.env[name] || '').trim()).find(Boolean) || '';
+  const webhookRaw = (process.env[AGENT_WEBHOOK_ENV] || '').trim();
+  const hasWebhook = webhookRaw.startsWith('http');
+
+  // `AGENT_API` og `NEXT_PUBLIC_AGENT_API` er to navn på samme nøkkel (se
+  // `queryAutonomousAgent`). Vi viser dem som én rad – ellers ville panelet mast
+  // om `AGENT_API` i et miljø som kjører helt fint på `NEXT_PUBLIC_AGENT_API`.
+  const env: AgentCapabilityEnvVar[] = [
+    { name: AGENT_KEY_ENV[0], set: Boolean(mcpKey) },
+    { name: AGENT_WEBHOOK_ENV, set: hasWebhook },
+  ];
+
+  const webIntelligence: AgentCapabilityEnvVar[] = [
+    { name: 'BRAVE_API_KEY', set: await webKeySet('brave_api_key', 'BRAVE_API_KEY') },
+    { name: 'TAVILY_API_KEY', set: await webKeySet('tavily_api_key', 'TAVILY_API_KEY') },
+    { name: 'APIFY_API_KEY', set: await webKeySet('apify_api_key', 'APIFY_API_KEY') },
+  ];
+
+  return {
+    configured: Boolean(mcpKey) || hasWebhook,
+    hasMcpKey: Boolean(mcpKey),
+    hasWebhook,
+    env,
+    // BARE de som beviselig mangler. `set: null` (vet ikke) skal aldri stilles
+    // ut som en mangel.
+    missing: env.filter((e) => e.set === false).map((e) => e.name),
+    /** De som beviselig ER satt – for meldinger som skal navngi dem. */
+    configuredEnv: env.filter((e) => e.set === true).map((e) => e.name),
+    inboundMcpRequiresKey: envSet('MCP_API_KEY'),
+    inboundMcpReadOnlyKey: envSet('MCP_READONLY_API_KEY'),
+    webIntelligence,
+    // Disse kan også ligge i databasen (SystemSetting). Er databasen
+    // utilgjengelig, svarer `webKeySet` `null` = «vet ikke», ikke «mangler».
+    //
+    // Navnene MÅ speile kildene `lib/ai-config.ts` og `lib/web-intelligence.ts`
+    // faktisk leser. Probte vi et smalere sett, ville panelet sagt «Ikke satt
+    // opp» om en nøkkel som virker – samme feilklasse, speilvendt.
+    integrations: [
+      { name: 'GEMINI_API_KEY', set: await webKeySet('gemini_api_key', 'GEMINI_API_KEY') },
+      {
+        name: '1_MIN_AI',
+        set: await webKeySet(
+          '1_min_ai',
+          '1_MIN_AI',
+          'ONE_MIN_AI',
+          'ONE_MIN_AI_API_KEY',
+          'ONE_MIN_AI_KEY',
+          'ONEMIN_API_KEY'
+        ),
+      },
+      {
+        name: 'TICKETMASTER_API_KEY',
+        set: await webKeySet('ticketmaster_api_key', 'TICKETMASTER_API_KEY'),
+      },
+    ],
+  };
+}
 
 /** Tidsbudsjetter. Kan overstyres med miljøvariabler uten ny deploy. */
 function readTimeout(name: string, fallback: number): number {

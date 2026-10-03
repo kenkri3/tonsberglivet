@@ -33,12 +33,56 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { TonsbergAgentChat } from '@/components/admin/TonsbergAgentChat';
+import { AGENT_BADGES, agentStatusDetail, useAgentStatus } from '@/lib/useAgentStatus';
+
+/**
+ * Én rad i integrasjonsoversikten. Oversikten viste tidligere hardkodet grønt
+ * «Aktiv»/«Klar» på Brave, Tavily, Apify og Duett – også når nøkkelen beviselig
+ * ikke fantes. Radene får nå statusen sin fra API-ets egen konfigurasjonsrapport.
+ */
+function IntegrationRow({
+  icon,
+  title,
+  subtitle,
+  active,
+}: {
+  icon: string;
+  title: string;
+  subtitle: string;
+  /** true = verifisert satt opp, false = mangler, null = kan ikke avgjøres her. */
+  active: boolean | null;
+}) {
+  const badge =
+    active === true
+      ? { label: 'Aktiv', cls: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
+      : active === false
+      ? { label: 'Ikke satt opp', cls: 'text-foreground-muted bg-surface border-border' }
+      : { label: 'Ukjent', cls: 'text-foreground-muted bg-surface border-border' };
+
+  return (
+    <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
+      <div className="flex items-center gap-2.5">
+        <span>{icon}</span>
+        <div>
+          <div className="font-bold text-foreground">{title}</div>
+          <div className="text-[10px] text-foreground-muted">{subtitle}</div>
+        </div>
+      </div>
+      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.cls}`}>
+        {badge.label}
+      </span>
+    </div>
+  );
+}
 import { roleLabel } from '@/lib/roles';
 
 const adminNav = [
   { label: 'Dashboard',           href: '/admin',                   icon: LayoutDashboard },
   { label: 'Team & Samhandling',  href: '/admin/team',              icon: UserCheck,     badge: 'team' as const },
-  { label: 'Autonom Agent Hub',   href: '/admin/agent',             icon: Bot,           badge: 'live' as const },
+  // MERK: agent-oppføringen har bevisst ingen `badge: 'live'` lenger. Den viste
+  // en pulserende grønn prikk som sa «live» selv når agenten var frakoblet.
+  // Prikken kommer nå fra den ekte agentstatusen (se `agentBadge`).
+  { label: 'Autonom Agent Hub',   href: '/admin/agent',             icon: Bot },
   { label: 'Artikler',            href: '/admin/artikler',          icon: FileText },
   { label: 'Sider',               href: '/admin/sider',             icon: FileText },
   { label: 'Torvleie & Byrom',    href: '/admin/booking',           icon: MapPin },
@@ -70,6 +114,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [recentNotifText, setRecentNotifText] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; email: string; role: string } | null>(null);
+
+  // Samme agentstatus som chatpanelet bruker. Topplinjen viste tidligere et
+  // hardkodet grønt «Agent Studio Aktiv»-merke, som lyste grønt også når
+  // agenten var frakoblet – og dermed motsa det røde merket i panelet.
+  const agentStatus = useAgentStatus();
+  const agentBadge = AGENT_BADGES[agentStatus.state];
+
+  /**
+   * Er en web-intelligens-nøkkel faktisk satt? Svarene kommer fra API-ets
+   * konfigurasjonsrapport, som har TRE tilstander: satt, beviselig ikke satt, og
+   * «vet ikke» (databasen svarte ikke, og nøkkelen kan ligge der).
+   *
+   * «Vet ikke» må ikke bli til «mangler» her – da ville panelet påstått noe
+   * usant i motsatt retning av det vi ryddet bort.
+   */
+  const webKeySet = (name: string): boolean | null => {
+    if (agentStatus.state === 'checking') return null;
+    const found = agentStatus.webIntelligence.find((w) => w.name === name);
+    return found ? found.set : null;
+  };
   const prevCountRef = useRef(0);
 
   useEffect(() => {
@@ -250,6 +314,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   ? pendingBookingsCount
                   : (item as any).count;
                 const isLivePulse = (item as any).badge === 'live';
+                // Agent Hub-oppføringen skal vise agentens EKTE status, ikke en
+                // fast grønn prikk. Er agenten ikke konfigurert, er prikken grå.
+                const isAgentNav = item.href === '/admin/agent';
 
                 // Section divider before Bildebank (idx 7)
                 const showDivider = idx === 7;
@@ -275,9 +342,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       </div>
 
                       <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                        {/* Live pulse dot */}
+                        {/* Live pulse dot – for agenten speiler den ekte status */}
                         {isLivePulse && (
                           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'bg-white' : 'bg-emerald-500'} animate-pulse`} />
+                        )}
+                        {isAgentNav && (
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              isActive ? 'bg-white' : agentBadge.dot
+                            }`}
+                            title={`Agentstatus: ${agentBadge.label}`}
+                          />
                         )}
                         {/* Numeric count bubble */}
                         {liveCount != null && liveCount > 0 && (
@@ -369,15 +444,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <span className="hidden sm:inline">
                     {copilotOpen ? 'Skjul Co-Pilot' : 'AI Co-Pilot'}
                   </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${agentBadge.dot}`}
+                    title={`Agentstatus: ${agentBadge.label}`}
+                  />
                   <span className="hidden md:inline text-[10px] opacity-75 font-mono ml-0.5">
                     ⌘J
                   </span>
                 </button>
               ) : (
-                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Agent Studio Aktiv</span>
+                <div
+                  className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold ${agentBadge.cls}`}
+                  title={agentStatusDetail(agentStatus)}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${agentBadge.dot}`} />
+                  <span>Agent: {agentBadge.label}</span>
                 </div>
               )}
 
@@ -671,7 +752,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <Sparkles className="w-4 h-4" />
             <span>AI Co-Pilot</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className={`w-1.5 h-1.5 rounded-full ${agentBadge.dot}`} />
           </button>
         )}
 
@@ -727,7 +808,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       : 'stroke-[1.8]'
                   }`}
                 />
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 animate-pulse border border-surface" />
+                <span
+                  className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-surface ${agentBadge.dot}`}
+                  title={`Agentstatus: ${agentBadge.label}`}
+                />
               </div>
               <span className="text-[10px] tracking-tight mt-0.5">Agent Hub</span>
             </Link>
@@ -828,71 +912,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
 
             <div className="space-y-2 text-xs">
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span>🦁</span>
-                  <div>
-                    <div className="font-bold text-foreground">Brave Search API</div>
-                    <div className="text-[10px] text-foreground-muted">Raskt nettsøk & faktasjekk</div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Aktiv
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span>🔍</span>
-                  <div>
-                    <div className="font-bold text-foreground">Tavily Deep Research</div>
-                    <div className="text-[10px] text-foreground-muted">Dyp kildegransking og analyser</div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Aktiv
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span>🕷️</span>
-                  <div>
-                    <div className="font-bold text-foreground">Apify Web Scrapers</div>
-                    <div className="text-[10px] text-foreground-muted">Henting av arrangementer og kultur</div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Aktiv
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span>💳</span>
-                  <div>
-                    <div className="font-bold text-foreground">Duett ERP (EHF 3.0)</div>
-                    <div className="text-[10px] text-foreground-muted">Autonom fakturering av torvleie</div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Klar
-                </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span>🗄️</span>
-                  <div>
-                    <div className="font-bold text-foreground">PostgreSQL & Prisma</div>
-                    <div className="text-[10px] text-foreground-muted">Lokal og Railway produksjonsdatabase</div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Tilkoblet
-                </span>
-              </div>
+              {/* Statusen kommer fra /api/agent/status → configuration, ikke fra
+                  fast tekst. Er nøkkelen ikke satt, står det det. */}
+              <IntegrationRow
+                icon="🦁"
+                title="Brave Search API"
+                subtitle="Raskt nettsøk & faktasjekk"
+                active={webKeySet('BRAVE_API_KEY')}
+              />
+              <IntegrationRow
+                icon="🔍"
+                title="Tavily Deep Research"
+                subtitle="Dyp kildegransking og analyser"
+                active={webKeySet('TAVILY_API_KEY')}
+              />
+              <IntegrationRow
+                icon="🕷️"
+                title="Apify Web Scrapers"
+                subtitle="Henting av arrangementer og kultur"
+                active={webKeySet('APIFY_API_KEY')}
+              />
+              <IntegrationRow
+                icon="💳"
+                title="Duett ERP (EHF 3.0)"
+                subtitle="Automatisk fakturering av torvleie"
+                // Settes opp under Admin → Økonomi, ikke som miljøvariabel.
+                // Vi kan derfor ikke avgjøre det herfra, og påstår det ikke.
+                active={null}
+              />
+              <IntegrationRow
+                icon="🗄️"
+                title="PostgreSQL & Prisma"
+                subtitle="Databasen denne økten faktisk leser fra"
+                // Denne modalen rendres bare fordi spørringen mot databasen
+                // svarte – siden lastet tross alt.
+                active={true}
+              />
             </div>
+            <p className="text-[10px] text-foreground-muted leading-relaxed">
+              Agenten selv er <strong>{agentBadge.label}</strong>
+              {agentStatus.state === 'healthy'
+                ? ' og henter ekte data fra Tønsberglivet.'
+                : agentStatus.state === 'degraded'
+                ? ', men verktøykallet mot Tønsberglivet feilet.'
+                : agentStatus.state === 'not_configured'
+                ? ' – nettverktøyene over er derfor ikke i bruk i chatten.'
+                : '.'}{' '}
+              Se <code className="font-mono">docs/agent-oppsett.md</code> for hvordan
+              nøklene settes.
+            </p>
 
             <button
               type="button"

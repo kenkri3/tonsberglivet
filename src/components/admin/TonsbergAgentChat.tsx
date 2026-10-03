@@ -34,6 +34,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { formatAiMarkdown } from '@/lib/formatAiMarkdown';
+import { AGENT_BADGES, agentStatusDetail, useAgentStatus } from '@/lib/useAgentStatus';
 
 export interface ChatMessage {
   id: string;
@@ -83,44 +84,11 @@ export function TonsbergAgentChat({
   const [isListeningMic, setIsListeningMic] = useState(false);
   const [sessionId, setSessionId] = useState(() => newSessionId());
 
-  // Ekte status fra /api/agent/status?deep=1 i stedet for et hardkodet «Live».
-  // Uten dette viste panelet grønt lys selv når agentens verktøykall mot
-  // Tønsberglivet ble avvist med 401.
-  const [agentHealth, setAgentHealth] = useState<{
-    state: 'checking' | 'healthy' | 'degraded' | 'unreachable';
-    detail?: string;
-  }>({ state: 'checking' });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const checkStatus = async () => {
-      try {
-        const res = await fetch('/api/agent/status?deep=1', { cache: 'no-store' });
-        const data = await res.json().catch(() => ({}));
-        if (cancelled) return;
-
-        if (!res.ok) {
-          setAgentHealth({ state: 'unreachable', detail: data?.error || `HTTP ${res.status}` });
-        } else if (data.health?.toolsWorking) {
-          setAgentHealth({ state: 'healthy' });
-        } else if (data.health?.reachable) {
-          setAgentHealth({ state: 'degraded', detail: data.health.reason });
-        } else {
-          setAgentHealth({ state: 'unreachable', detail: data.health?.reason });
-        }
-      } catch {
-        if (!cancelled) setAgentHealth({ state: 'unreachable', detail: 'nettverksfeil' });
-      }
-    };
-
-    void checkStatus();
-    const timer = setInterval(checkStatus, 5 * 60 * 1000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, []);
+  // Ekte agentstatus fra /api/agent/status?deep=1 – delt med topplinjen via
+  // useAgentStatus, slik at panelet og headeren aldri kan vise ulik status.
+  // Hooken skiller også «ikke konfigurert i dette miljøet» fra «konfigurert,
+  // men nede», som er to feil med hver sin fiks.
+  const agentHealth = useAgentStatus();
   
   // Three-dots dropdown state
   const [menuOpen, setMenuOpen] = useState(false);
@@ -459,28 +427,20 @@ export function TonsbergAgentChat({
     }
   };
 
-  const healthBadge = {
-    checking: {
-      label: 'Sjekker…',
-      cls: 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20',
-      dot: 'bg-slate-400',
-    },
-    healthy: {
-      label: 'Live',
-      cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-      dot: 'bg-emerald-500 animate-pulse',
-    },
-    degraded: {
-      label: 'Redusert',
-      cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-      dot: 'bg-amber-500 animate-pulse',
-    },
-    unreachable: {
-      label: 'Frakoblet',
-      cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-      dot: 'bg-rose-500',
-    },
-  }[agentHealth.state];
+  // Etikett, farge og prikk kommer fra den delte oversettelsen i useAgentStatus,
+  // slik at chatpanelet og topplinjen alltid sier nøyaktig det samme.
+  const healthBadge = AGENT_BADGES[agentHealth.state];
+  const healthTextClass = healthBadge.text;
+
+  /**
+   * Er en integrasjonsnøkkel satt? `null` = vet ikke (databasen svarte ikke,
+   * eller nøkkelen kan ligge der). «Vet ikke» skal ikke bli til «mangler».
+   */
+  const integrationSet = (name: string): boolean | null => {
+    if (agentHealth.state === 'checking') return null;
+    const found = agentHealth.integrations.find((i) => i.name === name);
+    return found ? found.set : null;
+  };
 
   return (
     <div className={`flex flex-col bg-surface rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden h-full relative ${className}`}>
@@ -498,11 +458,7 @@ export function TonsbergAgentChat({
               </span>
               <span
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${healthBadge.cls}`}
-                title={
-                  agentHealth.detail
-                    ? `Agent-status: ${healthBadge.label} (${agentHealth.detail})`
-                    : `Agent-status: ${healthBadge.label}`
-                }
+                title={agentStatusDetail(agentHealth)}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${healthBadge.dot}`} />
                 {healthBadge.label}
@@ -871,14 +827,8 @@ export function TonsbergAgentChat({
                 Trykk <kbd className="px-1 py-0.5 rounded bg-surface-muted border border-border font-mono">Enter</kbd> for å sende. Hold deg øverst i svaret og scroll nedover.
               </span>
               <span
-                className={`flex items-center gap-1 font-semibold ${
-                  agentHealth.state === 'healthy'
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : agentHealth.state === 'degraded'
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-rose-600 dark:text-rose-400'
-                }`}
-                title={agentHealth.detail ? `Årsak: ${agentHealth.detail}` : undefined}
+                className={`flex items-center gap-1 font-semibold ${healthTextClass}`}
+                title={agentStatusDetail(agentHealth)}
               >
                 <ShieldCheck className="w-3 h-3" /> Agent: {healthBadge.label}
               </span>
@@ -906,38 +856,62 @@ export function TonsbergAgentChat({
             </div>
 
             <div className="space-y-2.5 text-xs">
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="font-semibold text-foreground">PostgreSQL & Prisma</span>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Tilkoblet</span>
-              </div>
+              {/* Statusen er hentet fra API-ets konfigurasjonsrapport. Før sto
+                  det hardkodet grønt «Aktiv» på 1min.ai og Ticketmaster selv når
+                  nøkkelen ikke fantes. Nå står det «Ukjent» når vi ikke vet –
+                  for eksempel for nøkler som kan ligge i databasen. */}
+              {[
+                {
+                  label: 'PostgreSQL & Prisma',
+                  detail: 'Databasen denne økten faktisk leser fra',
+                  // Denne modalen vises bare fordi siden lastet, altså svarte DB.
+                  state: true as boolean | null,
+                },
+                {
+                  label: 'AI-modell (1min.ai)',
+                  detail: 'Reservemotor for tekst og resonnering',
+                  state: integrationSet('1_MIN_AI'),
+                },
+                {
+                  label: 'Duett ERP (Peppol EHF 3.0)',
+                  detail: 'Settes opp under Admin → Økonomi',
+                  state: null as boolean | null,
+                },
+                {
+                  label: 'Ticketmaster API',
+                  detail: 'Live konserter og billettsalg',
+                  state: integrationSet('TICKETMASTER_API_KEY'),
+                },
+              ].map((row) => {
+                const badge =
+                  row.state === true
+                    ? { text: 'Satt opp', cls: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' }
+                    : row.state === false
+                    ? { text: 'Ikke satt opp', cls: 'text-foreground-muted', dot: 'bg-slate-400' }
+                    : { text: 'Ukjent', cls: 'text-foreground-muted', dot: 'bg-slate-400' };
 
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="font-semibold text-foreground">AI-modell (1min.ai)</span>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Aktiv</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="font-semibold text-foreground">Duett ERP (Peppol EHF 3.0)</span>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Klar</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="font-semibold text-foreground">Ticketmaster API</span>
-                </div>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Synk aktiv</span>
-              </div>
+                return (
+                  <div
+                    key={row.label}
+                    className="p-3 rounded-xl bg-surface-muted flex items-center justify-between border border-border"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${badge.dot}`} />
+                      <div className="min-w-0">
+                        <div className="font-semibold text-foreground truncate">{row.label}</div>
+                        <div className="text-[10px] text-foreground-muted truncate">{row.detail}</div>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-bold shrink-0 ${badge.cls}`}>{badge.text}</span>
+                  </div>
+                );
+              })}
             </div>
+
+            <p className="text-[10px] text-foreground-muted leading-relaxed">
+              Agentstatus: <strong>{healthBadge.label}</strong>. «Ukjent» betyr at nøkkelen
+              kan ligge i databasen (Innstillinger) – panelet leser bare miljøvariabler.
+            </p>
 
             <div className="pt-2">
               <button

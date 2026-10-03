@@ -44,14 +44,44 @@ export async function getSetting(key: string, defaultValue?: string): Promise<st
 }
 
 /**
+ * Leser en innstilling UTEN å skjule feil.
+ *
+ * `getSetting` over svelger databasefeil med vilje: den skal falle tilbake til
+ * miljø/minne og alltid gi et brukbart svar. Men den som skal RAPPORTERE om noe
+ * er konfigurert, kan ikke bruke den – da ville «databasen svarte ikke» blitt
+ * til «nøkkelen finnes ikke», som er en usann påstand i motsatt retning.
+ *
+ * Denne varianten skiller de tre tilfellene: funnet, ikke funnet, og feil.
+ */
+export type SettingProbe =
+  | { status: 'found'; value: string }
+  | { status: 'missing' }
+  | { status: 'error'; message: string };
+
+export async function probeSetting(key: string): Promise<SettingProbe> {
+  try {
+    const setting = await (prisma as any).systemSetting?.findUnique({
+      where: { key },
+    });
+    if (setting && typeof setting.value === 'string' && setting.value.trim() !== '') {
+      return { status: 'found', value: setting.value };
+    }
+    return { status: 'missing' };
+  } catch (error) {
+    return {
+      status: 'error',
+      message: error instanceof Error ? error.message : 'ukjent databasefeil',
+    };
+  }
+}
+/**
  * Lagrer eller oppdaterer en systeminnstilling.
  */
 export async function setSetting(
   key: string,
   value: string,
   category: string = 'GENERAL'
-): Promise<void> {
-  memorySettings[key] = value;
+): Promise<void> {  memorySettings[key] = value;
   try {
     await (prisma as any).systemSetting?.upsert({
       where: { key },
