@@ -13,7 +13,10 @@
  */
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role, ArticleCategory, TaskStatus, TaskPriority } from '@prisma/client';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -1873,3 +1876,103 @@ async function main() {
 main()
   .catch((e) => { console.error(e); process.exit(1); })
   .finally(() => prisma.$disconnect());
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+async function seedTeamAndContent() {
+  console.log('--- Seeder team, brukere, artikler og oppgaver ---');
+  const adminPassword = process.env.ADMIN_PASSWORD || 'Tonsberg2026!';
+  const hashedAdminPassword = hashPassword(adminPassword);
+
+  const kenneth = await prisma.user.upsert({
+    where: { email: 'kenkri3@gmail.com' },
+    update: { name: 'Kenneth Kristiansen', role: Role.ADMIN, title: 'Systemadministrator & Eier', active: true, password: hashedAdminPassword },
+    create: { email: 'kenkri3@gmail.com', name: 'Kenneth Kristiansen', role: Role.ADMIN, title: 'Systemadministrator & Eier', active: true, password: hashedAdminPassword },
+  });
+
+  const cecilie = await prisma.user.upsert({
+    where: { email: 'cecilie@tonsberglivet.no' },
+    update: { name: 'Cecilie Bækken Dahl', role: Role.ADMIN, title: 'Daglig leder, Tønsberglivet', active: true, password: hashedAdminPassword },
+    create: { email: 'cecilie@tonsberglivet.no', name: 'Cecilie Bækken Dahl', role: Role.ADMIN, title: 'Daglig leder, Tønsberglivet', active: true, password: hashedAdminPassword },
+  });
+
+  const editor = await prisma.user.upsert({
+    where: { email: 'redaksjon@tonsberglivet.no' },
+    update: { name: 'Redaksjonen Tønsberglivet', role: Role.EDITOR, title: 'Innholdsredaktør & Kommunikasjon', active: true, password: hashPassword('Redaksjon2026!') },
+    create: { email: 'redaksjon@tonsberglivet.no', name: 'Redaksjonen Tønsberglivet', role: Role.EDITOR, title: 'Innholdsredaktør & Kommunikasjon', active: true, password: hashPassword('Redaksjon2026!') },
+  });
+
+  // Artikler
+  const articleCount = await prisma.article.count();
+  if (articleCount === 0) {
+    const archivePath = path.join(process.cwd(), 'src', 'data', 'news-archive.json');
+    if (fs.existsSync(archivePath)) {
+      const newsArchive = JSON.parse(fs.readFileSync(archivePath, 'utf8'));
+      const categoryMap = {
+        BYLIVET: ArticleCategory.BYLIVET,
+        HVERDAGSLIVET: ArticleCategory.HVERDAGSLIVET,
+        NAERINGSLIVET: ArticleCategory.NAERINGSLIVET,
+        REISELIVET: ArticleCategory.REISELIVET,
+        STUDENTLIVET: ArticleCategory.STUDENTLIVET,
+      };
+      for (const item of newsArchive) {
+        const cat = categoryMap[item.category] || ArticleCategory.BYLIVET;
+        const bodyContent = (item.blocks || []).map((b) => (b.type === 'quote' ? `> ${b.text}` : b.text)).join('\n\n');
+        try {
+          await prisma.article.create({
+            data: {
+              title: item.title,
+              slug: item.slug || item.id,
+              excerpt: item.excerpt || null,
+              content: bodyContent || item.excerpt || item.title,
+              category: cat,
+              published: true,
+              publishedAt: item.publishedAt ? new Date(item.publishedAt) : new Date(),
+              authorId: cecilie.id,
+            },
+          });
+        } catch (e) {}
+      }
+    }
+  }
+
+  // Tasks
+  const taskCount = await prisma.teamTask.count();
+  if (taskCount === 0) {
+    await prisma.teamTask.createMany({
+      data: [
+        { title: 'Korrektur på høstprogrammet for Tønsberg Torv', description: 'Gå gjennom datoer, utstillere og tillatelser for torvleie.', status: TaskStatus.IN_PROGRESS, priority: TaskPriority.HIGH, assignedToId: cecilie.id, createdById: kenneth.id },
+        { title: 'Gjennomgå nye bedriftsprofiler fra Brønnøysund', description: 'Kvalitetssikre kategorier og kontaktinfo for nylig etablerte selskaper.', status: TaskStatus.PENDING, priority: TaskPriority.MEDIUM, assignedToId: editor.id, createdById: cecilie.id },
+        { title: 'Oppdatere bildebank med høstbilder', description: 'Sikre at alle bilder har godkjent GDPR-status og korrekte alt-tekster.', status: TaskStatus.COMPLETED, priority: TaskPriority.LOW, assignedToId: editor.id, createdById: cecilie.id },
+      ],
+    });
+  }
+
+  // Notes
+  const noteCount = await prisma.internalNote.count();
+  if (noteCount === 0) {
+    await prisma.internalNote.create({
+      data: {
+        content: 'Velkommen til Tønsberglivet Team & Samhandling! Her kan redaksjonen og ledelsen samarbeide om artikler, torvleie, arrangementer og daglige oppgaver på tvers av enheter.',
+        pinned: true,
+        authorId: cecilie.id,
+      },
+    });
+  }
+
+  // Activity
+  const actCount = await prisma.activityLog.count();
+  if (actCount === 0) {
+    await prisma.activityLog.createMany({
+      data: [
+        { userName: 'Kenneth Kristiansen', userEmail: 'kenkri3@gmail.com', userRole: 'ADMIN', action: 'SYSTEM_INITIALIZED', details: 'Initialiserte PostgreSQL database og koblet til Railway produksjon.', targetType: 'System' },
+        { userName: 'Kenneth Kristiansen', userEmail: 'kenkri3@gmail.com', userRole: 'ADMIN', action: 'TEAM_MODULE_ACTIVATED', details: 'Aktiverte Team & Samhandlingshub med brukeradministrasjon, oppgaver og notater.', targetType: 'User' },
+        { userName: 'Cecilie Bækken Dahl', userEmail: 'cecilie@tonsberglivet.no', userRole: 'ADMIN', action: 'CONTENT_SYNCED', details: 'Synkroniserte artikler og bildebank med det offisielle arkivet for Tønsberg.', targetType: 'Article' },
+      ],
+    });
+  }
+}

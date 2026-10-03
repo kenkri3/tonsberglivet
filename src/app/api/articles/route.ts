@@ -3,6 +3,7 @@ import { ArticleCategory } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { sanitizeInput } from '@/lib/validations';
 import { requireEditorOrAdmin, getSessionFromRequest } from '@/lib/auth';
+import { logActivity } from '@/lib/activity';
 import { getSetting } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
@@ -130,7 +131,15 @@ export async function POST(request: Request) {
         content: String(content),
         imageId: resolvedImageId,
         published: shouldPublish,
+        authorId: auth.user?.id || null,
       },
+    });
+    await logActivity({
+      user: auth.user,
+      action: shouldPublish ? 'ARTICLE_PUBLISHED' : 'ARTICLE_CREATED',
+      details: `${shouldPublish ? 'Publiserte' : 'Opprettet utkast for'} artikkelen: "${article.title}" (${article.category})`,
+      targetType: 'Article',
+      targetId: article.id,
     });
     return NextResponse.json({ success: true, data: article }, { status: 201 });
   } catch (error: any) {

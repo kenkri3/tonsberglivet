@@ -28,6 +28,7 @@ import {
   CheckCircle2,
   Bell,
   LogOut,
+  UserCheck,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -35,6 +36,7 @@ import { TonsbergAgentChat } from '@/components/admin/TonsbergAgentChat';
 
 const adminNav = [
   { label: 'Dashboard',           href: '/admin',                   icon: LayoutDashboard },
+  { label: 'Team & Samhandling',  href: '/admin/team',              icon: UserCheck,     badge: 'team' as const },
   { label: 'Autonom Agent Hub',   href: '/admin/agent',             icon: Bot,           badge: 'live' as const },
   { label: 'Artikler',            href: '/admin/artikler',          icon: FileText },
   { label: 'Torvleie & Byrom',    href: '/admin/booking',           icon: MapPin },
@@ -62,7 +64,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [recentNotifText, setRecentNotifText] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; email: string; role: string } | null>(null);
   const prevCountRef = useRef(0);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.authenticated && d.user) setCurrentUser(d.user);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -517,14 +529,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
               {/* Brukerprofil-badge & Logg ut */}
               <div className="flex items-center gap-2 sm:gap-2.5 pl-2 sm:pl-3 border-l border-border">
-                <div className="flex items-center gap-2">
+                <Link
+                  href="/admin/team"
+                  className="flex items-center gap-2 hover:opacity-85 transition"
+                  title="Gå til Team & Brukere"
+                >
                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-xs">
-                    <span className="text-xs font-bold text-primary-foreground">TL</span>
+                    <span className="text-xs font-bold text-primary-foreground">
+                      {currentUser?.name
+                        ? currentUser.name.split(' ').map((p) => p[0]).join('').toUpperCase().slice(0, 2)
+                        : (currentUser?.email ? currentUser.email.slice(0, 2).toUpperCase() : 'TL')}
+                    </span>
                   </div>
-                  <span className="hidden xl:block text-xs font-bold text-foreground">
-                    Tønsberglivet Admin
-                  </span>
-                </div>
+                  <div className="hidden xl:flex flex-col text-left">
+                    <span className="text-xs font-bold text-foreground leading-tight">
+                      {currentUser?.name || (currentUser?.email ? currentUser.email.split('@')[0] : 'Tønsberglivet Admin')}
+                    </span>
+                    <span className="text-[10px] text-foreground-muted font-medium capitalize">
+                      {currentUser?.role === 'ADMIN' ? 'Administrator' : (currentUser?.role === 'EDITOR' ? 'Redaktør' : 'Bruker')}
+                    </span>
+                  </div>
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}

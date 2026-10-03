@@ -3,6 +3,7 @@ import { bookingSchema, formatZodError } from '@/lib/validations';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit, getClientIdentity } from '@/lib/rate-limit';
 import { requireEditorOrAdmin } from '@/lib/auth';
+import { logActivity } from '@/lib/activity';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,6 +107,13 @@ export async function PATCH(request: Request) {
     const updated = await prisma.bookingRequest.update({
       where: { id },
       data: { status },
+    });
+    await logActivity({
+      user: auth.user,
+      action: status === 'APPROVED' ? 'BOOKING_APPROVED' : (status === 'REJECTED' ? 'BOOKING_REJECTED' : 'BOOKING_UPDATED'),
+      details: `${status === 'APPROVED' ? 'Godkjente' : (status === 'REJECTED' ? 'Avslo' : 'Oppdaterte')} torvleiesøknad for ${updated.name || updated.email} (${updated.type})`,
+      targetType: 'BookingRequest',
+      targetId: updated.id,
     });
     return NextResponse.json({ success: true, data: updated });
   } catch (e: any) {

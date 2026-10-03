@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createSessionToken, verifyPassword, hashPassword, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS, SessionUser } from '@/lib/auth';
+import { logActivity } from '@/lib/activity';
 
 export const dynamic = 'force-dynamic';
 
@@ -163,6 +164,25 @@ export async function POST(request: Request) {
     }
 
     const token = createSessionToken(user);
+
+    // Oppdater lastActiveAt og logg innlogging
+    try {
+      if (user.id && user.id !== 'admin-env-id') {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastActiveAt: new Date() },
+        });
+      }
+      await logActivity({
+        user,
+        action: 'USER_LOGIN',
+        details: 'Logget inn i administrasjonspanelet',
+        targetType: 'User',
+        targetId: user.id !== 'admin-env-id' ? user.id : null,
+      });
+    } catch (e) {
+      // Ignorerer feil i aktivitetslogg
+    }
 
     const response = NextResponse.json({
       success: true,
