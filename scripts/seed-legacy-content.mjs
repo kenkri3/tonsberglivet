@@ -192,15 +192,22 @@ async function main() {
   }
 
   // ── Hopp over hvis innholdet allerede er på plass ─────────────────────────
-  const [antallArtikler, antallEvents] = await Promise.all([
+  const [antallArtikler, antallEvents, antallSider, antallProsjekter] = await Promise.all([
     prisma.article.count(),
     prisma.event.count(),
+    prisma.page.count(),
+    prisma.project.count(),
   ]);
 
-  if (!force && antallArtikler >= arkiv.length * 0.9 && antallEvents > 0) {
+  if (
+    !force &&
+    antallArtikler >= arkiv.length * 0.9 &&
+    antallEvents >= 1000 &&
+    antallSider >= 50 &&
+    antallProsjekter >= 20
+  ) {
     console.log(
-      `[seed-legacy] Innholdet er allerede importert (${antallArtikler} artikler, ` +
-        `${antallEvents} arrangementer). Bruk --force for å kjøre på nytt.`
+      `[seed-legacy] Innholdet er allerede importert (${antallArtikler} artikler, ${antallEvents} arrangementer, ${antallSider} sider, ${antallProsjekter} prosjekter). Bruk --force for å kjøre på nytt.`
     );
     await prisma.$disconnect();
     return;
@@ -222,6 +229,12 @@ async function main() {
 
   const teller = { article: 0, event: 0, business: 0, project: 0, page: 0, image: 0 };
   const feil = [];
+
+  const kjørIChunks = async (items, batchSize, fn) => {
+    for (let i = 0; i < items.length; i += batchSize) {
+      await Promise.all(items.slice(i, i + batchSize).map(fn));
+    }
+  };
 
   /** Oppretter/oppdaterer en Image-rad og returnerer id-en. */
   const sikreBilde = async (bilde, altFallback) => {
@@ -263,7 +276,7 @@ async function main() {
   };
 
   // ── Artikler ──────────────────────────────────────────────────────────────
-  for (const a of arkiv) {
+  await kjørIChunks(arkiv, 15, async (a) => {
     try {
       const bildeId = await sikreBilde(a.featuredImage, a.title);
       const publishedAt = a.publishedAt ? new Date(a.publishedAt) : new Date();
@@ -285,10 +298,10 @@ async function main() {
     } catch (err) {
       feil.push(`artikkel ${a.slug}: ${String(err.message).slice(0, 100)}`);
     }
-  }
+  });
 
   // ── Bedrifter ─────────────────────────────────────────────────────────────
-  for (const b of data.filter((d) => d.type === 'business')) {
+  await kjørIChunks(data.filter((d) => d.type === 'business'), 15, async (b) => {
     try {
       const verdier = {
         name: b.navn,
@@ -309,12 +322,12 @@ async function main() {
     } catch (err) {
       feil.push(`bedrift ${b.slug}: ${String(err.message).slice(0, 100)}`);
     }
-  }
+  });
 
   // ── Arrangementer ─────────────────────────────────────────────────────────
-  for (const e of data.filter((d) => d.type === 'event')) {
+  await kjørIChunks(data.filter((d) => d.type === 'event'), 15, async (e) => {
     const start = e.startDato ? new Date(e.startDato) : null;
-    if (!start || Number.isNaN(start.getTime())) continue;
+    if (!start || Number.isNaN(start.getTime())) return;
     try {
       const bildeId = await sikreBilde(e.bilde, e.tittel);
       const slutt = e.sluttDato ? new Date(e.sluttDato) : null;
@@ -339,10 +352,10 @@ async function main() {
     } catch (err) {
       feil.push(`arrangement ${e.slug}: ${String(err.message).slice(0, 100)}`);
     }
-  }
+  });
 
   // ── Prosjekter ────────────────────────────────────────────────────────────
-  for (const p of data.filter((d) => d.type === 'project')) {
+  await kjørIChunks(data.filter((d) => d.type === 'project'), 15, async (p) => {
     try {
       const bildeId = await sikreBilde(p.bilde, p.tittel);
       const verdier = {
@@ -362,12 +375,12 @@ async function main() {
     } catch (err) {
       feil.push(`prosjekt ${p.slug}: ${String(err.message).slice(0, 100)}`);
     }
-  }
+  });
 
   // ── Sider ─────────────────────────────────────────────────────────────────
-  for (const s of data.filter((d) => d.type === 'page')) {
+  await kjørIChunks(data.filter((d) => d.type === 'page'), 15, async (s) => {
     const slug = lagSlug(s.sti || s.slug);
-    if (!slug) continue;
+    if (!slug) return;
     try {
       const innhold = [s.ingress, s.innhold].filter(Boolean).join('\n\n') || s.tittel;
       await prisma.page.upsert({
@@ -379,7 +392,7 @@ async function main() {
     } catch (err) {
       feil.push(`side ${slug}: ${String(err.message).slice(0, 100)}`);
     }
-  }
+  });
 
   console.log('\n[seed-legacy] Skrevet:');
   for (const [k, v] of Object.entries(teller)) console.log(`  ${k.padEnd(10)} ${v}`);
