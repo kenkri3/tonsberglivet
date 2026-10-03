@@ -1,112 +1,195 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
-import { Calendar, User, ArrowLeft, Share2, Compass, Ticket, BookOpen } from 'lucide-react';
+import { Calendar, User, ArrowLeft, Share2, Compass, Ticket, BookOpen, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { ArticleJsonLd } from '@/components/seo/JsonLd';
+import { findNewsArticle } from '@/lib/news-server';
+import type { NewsBlock } from '@/lib/news';
 
-const demoNewsMap: Record<string, {
-  title: string;
-  category: string;
-  date: string;
-  author: string;
-  excerpt: string;
-  content: string[];
-  tags: string[];
-  readTime: string;
-}> = {
-  '1': {
-    title: 'Ny kafé åpner i Nedre Langgate med fokus på lokale råvarer',
-    category: 'Bylivet',
-    date: '12. august 2026',
-    author: 'Tønsberglivet Redaksjon',
-    excerpt: 'Tønsberg sentrum utvides med et nytt spennende serveringssted. Eierne lover hjemmebakt brød, fersk kaffe og koselig bakgård.',
-    content: [
-      'Gledelige nyheter for alle kaffe- og matelskere i Tønsberg! Nå åpner dørene til en splitter ny kafé i historiske lokaler i Nedre Langgate.',
-      'Bak konseptet står to lokale gründere som brenner for å skape nye møteplasser i bykjernen. Menyen vil variere etter sesongene, med spesiell vekt på kortreiste råvarer fra bønder i Vestfold og Færder.',
-      '– Vi ønsker at dette skal være en uformell oase der folk kan senke skuldrene, enten de trenger en god lunsj eller vil ta med seg nybakt surdeigsbrød hjem, forteller gründerne.',
-      'Åpningstidene blir fra 08:00 til 18:00 alle hverdager, og 09:00 til 17:00 i helgene. Velkommen innom!'
-    ],
-    tags: ['Kafé', 'Nedre Langgate', 'Bylivet', 'Lokalmat'],
-    readTime: '3 min lesetid',
-  },
-  '2': {
-    title: 'Gründerhuset Hi5 feirer 5 år med rekordmange oppstartsbedrifter',
-    category: 'Næringslivet',
-    date: '10. august 2026',
-    author: 'Tønsberglivet Næring',
-    excerpt: 'Over 50 bedrifter har fått starthjelp gjennom miljøet på Hi5 siden oppstarten. Nå feires jubileet med åpen dag.',
-    content: [
-      'Gründerhuset Hi5 har etablert seg som en sentral drivkraft for nyskaping og næringsutvikling i Tønsbergregionen.',
-      'Siden starten for fem år siden har klyngefellesskapet hjulpet frem alt fra teknologiselskaper til bærekraftige tjenesteleverandører.',
-      '– Nøkkelen til suksessen er delingskulturen. Når gründere sitter sammen og utveksler erfaringer, akselererer veksten betydelig, sier daglig leder.',
-      'I forbindelse med jubileet inviteres hele næringslivet og interesserte innbyggere til åpen dag med foredrag og nettverksbygging.'
-    ],
-    tags: ['Hi5', 'Næringsliv', 'Gründere', 'Innovasjon'],
-    readTime: '4 min lesetid',
-  },
-  '3': {
-    title: '10 fantastiske opplevelser i Færder i sommer',
-    category: 'Reiselivet',
-    date: '8. august 2026',
-    author: 'Visit Tønsberg & Færder',
-    excerpt: 'Fra Verdens Ende til skjulte perler i skjærgården. Her er guiden til de mest magiske sommeropplevelsene.',
-    content: [
-      'Færder nasjonalpark og kyststiene i Tønsbergregionen byr på noen av Norges vakreste natur- og sommeropplevelser.',
-      'Her kan du kombinere svaberg og skjærgårdsliv med rike kulturminner, historiske Slottsfjellet og ylende bryggeliv.',
-      'Enten du ønsker ro og kajakkpadling eller livlige konsertkvelder i Foynhagen, har Tønsberg alt du ser etter.',
-      'Se hele listen over anbefalte turer og aktiviteter i vår reiselivsportal!'
-    ],
-    tags: ['Færder', 'Sommer', 'Skjærgård', 'Verdens Ende'],
-    readTime: '5 min lesetid',
-  },
-};
+const SITE_URL = 'https://tonsberglivet.no';
+const FALLBACK_OG_IMAGE = '/images/tonsberg/nyheter-siste-nytt-fra-tonsberg-ga.jpg';
+
+// Saken hentes fra databasen (CMS) eller det redaksjonelle arkivet ved hvert
+// kall, slik at en nypublisert sak er tilgjengelig med én gang.
+export const dynamic = 'force-dynamic';
+
+function articleUrl(slug: string): string {
+  return `${SITE_URL}/nyheter/${slug}`;
+}
+
+function absoluteImageUrl(imageUrl: string | undefined): string {
+  const path = imageUrl || FALLBACK_OG_IMAGE;
+  return path.startsWith('http') ? path : `${SITE_URL}${path}`;
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const news = demoNewsMap[id] || demoNewsMap['1'];
+  const article = await findNewsArticle(id);
+
+  if (!article) {
+    // Siden svarer 404 selv om metadata må returneres – lån aldri en annen sak sin tittel.
+    return {
+      title: 'Saken finnes ikke | Tønsberglivet',
+      description: 'Denne nyhetssaken finnes ikke. Se alle siste nyheter fra Tønsberg på Tønsberglivet.',
+      robots: { index: false, follow: true },
+    };
+  }
+
+  const url = articleUrl(article.slug);
+  const image = absoluteImageUrl(article.imageUrl);
+
   return {
-    title: `${news.title} | Tønsberglivet`,
-    description: news.excerpt,
+    title: `${article.title} | Tønsberglivet`,
+    description: article.excerpt,
+    alternates: { canonical: url },
     openGraph: {
-      title: news.title,
-      description: news.excerpt,
-      url: `https://tonsberglivet.no/nyheter/${id}`,
+      title: article.title,
+      description: article.excerpt,
+      url,
       siteName: 'Tønsberglivet',
       locale: 'nb_NO',
       type: 'article',
+      publishedTime: article.publishedAt,
+      images: [{ url: image, alt: article.imageAlt || article.title }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: news.title,
-      description: news.excerpt,
+      title: article.title,
+      description: article.excerpt,
+      images: [image],
     },
   };
 }
 
+/**
+ * Rendrer sakens innhold slik det står i kilden: mellomtitler, avsnitt, sitater,
+ * punktlister, bilder og CTA-lenker.
+ */
+function ArticleBody({ blocks, excerpt }: { blocks: NewsBlock[]; excerpt: string }) {
+  const lead = excerpt.trim();
+  let skippedDuplicateLead = false;
+
+  return (
+    <div className="space-y-6 text-foreground/90 text-sm sm:text-base md:text-lg leading-relaxed">
+      {blocks.map((block, index) => {
+        switch (block.type) {
+          case 'heading':
+            return (
+              <h2
+                key={index}
+                className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight pt-3"
+              >
+                {block.text}
+              </h2>
+            );
+
+          case 'quote':
+            return (
+              <blockquote
+                key={index}
+                className="border-l-4 border-primary/40 pl-4 sm:pl-6 italic text-foreground/85"
+              >
+                {block.text}
+              </blockquote>
+            );
+
+          case 'list':
+            return (
+              <ul key={index} className="list-disc pl-5 sm:pl-6 space-y-2">
+                {block.items.map((item, itemIndex) => (
+                  <li key={itemIndex}>{item}</li>
+                ))}
+              </ul>
+            );
+
+          case 'image':
+            if (!block.width || !block.height) return null;
+            return (
+              <figure key={index} className="space-y-2 py-2">
+                <Image
+                  src={block.src}
+                  alt={block.alt || ''}
+                  width={block.width}
+                  height={block.height}
+                  sizes="(max-width: 1024px) 100vw, 768px"
+                  className="w-full h-auto rounded-2xl border border-border"
+                />
+                {block.alt ? (
+                  <figcaption className="text-xs text-foreground-muted">{block.alt}</figcaption>
+                ) : null}
+              </figure>
+            );
+
+          case 'link':
+            return (
+              <p key={index} className="pt-1">
+                <a
+                  href={block.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-xl transition-colors"
+                >
+                  {block.text}
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </p>
+            );
+
+          default: {
+            // Ingressen vises rett over brødteksten. Noen saker har samme tekst i
+            // ingress og første avsnitt – da viser vi den bare én gang.
+            if (!skippedDuplicateLead && block.text.trim() === lead) {
+              skippedDuplicateLead = true;
+              return null;
+            }
+            return (
+              <p key={index} className="leading-relaxed">
+                {block.text}
+              </p>
+            );
+          }
+        }
+      })}
+    </div>
+  );
+}
+
 export default async function NewsDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const news = demoNewsMap[id] || demoNewsMap['1'];
-  const articleUrl = `https://tonsberglivet.no/nyheter/${id}`;
+  const article = await findNewsArticle(id);
+
+  // Ukjent sak skal gi 404. Tidligere falt denne siden tilbake til sak «1»,
+  // og da endte alle ukjente lenker på samme kafésak.
+  if (!article) {
+    notFound();
+  }
+
+  const url = articleUrl(article.slug);
 
   return (
     <main className="min-h-screen pb-20">
       {/* Schema.org @graph JSON-LD */}
       <ArticleJsonLd
-        title={news.title}
-        description={news.excerpt}
-        url={articleUrl}
-        datePublished="2026-08-12T08:00:00Z"
-        authorName={news.author}
-        category={news.category}
-        imageUrl="https://tonsberglivet.no/images/hero.jpg"
+        title={article.title}
+        description={article.excerpt}
+        url={url}
+        datePublished={article.publishedAt}
+        authorName={article.author}
+        category={article.categoryLabel}
+        imageUrl={absoluteImageUrl(article.imageUrl)}
       />
 
       <HeroSection
         compact={true}
-        title={news.title}
-        subtitle={`${news.category} • ${news.date}`}
-        description={news.excerpt}
+        title={article.title}
+        subtitle={`${article.categoryLabel} • ${article.date}`}
+        description={article.excerpt}
         backgroundGradient="linear-gradient(135deg, #1E293B 0%, #0F172A 100%)"
+        backgroundImage={article.imageUrl}
+        imageAlt={article.imageAlt || article.title}
+        priority
       />
 
       {/* Responsiv container tilpasset Mobil, Pad, PC og TV */}
@@ -126,45 +209,41 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6 text-xs sm:text-sm">
               <div className="flex flex-wrap items-center gap-4 text-foreground-muted">
                 <span className="flex items-center gap-1.5 font-bold text-foreground">
-                  <User className="w-4 h-4 text-primary" /> {news.author}
+                  <User className="w-4 h-4 text-primary" /> {article.author}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-primary" /> {news.date}
+                  <Calendar className="w-4 h-4 text-primary" /> {article.date}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-surface-muted text-foreground-muted text-xs font-mono">
-                  {news.readTime}
+                  {article.readTime}
                 </span>
               </div>
               <span className="px-3 py-1 text-xs font-extrabold bg-primary/10 text-primary border border-primary/20 rounded-full">
-                {news.category}
+                {article.categoryLabel}
               </span>
             </div>
 
             {/* Ingress (GEO fact summary) */}
             <p className="text-base sm:text-lg md:text-xl font-medium text-foreground leading-relaxed">
-              {news.excerpt}
+              {article.excerpt}
             </p>
 
             {/* Brødtekst */}
-            <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-foreground/90 text-sm sm:text-base md:text-lg leading-relaxed">
-              {news.content.map((paragraph, index) => (
-                <p key={index} className="leading-relaxed">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+            <ArticleBody blocks={article.blocks} excerpt={article.excerpt} />
 
             {/* Tagger */}
-            <div className="pt-6 border-t border-border flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Tagger:</span>
-              {news.tags.map((tag, idx) => (
-                <span key={idx} className="px-3 py-1 rounded-lg bg-surface-muted border border-border text-xs font-medium text-foreground">
-                  #{tag}
-                </span>
-              ))}
-            </div>
+            {article.tags.length > 0 && (
+              <div className="pt-6 border-t border-border flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider">Tagger:</span>
+                {article.tags.map((tag, idx) => (
+                  <span key={idx} className="px-3 py-1 rounded-lg bg-surface-muted border border-border text-xs font-medium text-foreground">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
 
-            {/* Deling & Toveis internlenker */}
+            {/* Deling & toveis internlenker */}
             <div className="pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-foreground-muted font-medium">
                 <BookOpen className="w-4 h-4 text-primary" />
@@ -179,7 +258,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ id:
             </div>
           </article>
 
-          {/* Høyre sidebar: Toveis internlenker & CTA (4 kolonner på PC/TV) */}
+          {/* Høyre sidebar: toveis internlenker & CTA (4 kolonner på PC/TV) */}
           <aside className="lg:col-span-4 space-y-6">
             
             {/* CTA 1: Utforsk Tønsberglivet */}
