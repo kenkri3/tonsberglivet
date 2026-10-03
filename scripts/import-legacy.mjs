@@ -336,13 +336,34 @@ function parseSide(html, post) {
     renTekst(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] ?? '');
   if (!tittel) return null;
 
-  const avsnitt = [...html.matchAll(/<div[^>]*class="[^"]*(?:wysiwyg|rich-text)[^"]*"[^>]*>([\s\S]*?)<\/div>/gi)]
-    .map((m) => renTekst(m[1]))
-    .filter((t) => t.length > 30);
+  /*
+   * Innholdet på undersidene ligger ikke i wysiwyg-blokker slik man skulle
+   * tro, men i vanlige <p>-elementer inne i <main> (ofte merket
+   * «paragraph small»). Lette vi bare etter wysiwyg, ble 59 sider importert
+   * med nesten tomt innhold – «Bli med» endte på 68 tegn.
+   *
+   * Vi henter derfor all brødtekst fra <main> og luker bort navigasjon, søk
+   * og bunntekst, som ikke er sidens innhold.
+   */
+  const hoved = html.match(/<main[\s\S]*?<\/main>/i)?.[0] ?? html;
+
+  const STØY = /navigation|nav-|menu|breadcrumb|search|footer|skip-link|cookie|share|related|tags/i;
+
+  const avsnitt = [...hoved.matchAll(/<(p|h2|h3|blockquote|li)\b([^>]*)>([\s\S]*?)<\/\1>/gi)]
+    .map((m) => ({ tag: m[1].toLowerCase(), klasse: m[2], tekst: renTekst(m[3]) }))
+    .filter((b) => b.tekst.length > 25 && !STØY.test(b.klasse))
+    .map((b) => (b.tag === 'h2' ? `## ${b.tekst}` : b.tag === 'h3' ? `### ${b.tekst}` : b.tag === 'li' ? `- ${b.tekst}` : b.tekst))
+    // Fjern duplikater som oppstår når samme tekst står både i <li> og <p>.
+    .filter((t, i, arr) => arr.indexOf(t) === i);
 
   const bilder = [...html.matchAll(/<img[^>]*src="([^"]*wp-content\/uploads[^"]*)"/gi)]
     .map((m) => originalbilde(m[1]))
     .filter((u) => !/logo|sticker|staende|TL_hvit|BL-hvit|share\.jpg/i.test(u));
+
+  const ingress =
+    renTekst(html.match(/<h1[^>]*>[\s\S]*?<\/h1>\s*(?:<[^>]+>\s*)*<p[^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? '') ||
+    avsnitt[0] ||
+    '';
 
   return {
     type: 'page',
@@ -350,7 +371,7 @@ function parseSide(html, post) {
     kilde: post.url,
     sti: post.url.replace(SITE, '') || '/',
     tittel,
-    ingress: renTekst(html.match(/<h1[^>]*>[\s\S]*?<\/h1>\s*(?:<[^>]+>\s*)*<p[^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? ''),
+    ingress,
     innhold: avsnitt.join('\n\n'),
     bilde: velgBilde(html),
     bilder: [...new Set(bilder)],
