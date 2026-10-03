@@ -3,13 +3,21 @@ import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { CreditCard, Smartphone, Store, Building, ChevronRight, Gift } from 'lucide-react';
 import Link from 'next/link';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
+
+// Innholdet hentes fra databasen ved hvert besøk.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Sentrumsgavekortet | Tønsberglivet',
   description: 'Gaven som gleder og støtter lokalt næringsliv. Kjøp Sentrumsgavekortet fysisk eller digitalt, og bruk det hos over 300 aktører i Tønsberg.',
 };
 
-export default function GavekortPage() {
+export default async function GavekortPage() {
+  const steder = await hentBedrifter(BusinessCategory.SHOPPING, 30);
+
   return (
     <main className="min-h-screen">
       <HeroSection
@@ -152,6 +160,29 @@ export default function GavekortPage() {
           </Link>
         </div>
       </section>
+      {/* ── Fra bedriftsregisteret ── */}
+      <section className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Butikker som selger gavekort
+            </h2>
+            <p className="text-sm text-foreground-muted mt-1">Butikkene i Tønsberglivets register. Ta kontakt for å høre om gavekort.</p>
+          </div>
+          <Link
+            href="/naeringslivet/bedrifter"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Se hele registeret &rarr;
+          </Link>
+        </div>
+
+        <BusinessGrid
+          bedrifter={steder}
+          tomTekst="Ingen steder er publisert i registeret ennå."
+        />
+      </section>
+
     </main>
   );
 }

@@ -3,6 +3,12 @@ import { HeroSection } from '@/components/ui/HeroSection';
 import { Map, Zap, CheckCircle2, PhoneCall, Building } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
+
+// Innholdet hentes fra databasen ved hvert besøk.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Etablering & Næringsarealer | Tønsberglivet',
@@ -40,7 +46,9 @@ const areas = [
   },
 ];
 
-export default function EtableringPage() {
+export default async function EtableringPage() {
+  const steder = await hentBedrifter(undefined, 12);
+
   return (
     <main className="min-h-screen pb-20">
       <HeroSection
@@ -107,6 +115,29 @@ export default function EtableringPage() {
           </Link>
         </div>
       </div>
+      {/* ── Fra bedriftsregisteret ── */}
+      <section className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Bedrifter i regionen
+            </h2>
+            <p className="text-sm text-foreground-muted mt-1">Et utvalg fra Tønsberglivets bedriftsregister. Se hele registeret for full oversikt.</p>
+          </div>
+          <Link
+            href="/naeringslivet/bedrifter"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Se hele registeret &rarr;
+          </Link>
+        </div>
+
+        <BusinessGrid
+          bedrifter={steder}
+          tomTekst="Ingen steder er publisert i registeret ennå."
+        />
+      </section>
+
     </main>
   );
 }

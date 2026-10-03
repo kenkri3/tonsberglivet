@@ -3,13 +3,22 @@ import Image from 'next/image';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Mail, Phone, MapPin, Info, Calendar, Clock, Sun } from 'lucide-react';
 import { TorvleieForm } from '@/components/forms/TorvleieForm';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
+import Link from 'next/link';
+
+// Innholdet hentes fra databasen ved hvert besøk.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Torvleie | Tønsberglivet',
   description: 'Lei plass på Tønsberg Torv. Vi tilbyr dagplass, sesongplass og helårsplass for selgere og utstillere.',
 };
 
-export default function TorvleiePage() {
+export default async function TorvleiePage() {
+  const steder = await hentBedrifter(undefined, 12);
+
   return (
     <main className="min-h-screen">
       <HeroSection
@@ -124,6 +133,29 @@ export default function TorvleiePage() {
 
         </div>
       </section>
+      {/* ── Fra bedriftsregisteret ── */}
+      <section className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Noen av aktørene i byen
+            </h2>
+            <p className="text-sm text-foreground-muted mt-1">Et utvalg fra Tønsberglivets bedriftsregister.</p>
+          </div>
+          <Link
+            href="/naeringslivet/bedrifter"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Se hele registeret &rarr;
+          </Link>
+        </div>
+
+        <BusinessGrid
+          bedrifter={steder}
+          tomTekst="Ingen steder er publisert i registeret ennå."
+        />
+      </section>
+
     </main>
   );
 }
