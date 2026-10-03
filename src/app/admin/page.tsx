@@ -262,14 +262,25 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          {/* Brønnøysundregistrene */}
-          <div className="p-3.5 rounded-xl border bg-emerald-500/5 border-emerald-500/20 text-emerald-700 dark:text-emerald-400">
+          {/* Brønnøysundregistrene — status utledes fra registeret, ikke påstand */}
+          <div className={`p-3.5 rounded-xl border ${
+            integrations.brreg?.configured
+              ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+              : 'bg-amber-500/5 border-amber-500/20 text-amber-700 dark:text-amber-400'
+          }`}>
             <div className="flex items-center justify-between font-bold">
               <span>Brreg OpenAPI</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              {integrations.brreg?.configured ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-amber-500" />
+              )}
             </div>
             <p className="mt-1 text-[11px] text-foreground-muted">
-              Live sanntidsdata for Tønsberg (3905) er aktivt koblet til.
+              {integrations.brreg?.statusText ||
+                (integrations.brreg?.configured
+                  ? 'Enhetsregisteret svarte ved siste henting.'
+                  : 'Enhetsregisteret svarte ikke ved siste henting.')}
             </p>
           </div>
         </div>

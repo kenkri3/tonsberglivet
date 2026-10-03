@@ -224,7 +224,12 @@ async function handleDailySync(request: Request) {
     }
 
     // ── 7. Send morgen-sammendrag til Slack/Teams via sendAgentNotification ──
-    const morningSummary = `God morgen! I dag er det ${activeEventsCount} aktive arrangementer i Tønsberg, ${pendingCount} ventende torvleiesøknader, ${newCompaniesDraftCount} nye bedrifter klare for velkomsthilsen, og byskjermene viser dagens program.${purgedMessagesCount > 0 ? ` (GDPR-rydding: ${purgedMessagesCount} eldre meldinger slettet).` : ''}`;
+    // Antall skjermer utledes fra spillelisten som faktisk ble bygget, i stedet
+    // for å påstå «3/3 i drift». Vi kan bekrefte at en skjerm har innhold –
+    // ikke at den er fysisk i drift.
+    const screensWithContent = new Set(todayPlaylist.map((p) => p.screenId)).size;
+
+    const morningSummary = `God morgen! I dag er det ${activeEventsCount} aktive arrangementer i Tønsberg, ${pendingCount} ventende torvleiesøknader, ${newCompaniesDraftCount} nye bedrifter klare for velkomsthilsen, og ${screensWithContent} byskjermer har fått dagens program.${purgedMessagesCount > 0 ? ` (GDPR-rydding: ${purgedMessagesCount} eldre meldinger slettet).` : ''}`;
 
     await sendAgentNotification({
       title: 'Morgen-oppdatering fra Tønsberglivet',
@@ -234,7 +239,9 @@ async function handleDailySync(request: Request) {
         'Aktive Eventer': activeEventsCount,
         'Ventende Torvleie': `${pendingCount} søknader`,
         'Nystartede Bedrifter (Brreg)': `${newCompaniesDraftCount} klare til velkomstmail`,
-        'Byskjermer': '3/3 i drift (Torvet, Kanalen, Kaldnes)',
+        'Byskjermer': screensWithContent > 0
+          ? `${screensWithContent} skjermer har fått innhold`
+          : 'Ingen skjermer fikk innhold',
         'Spilleliste': todayPlaylist.map((p) => p.spotTitle).join(' • '),
         'GDPR Lagringsvern': `${purgedMessagesCount} utgåtte meldinger slettet`,
       },

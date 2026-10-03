@@ -24,9 +24,17 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import pg from 'pg';
+import dotenv from 'dotenv';
 
 const BASELINE_NAME = '20261003120000_baseline';
 const BASELINE_SQL = `prisma/migrations/${BASELINE_NAME}/migration.sql`;
+
+// Les .env når den finnes. På Railway injiseres variablene av plattformen, men
+// lokalt og ved selvhosting ligger DATABASE_URL i .env. Uten dette feilet
+// skjema-steget lokalt med «DATABASE_URL mangler» mens innholdssteget like
+// etterpå importerte 124 artikler – fordi seed-legacy-content.mjs lastet .env
+// og dette skriptet ikke gjorde det.
+dotenv.config({ quiet: true });
 
 const url = process.env.DATABASE_URL;
 if (!url) {

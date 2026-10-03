@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createSessionToken, verifyPassword, hashPassword, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS, SessionUser } from '@/lib/auth';
 import { logActivity } from '@/lib/activity';
+import { checkRateLimit, getClientIdentity } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,36 @@ export async function POST(request: Request) {
     }
 
     const cleanEmail = String(email).trim().toLowerCase();
+
+    // ── Rate limiting ──────────────────────────────────────────────────────
+    // Innlogging var tidligere det eneste endepunktet uten grense. Uten dette
+    // var scrypt-kostnaden eneste motstand mot en brute force mot admin-passordet.
+    //
+    // Tre lag, fordi et angrep kan se ulikt ut:
+    //   1) per klient  – stopper én IP som gjetter mange passord
+    //   2) per e-post  – stopper fordelt gjetting mot én konto fra mange IP-er
+    //   3) globalt     – stopper fordelt gjetting mot mange kontoer
+    //
+    // Grensene er romslige nok for en som taster feil noen ganger, og stramme
+    // nok til at gjetting blir upraktisk. Vinduet er 15 minutter.
+    const client = getClientIdentity(request);
+    const [perClient, perEmail, global] = await Promise.all([
+      checkRateLimit(`login_client_${client.id}`, 10, 900, client.identified),
+      checkRateLimit(`login_email_${cleanEmail}`, 20, 900, true),
+      checkRateLimit('login_global', 60, 900, true),
+    ]);
+
+    if (!perClient.allowed || !perEmail.allowed || !global.allowed) {
+      const retryAfter = Math.max(perClient.resetSeconds, perEmail.resetSeconds, global.resetSeconds);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `For mange innloggingsforsøk. Prøv igjen om ${Math.ceil(retryAfter / 60)} minutt(er).`,
+        },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      );
+    }
+
     const envAdminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.trim().toLowerCase() : null;
     const envAdminPassword = process.env.ADMIN_PASSWORD ? process.env.ADMIN_PASSWORD.trim() : null;
 
