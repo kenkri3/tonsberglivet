@@ -2,67 +2,85 @@ import { Metadata } from 'next';
 import { HeroSection } from '@/components/ui/HeroSection';
 import { Calendar, Clock, MapPin, Share2, ArrowLeft, Ticket, CheckCircle2, Compass, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { permanentRedirect } from 'next/navigation';
+import { permanentRedirect, notFound } from 'next/navigation';
 import { EventJsonLd } from '@/components/seo/JsonLd';
 
-const demoEventsMap: Record<string, {
-  title: string;
-  date: string;
-  isoDate: string;
-  time: string;
-  location: string;
-  address: string;
-  category: string;
-  organizer: string;
-  price: string;
-  description: string;
-  highlights: string[];
-  isExpired?: boolean;
-}> = {
-  '1': {
-    title: 'Bondens marked på Torvet',
-    date: 'Lørdag 22. august 2026',
-    isoDate: '2026-08-22T10:00:00Z',
-    time: '10:00 – 15:00',
-    location: 'Tønsberg Torv',
-    address: 'Torvet, 3110 Tønsberg',
-    category: 'Marked',
-    organizer: 'Bondens Marked Vestfold',
-    price: '0 kr (Gratis inngang)',
-    description: 'Opplev sesongens ferskeste råvarer direkte fra lokale bønder og matprodusenter i regionen. Her finner du ferskt bakverk, lokalost, nyslaktet kjøtt, spekemat, honning, og nystrikkede håndverksprodukter.',
-    highlights: ['Lokalmat i verdensklasse', 'Ferske grønnsaker og frukt', 'Aktiviteter for barn', 'Kaffe og lapper på plassen'],
-  },
-  '2': {
-    title: 'Konsert i Foynhagen',
-    date: 'Søndag 23. august 2026',
-    isoDate: '2026-08-23T19:00:00Z',
-    time: '19:00 (Dørene åpner 18:00)',
-    location: 'Foynhagen',
-    address: 'Storgaten 24, 3126 Tønsberg',
-    category: 'Konsert',
-    organizer: 'Foynhagen AS',
-    price: '350 kr (Billetter på Ticketmaster)',
-    description: 'Foynhagen byr på magisk sommerstemning under åpen himmel. Ta med venner og familie til en uforglemmelig kveld fylt med levende musikk, god mat og god drikke.',
-    highlights: ['Intim utendørsarena', 'Servering av mat og drikke', '18 års aldersgrense', 'Rullestoltilpasset'],
-  },
-  '3': {
-    title: 'Tabletop-tirsdag på biblioteket',
-    date: 'Tirsdag 26. august 2026',
-    isoDate: '2026-08-26T17:00:00Z',
-    time: '17:00 – 21:00',
-    location: 'Tønsberg og Færder bibliotek',
-    address: 'Storgaten 16, 3126 Tønsberg',
-    category: 'Kultur',
-    organizer: 'Tønsberg Spilleforening',
-    price: '0 kr (Gratis)',
-    description: 'Åpen brettspillkveld for alle brettspillinteresserte! Enten du er nybegynner eller erfaren spiller har vi et stort utvalg spill eller du kan ta med eget.',
-    highlights: ['Over 50 brettspill tilgjengelig', 'Åpent for alle aldre', 'Enkel servering av kaffe/te', 'Sosialt og inkluderende'],
-  },
+/**
+ * Slår opp et arrangement på id ELLER slug.
+ *
+ * Siden brukte tidligere en hardkodet `demoEventsMap` med fiktive arrangementer
+ * («Bondens marked på Torvet», «Konsert i Foynhagen» …) som aldri fantes i
+ * databasen. Det var dem sitemapen viste som /eventer/1, /eventer/2 og
+ * /eventer/3. Etter migreringen ligger det 1095 ekte arrangementer i basen,
+ * og de skal ha hver sin side.
+ *
+ * Returnerer samme form som den gamle kartan, så resten av JSX-en er urørt.
+ */
+const KATEGORI_ETIKETT: Record<string, string> = {
+  ARRANGEMENT: 'Arrangement',
+  KONSERT: 'Konsert',
+  MARKED: 'Marked',
+  KURS: 'Kurs',
+  BARN: 'Barn',
+  SPORT: 'Sport',
+  KULTUR: 'Kultur',
+  FESTIVAL: 'Festival',
 };
+
+async function hentArrangement(idOrSlug: string) {
+  const { prisma } = await import('@/lib/prisma');
+
+  let e = null;
+  try {
+    e = await prisma.event.findUnique({ where: { id: idOrSlug }, include: { image: true } });
+    if (!e) {
+      e = await prisma.event.findUnique({ where: { slug: idOrSlug }, include: { image: true } });
+    }
+  } catch {
+    return null;
+  }
+  if (!e) return null;
+
+  const start = new Date(e.startDate);
+  const naa = new Date();
+  // Et arrangement regnes som utgått dagen etter sluttdato (eller startdato).
+  const slutt = e.endDate ? new Date(e.endDate) : start;
+  const utgaatt = slutt.getTime() + 24 * 60 * 60 * 1000 < naa.getTime();
+
+  const klokkeslett = e.startTime
+    ? `${e.startTime}${e.endTime ? ` – ${e.endTime}` : ''}`
+    : 'Tid ikke oppgitt';
+
+  return {
+    title: e.title,
+    date: new Intl.DateTimeFormat('nb-NO', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(start),
+    isoDate: start.toISOString(),
+    time: klokkeslett,
+    location: e.location || 'Tønsberg',
+    address: e.address || 'Tønsberg',
+    category: KATEGORI_ETIKETT[e.category] ?? 'Arrangement',
+    organizer: 'Tønsberglivet',
+    // Vi har ikke billettpris i kilden. Da sier vi det, i stedet for å dikte
+    // opp et beløp.
+    price: e.externalUrl ? 'Billetter via arrangørens side' : 'Pris ikke oppgitt',
+    description: e.description || `${e.title} i ${e.location || 'Tønsberg'}.`,
+    highlights: [] as string[],
+    isExpired: utgaatt,
+    externalUrl: e.externalUrl ?? null,
+    imageUrl: e.image?.url ?? null,
+    imageAlt: e.image?.alt ?? e.title,
+  };
+}
+
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const event = demoEventsMap[id];
+  const event = await hentArrangement(id);
   
   if (!event || event.isExpired) {
     return {
@@ -87,11 +105,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const event = demoEventsMap[id];
+  const event = await hentArrangement(id);
 
-  // ── Livssyklus & 301 Redirect Regel 5 ──
-  // Hvis arrangementet er utgått eller ukjent, omdiriger permanent (301) til /eventer for å bevare SEO-autoritet
-  if (!event || event.isExpired) {
+  // ── Livssyklus ──
+  // Utgått arrangement: permanent omdirigering til kalenderen, så SEO-autoriteten
+  // bevares (dette var den opprinnelige hensikten).
+  // Ukjent id: 404. En 301 ville fortalt Google at en side som aldri har
+  // eksistert har flyttet seg, og det er direkte skadelig for indekseringen.
+  if (!event) {
+    notFound();
+  }
+  if (event.isExpired) {
     permanentRedirect('/eventer');
   }
 

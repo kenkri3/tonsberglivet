@@ -7,10 +7,16 @@ import { Filter, Ticket, RefreshCw, Search } from 'lucide-react';
 import { TicketmasterEvent } from '@/lib/ticketmaster';
 import { groupEventPerformances, shortDateLabel } from '@/lib/event-grouping';
 import { LibraryEventsWidget } from '@/components/culture/LibraryEventsWidget';
+import { EgenKalender, type EgetArrangement } from '@/components/events/EgenKalender';
 
 const categories = ['Alle', 'Konsert', 'Kultur', 'Teater', 'Aktiviteter', 'Mat & Drikke'];
 
-export default function EventerClient() {
+interface Props {
+  egneArrangementer?: EgetArrangement[];
+  egneTotalt?: number;
+}
+
+export default function EventerClient({ egneArrangementer = [], egneTotalt = 0 }: Props) {
   const [activeCategory, setActiveCategory] = useState('Alle');
   const [searchQuery, setSearchQuery] = useState('');
   const [ticketmasterEvents, setTicketmasterEvents] = useState<TicketmasterEvent[]>([]);
@@ -55,6 +61,10 @@ export default function EventerClient() {
         priority
         compact={true}
       />
+
+      {/* Tønsberglivets egen kalender – 1095 arrangementer fra kundens
+          eksisterende nettsted, som aldri har vært synlige her før. */}
+      <EgenKalender arrangementer={egneArrangementer} antallTotalt={egneTotalt} />
 
       <div className="container mx-auto px-4 mt-8 md:mt-12">
         {/* Ticketmaster Live Banner */}
