@@ -39,8 +39,16 @@ async function isAuthorizedCronRequest(request: Request): Promise<boolean> {
   return requireAdmin(request).authorized;
 }
 
-/** Leser et heltall fra query, med fornuftig grense så et kall ikke kan be om uendelig arbeid. */
+/**
+ * Leser et heltall fra query, med fornuftig grense så et kall ikke kan be om
+ * uendelig arbeid.
+ *
+ * MERK: `Number(null)` er 0, ikke NaN. Uten den eksplisitte null-sjekken ble en
+ * utelatt parameter tolket som 0 og deretter klemt opp til `min` – så
+ * `maxDetails` endte på 1 og hver synk beriket nøyaktig én annonse.
+ */
 function readInt(value: string | null, fallback: number, min: number, max: number): number {
+  if (value === null || value.trim() === '') return fallback;
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(Math.max(Math.trunc(parsed), min), max);

@@ -508,9 +508,19 @@ async function readJsonUtf8<T>(res: Response): Promise<T> {
 async function fetchAdDetail(uuid: string): Promise<NavFeedEntryDetail | null> {
   try {
     const res = await navFetch(`${NAV_FEED_PATH}entry/${uuid}`);
-    if (!res || !res.ok) return null;
+    if (!res) {
+      console.warn(`Ingen respons fra NAV for stilling ${uuid} (mangler token?).`);
+      return null;
+    }
+    if (!res.ok) {
+      console.warn(`NAV svarte HTTP ${res.status} for stilling ${uuid}.`);
+      return null;
+    }
     const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('json')) return null;
+    if (!contentType.includes('json')) {
+      console.warn(`NAV svarte ikke-JSON (${contentType || 'ukjent'}) for stilling ${uuid}.`);
+      return null;
+    }
     return await readJsonUtf8<NavFeedEntryDetail>(res);
   } catch (err) {
     console.warn(`Kunne ikke hente detaljer for stilling ${uuid}:`, err);
@@ -541,17 +551,29 @@ async function mapWithConcurrency<T, R>(
 // ─────────────────────────────────────────────────────────────
 
 let tableAvailable: boolean | null = null;
+let tableCheckedAt = 0;
+
+/** Hvor lenge et negativt tabellsvar huskes før vi prøver på nytt. */
+const TABLE_RECHECK_MS = 60_000;
 
 async function hasVacancyTable(): Promise<boolean> {
-  if (tableAvailable !== null) return tableAvailable;
+  // Et positivt svar caches for godt – tabellen forsvinner ikke under kjøring.
+  // Et negativt svar caches bare kort: ellers ville en `npx prisma db push` som
+  // kjøres mens serveren står, krevd omstart før stillingene ble lagret.
+  if (tableAvailable === true) return true;
+  if (tableAvailable === false && Date.now() - tableCheckedAt < TABLE_RECHECK_MS) {
+    return false;
+  }
+
   try {
     await (prisma as any).jobVacancy.count();
     tableAvailable = true;
   } catch {
-    // Tabellen finnes ikke ennå (migrering ikke kjørt). Vi fortsetter uten
-    // lagring i stedet for å krasje – widgeten faller da tilbake til live-søk.
+    // Tabellen finnes ikke ennå. Vi fortsetter uten lagring i stedet for å
+    // krasje – widgeten faller da tilbake til live-uttrekket fra NAV.
     tableAvailable = false;
   }
+  tableCheckedAt = Date.now();
   return tableAvailable;
 }
 
@@ -608,6 +630,10 @@ export interface NavSyncStats {
   pruned: number;
   backfillComplete: boolean;
   durationMs: number;
+  /** Hvorfor kandidater ble forkastet – gjør en tom synk feilsøkbar. */
+  skippedNoDetail: number;
+  skippedInactive: number;
+  skippedMunicipality: number;
   note?: string;
 }
 
@@ -643,6 +669,9 @@ export async function syncNavVacancies(options: NavSyncOptions = {}): Promise<Na
       pruned: 0,
       backfillComplete: false,
       durationMs: Date.now() - startedAt,
+      skippedNoDetail: 0,
+      skippedInactive: 0,
+      skippedMunicipality: 0,
       note:
         'Tabellen job_vacancies finnes ikke. Kjør `npx prisma db push` for å opprette den ' +
         '– til da viser widgeten et live-uttrekk fra NAV i stedet for hele det aktive settet.',
@@ -699,6 +728,10 @@ export async function syncNavVacancies(options: NavSyncOptions = {}): Promise<Na
   // vilkårene krever at de forsvinner så snart de blir inaktive.
   const becameInactive = new Set<string>();
 
+  let skippedNoDetail = 0;
+  let skippedInactive = 0;
+  let skippedMunicipality = 0;
+
   for (let i = 0; i < uuids.length; i++) {
     const uuid = uuids[i];
     const detail = details[i];
@@ -706,16 +739,23 @@ export async function syncNavVacancies(options: NavSyncOptions = {}): Promise<Na
     // Status i detaljen er ferskere enn feed-elementet vi plukket opp.
     if (detail?.status && detail.status.toUpperCase() !== 'ACTIVE') {
       becameInactive.add(uuid);
+      skippedInactive++;
       continue;
     }
 
     const ad = detail?.ad_content;
-    if (!ad) continue;
+    if (!ad) {
+      skippedNoDetail++;
+      continue;
+    }
 
     const row = mapAdContent(uuid, ad, detail?.sistEndret ?? walk.matches.get(uuid)?.sistEndret);
 
     // Kommunen i detaljen er autoritativ – feed-elementet kan mangle den.
-    if (!NAV_MUNICIPALITIES.includes(row.municipality)) continue;
+    if (!NAV_MUNICIPALITIES.includes(row.municipality)) {
+      skippedMunicipality++;
+      continue;
+    }
 
     try {
       await (prisma as any).jobVacancy.upsert({
@@ -775,6 +815,9 @@ export async function syncNavVacancies(options: NavSyncOptions = {}): Promise<Na
     pruned,
     backfillComplete,
     durationMs: Date.now() - startedAt,
+    skippedNoDetail,
+    skippedInactive,
+    skippedMunicipality,
   };
 
   if (!backfillComplete) {
