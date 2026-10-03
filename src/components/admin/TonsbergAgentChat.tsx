@@ -60,6 +60,12 @@ interface TonsbergAgentChatProps {
   onCloseSidePanel?: () => void;
 }
 
+/** Ny samtale-ID. Agenten husker samtalen på `conversation_id`, så «nullstill»
+ *  må faktisk bytte ID – ellers husker agenten det brukeren nettopp slettet. */
+function newSessionId(): string {
+  return `tb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
 export function TonsbergAgentChat({
   className = '',
   userName = 'Cecilie',
@@ -75,7 +81,46 @@ export function TonsbergAgentChat({
   const [loadingStatus, setLoadingStatus] = useState('Kobler til agenten...');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isListeningMic, setIsListeningMic] = useState(false);
-  const [sessionId] = useState(() => `tb-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`);
+  const [sessionId, setSessionId] = useState(() => newSessionId());
+
+  // Ekte status fra /api/agent/status?deep=1 i stedet for et hardkodet «Live».
+  // Uten dette viste panelet grønt lys selv når agentens verktøykall mot
+  // Tønsberglivet ble avvist med 401.
+  const [agentHealth, setAgentHealth] = useState<{
+    state: 'checking' | 'healthy' | 'degraded' | 'unreachable';
+    detail?: string;
+  }>({ state: 'checking' });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkStatus = async () => {
+      try {
+        const res = await fetch('/api/agent/status?deep=1', { cache: 'no-store' });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+
+        if (!res.ok) {
+          setAgentHealth({ state: 'unreachable', detail: data?.error || `HTTP ${res.status}` });
+        } else if (data.health?.toolsWorking) {
+          setAgentHealth({ state: 'healthy' });
+        } else if (data.health?.reachable) {
+          setAgentHealth({ state: 'degraded', detail: data.health.reason });
+        } else {
+          setAgentHealth({ state: 'unreachable', detail: data.health?.reason });
+        }
+      } catch {
+        if (!cancelled) setAgentHealth({ state: 'unreachable', detail: 'nettverksfeil' });
+      }
+    };
+
+    void checkStatus();
+    const timer = setInterval(checkStatus, 5 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
   
   // Three-dots dropdown state
   const [menuOpen, setMenuOpen] = useState(false);
@@ -323,6 +368,9 @@ export function TonsbergAgentChat({
     setInputVal('');
     setActiveCanvasItem(null);
     setMenuOpen(false);
+    // Uten ny samtale-ID husker agenten fortsatt samtalen brukeren nettopp
+    // slettet, og svarer videre ut fra kontekst som ikke finnes i panelet.
+    setSessionId(newSessionId());
   };
 
   const handleExportChat = () => {
@@ -411,6 +459,29 @@ export function TonsbergAgentChat({
     }
   };
 
+  const healthBadge = {
+    checking: {
+      label: 'Sjekker…',
+      cls: 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20',
+      dot: 'bg-slate-400',
+    },
+    healthy: {
+      label: 'Live',
+      cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      dot: 'bg-emerald-500 animate-pulse',
+    },
+    degraded: {
+      label: 'Redusert',
+      cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+      dot: 'bg-amber-500 animate-pulse',
+    },
+    unreachable: {
+      label: 'Frakoblet',
+      cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+      dot: 'bg-rose-500',
+    },
+  }[agentHealth.state];
+
   return (
     <div className={`flex flex-col bg-surface rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden h-full relative ${className}`}>
       
@@ -425,9 +496,16 @@ export function TonsbergAgentChat({
               <span className="font-bold text-xs sm:text-sm text-foreground truncate">
                 {isSidePanel ? 'AI Co-Pilot' : 'Tønsberglivet Autonom Agent'}
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${healthBadge.cls}`}
+                title={
+                  agentHealth.detail
+                    ? `Agent-status: ${healthBadge.label} (${agentHealth.detail})`
+                    : `Agent-status: ${healthBadge.label}`
+                }
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${healthBadge.dot}`} />
+                {healthBadge.label}
               </span>
             </div>
             <p className="text-[10px] text-foreground-muted truncate">
@@ -792,8 +870,17 @@ export function TonsbergAgentChat({
               <span className="hidden sm:inline">
                 Trykk <kbd className="px-1 py-0.5 rounded bg-surface-muted border border-border font-mono">Enter</kbd> for å sende. Hold deg øverst i svaret og scroll nedover.
               </span>
-              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                <ShieldCheck className="w-3 h-3" /> Autonom agent klar
+              <span
+                className={`flex items-center gap-1 font-semibold ${
+                  agentHealth.state === 'healthy'
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : agentHealth.state === 'degraded'
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-rose-600 dark:text-rose-400'
+                }`}
+                title={agentHealth.detail ? `Årsak: ${agentHealth.detail}` : undefined}
+              >
+                <ShieldCheck className="w-3 h-3" /> Agent: {healthBadge.label}
               </span>
             </div>
           </div>

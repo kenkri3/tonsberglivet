@@ -13,25 +13,58 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Requested-With, X-API-Key',
 };
 
+/** Sammenligner to hemmeligheter i konstant tid (unngår timing-lekkasje). */
+function secretEquals(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 /**
- * Autorisasjon for MCP-verktøykall.
+ * Omfanget til den som kaller MCP-serveren.
  *
- * MCP-serveren skriver til CMS, bedriftsregisteret og torvleie. Verktøylisten og
- * `initialize` er åpne for oppdagelse, men selve kallene krever en av:
- *   1. Bearer-token / X-API-Key som matcher MCP_API_KEY (eksterne agenter).
- *   2. Innlogget administrator (cookie) — for manuell testing i adminpanelet.
- * Er ingen nøkkel konfigurert, nekter vi kall i stedet for å stå åpne.
+ * MCP-serveren skriver til CMS, bedriftsregisteret og torvleie, og godkjenning
+ * av torvleie sender kontrakt på e-post. Én nøkkel som åpnet ALT gjorde det
+ * umulig å gi en agent lesetilgang uten å samtidig gi den skriverett.
+ *
+ *   MCP_API_KEY            → 'write' (alle verktøy)
+ *   MCP_READONLY_API_KEY   → 'read'  (kun verktøyene i READ_ONLY_TOOLS)
+ *   innlogget administrator → 'write'
+ *
+ * Er ingen nøkkel satt, faller vi tilbake på admin-cookien – altså fail-closed
+ * for eksterne agenter, som ikke har noen cookie.
  */
-function isAuthorizedMcpCaller(req: NextRequest): boolean {
-  const configuredKey = process.env.MCP_API_KEY;
-  if (configuredKey) {
-    const authHeader = req.headers.get('authorization') || '';
-    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-    const apiKeyHeader = req.headers.get('x-api-key') || '';
-    if (bearer === configuredKey || apiKeyHeader === configuredKey) return true;
+type McpScope = 'none' | 'read' | 'write';
+
+/** Verktøy som bare leser data. Alt annet regnes som skrivende. */
+const READ_ONLY_TOOLS = new Set<string>([
+  'hent_tonsberg_kontekst',
+  'hent_ventende_torvleier',
+  'sok_steder_og_restauranter',
+  'sok_bedrifter_brreg',
+]);
+
+function resolveMcpScope(req: NextRequest): McpScope {
+  const authHeader = req.headers.get('authorization') || '';
+  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const apiKeyHeader = (req.headers.get('x-api-key') || '').trim();
+  const presented = [bearer, apiKeyHeader].filter(Boolean);
+
+  const writeKey = (process.env.MCP_API_KEY || '').trim();
+  const readKey = (process.env.MCP_READONLY_API_KEY || '').trim();
+
+  // Skrivenøkkelen sjekkes først, så en nøkkel som ved uhell er satt til samme
+  // verdi i begge variablene gir skrivetilgang – ikke en stille nedgradering.
+  for (const candidate of presented) {
+    if (secretEquals(candidate, writeKey)) return 'write';
+  }
+  for (const candidate of presented) {
+    if (secretEquals(candidate, readKey)) return 'read';
   }
 
-  return requireAdmin(req).authorized;
+  return requireAdmin(req).authorized ? 'write' : 'none';
 }
 
 /** Gyldige Prisma-enumverdier — ukjente verdier må normaliseres, ellers kaster Prisma. */
@@ -197,6 +230,17 @@ const MCP_TOOLS = [
     },
   },
   {
+    name: 'hent_ventende_torvleier',
+    description:
+      'Lister ventende søknader om leie av standplass på Tønsberg Torv og Kaldnes Brygge, med den eksakte booking-ID-en. Bruk dette verktøyet FØR godkjenn_torvleie for å finne riktig ID – ID-er skal aldri gjettes. Returnerer personopplysninger (navn, e-post, telefon); behandles konfidensielt.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'Maks antall søknader som returneres (standard 10, maks 25)' },
+      },
+    },
+  },
+  {
     name: 'sok_steder_og_restauranter',
     description:
       'Søker i Tønsberglivets register etter restauranter, butikker, overnattingssteder og opplevelser i Tønsberg og Færder.',
@@ -339,25 +383,74 @@ async function executeToolCall(toolName: string, args: any) {
       return `✅ Torvleie #${args.bookingId} (${result.booking.name}) er godkjent! ${emailStatus}, og fakturagrunnlag er klargjort.`;
     }
 
+    case 'hent_ventende_torvleier': {
+      const limit = Math.min(Math.max(Number(args?.limit) || 10, 1), 25);
+
+      // Ingen .catch()-fallback her: er databasen nede, skal agenten få en feil
+      // den kan rapportere – ikke en tom liste den tolker som «ingen søknader».
+      const [bookings, total] = await Promise.all([
+        prisma.bookingRequest.findMany({
+          where: { status: { in: ['NEW', 'PROCESSING'] } },
+          orderBy: { createdAt: 'asc' },
+          take: limit,
+        }),
+        prisma.bookingRequest.count({ where: { status: { in: ['NEW', 'PROCESSING'] } } }),
+      ]);
+
+      if (bookings.length === 0) {
+        return 'Ingen ventende torvleiesøknader akkurat nå.';
+      }
+
+      const linjer = bookings.map((b, i) => {
+        const periode = b.startDate
+          ? `${b.startDate.toLocaleDateString('nb-NO')}${
+              b.endDate ? ` – ${b.endDate.toLocaleDateString('nb-NO')}` : ''
+            }`
+          : 'Ikke oppgitt';
+
+        return [
+          `${i + 1}. ${b.name} — booking-ID: ${b.id}`,
+          `   • Type: ${b.type}${b.zone ? ` · Sone: ${b.zone}` : ''}`,
+          `   • Periode: ${periode}`,
+          `   • Kontakt: ${b.email}${b.phone ? ` · ${b.phone}` : ''}`,
+          `   • Leiebeløp: ${typeof b.totalPrice === 'number' ? `kr ${b.totalPrice.toLocaleString('nb-NO')}` : 'ikke satt'}`,
+          `   • Org.nr: ${b.orgNr || 'ikke oppgitt'} · Strøm: ${b.powerNeeded ? 'ja' : 'nei'} · Vann: ${b.waterNeeded ? 'ja' : 'nei'}`,
+          `   • Mottatt: ${b.createdAt.toLocaleDateString('nb-NO')}`,
+        ].join('\n');
+      });
+
+      return (
+        `🏛️ Ventende torvleiesøknader (viser ${bookings.length} av ${total}, eldste først):\n\n` +
+        linjer.join('\n\n') +
+        `\n\nGodkjenn med \`godkjenn_torvleie\` og den eksakte booking-ID-en over. ` +
+        `ID-er skal aldri gjettes.`
+      );
+    }
+
     case 'hent_tonsberg_kontekst': {
       const limit = Number(args?.antallArrangementer) || 5;
+
+      // Uten .catch()-fallback: tidligere rapporterte dette verktøyet «0 ventende
+      // torvleiesøknader» og «Ingen planlagte i dag» når databasen faktisk var
+      // nede. Agenten presenterte det som fakta til brukeren.
       const [events, pendingBookings, recentArticles] = await Promise.all([
-        (prisma as any).event.findMany({
+        prisma.event.findMany({
           where: { published: true, startDate: { gte: new Date() } },
           orderBy: { startDate: 'asc' },
           take: limit,
-        }).catch(() => []),
-        (prisma as any).bookingRequest.count({ where: { status: 'NEW' } }).catch(() => 0),
-        (prisma as any).article.findMany({
+        }),
+        // Samme statussett som hent_ventende_torvleier, så tallene stemmer.
+        prisma.bookingRequest.count({ where: { status: { in: ['NEW', 'PROCESSING'] } } }),
+        prisma.article.findMany({
           orderBy: { createdAt: 'desc' },
           take: 3,
           select: { title: true, slug: true, category: true },
-        }).catch(() => []),
+        }),
       ]);
 
-      const formattedEvents = events.map((e: any) => `• ${e.title} (${e.location || 'Tønsberg'} - ${new Date(e.startDate).toLocaleDateString('nb-NO')})`).join('\n');
+      const formattedEvents = events.map((e) => `• ${e.title} (${e.location || 'Tønsberg'} - ${e.startDate.toLocaleDateString('nb-NO')})`).join('\n');
 
-      return `📍 Tønsberglivet Sanntidsstatus:\n- Ventende torvleiesøknader: ${pendingBookings}\n- Kommende arrangementer:\n${formattedEvents || 'Ingen planlagte i dag'}\n- Siste nyheter: ${recentArticles.map((a: any) => a.title).join(', ') || 'Ingen'}`;
+      return `📍 Tønsberglivet Sanntidsstatus:\n- Ventende torvleiesøknader: ${pendingBookings}\n- Kommende arrangementer:\n${formattedEvents || 'Ingen planlagte i dag'}\n- Siste nyheter: ${recentArticles.map((a) => a.title).join(', ') || 'Ingen'}`;
     }
 
     case 'sok_steder_og_restauranter': {
@@ -438,7 +531,7 @@ async function executeToolCall(toolName: string, args: any) {
 }
 
 // ⚙️ Behandler JSON-RPC 2.0 meldinger iht. MCP-standarden
-async function processRpcMessage(body: any, isAuthorizedToolCaller: boolean): Promise<any> {
+async function processRpcMessage(body: any, scope: McpScope): Promise<any> {
   const reqId = body.id !== undefined ? body.id : 1;
   const method = body.method;
 
@@ -457,7 +550,7 @@ async function processRpcMessage(body: any, isAuthorizedToolCaller: boolean): Pr
         },
         serverInfo: {
           name: 'Tonsberglivet_MCP_Server',
-          version: '1.0.0',
+          version: '1.1.0',
         },
       },
     };
@@ -473,13 +566,14 @@ async function processRpcMessage(body: any, isAuthorizedToolCaller: boolean): Pr
     return { jsonrpc: '2.0', id: reqId, result: {} };
   }
 
-  // 3. Tools List
+  // 3. Tools List — en lese-only nøkkel får bare se verktøyene den kan bruke,
+  //    så agenten ikke prøver å kalle noe den får avvist.
   if (method === 'tools/list') {
     return {
       jsonrpc: '2.0',
       id: reqId,
       result: {
-        tools: MCP_TOOLS,
+        tools: scope === 'read' ? MCP_TOOLS.filter((t) => READ_ONLY_TOOLS.has(t.name)) : MCP_TOOLS,
       },
     };
   }
@@ -489,20 +583,36 @@ async function processRpcMessage(body: any, isAuthorizedToolCaller: boolean): Pr
   //    bedrifter og godkjenner torvleie. Uten denne sjekken kunne hvem som helst
   //    gjøre det med et anonymt POST-kall (CORS var dessuten satt til «*»).
   if (method === 'tools/call') {
-    if (!isAuthorizedToolCaller) {
+    if (scope === 'none') {
       return {
         jsonrpc: '2.0',
         id: reqId,
         error: {
           code: -32001,
           message:
-            'Uautorisert: verktøykall krever gyldig Bearer-token (MCP_API_KEY) eller innlogget administrator.',
+            'Uautorisert: verktøykall krever gyldig Bearer-token (MCP_API_KEY for skrivetilgang, ' +
+            'MCP_READONLY_API_KEY for lesetilgang) eller innlogget administrator.',
         },
       };
     }
 
     const toolName = body.params?.name;
     const toolArgs = body.params?.arguments || {};
+
+    // En lese-only nøkkel skal ikke kunne publisere artikler, overskrive
+    // bedrifter eller godkjenne torvleie – uansett hva agenten ber om.
+    if (scope === 'read' && !READ_ONLY_TOOLS.has(String(toolName))) {
+      return {
+        jsonrpc: '2.0',
+        id: reqId,
+        error: {
+          code: -32003,
+          message:
+            `Avvist: «${toolName}» endrer data, og denne nøkkelen har bare lesetilgang. ` +
+            'Bruk MCP_API_KEY for skrivende verktøy.',
+        },
+      };
+    }
 
     try {
       const resultText = await executeToolCall(toolName, toolArgs);
@@ -543,16 +653,16 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const isAuthorizedToolCaller = isAuthorizedMcpCaller(req);
+    const scope = resolveMcpScope(req);
     const body = await req.json().catch(() => ({}));
 
     // Håndter batch-kall eller enkeltkall
     if (Array.isArray(body)) {
-      const responses = await Promise.all(body.map((msg) => processRpcMessage(msg, isAuthorizedToolCaller)));
+      const responses = await Promise.all(body.map((msg) => processRpcMessage(msg, scope)));
       return NextResponse.json(responses, { headers: CORS_HEADERS });
     }
 
-    const response = await processRpcMessage(body, isAuthorizedToolCaller);
+    const response = await processRpcMessage(body, scope);
     return NextResponse.json(response, { headers: CORS_HEADERS });
   } catch (err: any) {
     console.error('MCP Server POST feil:', err);
@@ -588,10 +698,16 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(
     {
       status: 'online',
-      server: 'Tonsberglivet Remote MCP Server v1.0',
+      server: 'Tonsberglivet Remote MCP Server v1.1',
       protocolVersion: '2024-11-05',
       toolsCount: MCP_TOOLS.length,
       tools: MCP_TOOLS.map((t) => t.name),
+      readOnlyTools: [...READ_ONLY_TOOLS],
+      auth: {
+        write: 'Authorization: Bearer <MCP_API_KEY>',
+        read: 'Authorization: Bearer <MCP_READONLY_API_KEY>',
+        admin: 'innlogget administrator (cookie)',
+      },
       endpoint: '/api/mcp',
       openApiSchema: '/api/mcp/openapi.json',
       railwayLiveUrl: 'https://tonsberglivet-production.up.railway.app/api/mcp',

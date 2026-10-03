@@ -29,7 +29,10 @@ export async function GET() {
         bearerAuth: {
           type: 'http',
           scheme: 'bearer',
-          description: 'Delt hemmelighet: AGENT_WEBHOOK_SECRET for /api/agent/webhook, MCP_API_KEY for /api/mcp.',
+          description:
+            'Delt hemmelighet. AGENT_WEBHOOK_SECRET for /api/agent/webhook. ' +
+            'For /api/mcp: MCP_API_KEY gir skrivetilgang til alle verktøy, ' +
+            'MCP_READONLY_API_KEY gir bare leseverktøyene.',
         },
         adminSession: {
           type: 'apiKey',
@@ -92,7 +95,14 @@ export async function GET() {
           summary: 'MCP JSON-RPC 2.0 endpoint',
           description:
             'initialize og tools/list er åpne for oppdagelse. tools/call krever Bearer-token ' +
-            '(MCP_API_KEY) eller innlogget administrator, og svarer ellers med JSON-RPC-feil -32001.',
+            'og svarer ellers med JSON-RPC-feil -32001.\n\n' +
+            'TO NØKLER: MCP_API_KEY gir alle 8 verktøy (inkl. publisering, bedriftsendring og ' +
+            'godkjenning av torvleie). MCP_READONLY_API_KEY gir bare de fire leseverktøyene ' +
+            '(hent_tonsberg_kontekst, hent_ventende_torvleier, sok_steder_og_restauranter, ' +
+            'sok_bedrifter_brreg); skrivende kall avvises med -32003 og tools/list viser da ' +
+            'bare leseverktøyene. Er MCP_READONLY_API_KEY ikke satt, finnes ingen lesenøkkel.\n\n' +
+            'Bruk hent_ventende_torvleier til å finne booking-ID før godkjenn_torvleie – ' +
+            'ID-er skal aldri gjettes.',
           operationId: 'mcp_json_rpc',
           requestBody: {
             required: true,

@@ -256,6 +256,9 @@ export async function POST(request: NextRequest) {
     const quickReplies: Array<{ title: string; payload: string }> = [];
     let actionExecuted: string | null = null;
     let actionResult: any = null;
+    // Agentens eget svar når den mislyktes med verktøykallene. Brukes bare som
+    // siste utvei, etter at Gemini og 1min.AI har fått sjansen.
+    let degradedAgentReply: { reply: string; reason?: string } | null = null;
 
     const lower = message.toLowerCase();
 
@@ -296,9 +299,20 @@ export async function POST(request: NextRequest) {
         });
 
         if (agentResponse && agentResponse.success && agentResponse.reply) {
-          replyText = agentResponse.reply;
-          if (agentResponse.quickReplies && agentResponse.quickReplies.length > 0) {
-            quickReplies.push(...agentResponse.quickReplies);
+          if (agentResponse.degraded) {
+            // Agenten svarte, men innrømmer selv at verktøykallet mot
+            // Tønsberglivet ble avvist (typisk 401 fra /api/mcp). En høflig
+            // unnskyldning er ikke et svar – vi prøver neste motor først og
+            // beholder agentens tekst som siste utvei.
+            degradedAgentReply = { reply: agentResponse.reply, reason: agentResponse.reason };
+            console.warn(
+              `[Agent Chat API] Agenten svarte degradert (${agentResponse.reason || 'ukjent årsak'}) – prøver neste motor.`
+            );
+          } else {
+            replyText = agentResponse.reply;
+            if (agentResponse.quickReplies && agentResponse.quickReplies.length > 0) {
+              quickReplies.push(...agentResponse.quickReplies);
+            }
           }
         }
       } catch (agentErr: any) {
@@ -702,6 +716,37 @@ INSTRUKSJONER FOR SVAR:
         quickReplies.push({ title: '📅 Hent ekte arrangementer', payload: 'Hent live arrangementer' });
         quickReplies.push({ title: '📊 Publikumspuls fra nettsiden', payload: 'Analyser publikumshenvendelser fra nettsiden' });
         quickReplies.push({ title: '🏛️ Sjekk torvleie', payload: 'Hent ventende torvleiesøknader' });
+      }
+    }
+
+    // Agenten svarte, men bare med sin egen feilmelding.
+    if (degradedAgentReply) {
+      const grunn =
+        degradedAgentReply.reason === 'agent_mcp_not_configured'
+          ? 'agentplattformen har ingen MCP-integrasjon for denne boten («No MCP configuration matched tool»)'
+          : degradedAgentReply.reason === 'agent_tool_unauthorized'
+          ? 'MCP-integrasjonen avviser verktøykallene (uautorisert)'
+          : `verktøykallet mot backend feilet (${degradedAgentReply.reason || 'ukjent årsak'})`;
+
+      if (!replyText) {
+        // Ingenting annet svarte. Da sier vi ærlig hva som er galt i stedet for
+        // å presentere agentens unnskyldning som om den var et svar.
+        replyText =
+          `⚠️ **Agenten fikk ikke hentet ekte data fra Tønsberglivet.**\n\n` +
+          `Agenten svarte, men ${grunn}. Det betyr at koblingen mellom agenten og ` +
+          `Tønsberglivet-backend er nede – ikke at dataene mangler.\n\n` +
+          `**Slik fikser du det:**\n` +
+          `1. Legg inn \`MCP_API_KEY\` i Railway (den mangler i dag).\n` +
+          `2. Opprett MCP-integrasjonen «tonsberglivet_backend» i agentplattformen ` +
+          `med Server URL \`https://tonsberglivet-production.up.railway.app/api/mcp\`.\n` +
+          `3. Velg **Bearer Token** som autentisering og lim inn samme verdi som \`MCP_API_KEY\`.\n\n` +
+          `---\n\n${degradedAgentReply.reply}`;
+      } else {
+        // En reservemotor svarte. Uten denne linjen ville utfallet sett helt
+        // normalt ut, og feilen aldri blitt oppdaget.
+        replyText =
+          `> ⚠️ _Agenten kunne ikke hente data fra Tønsberglivet (${grunn}). ` +
+          `Svaret under kommer fra reservemotoren._\n\n${replyText}`;
       }
     }
 
