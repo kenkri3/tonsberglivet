@@ -55,8 +55,22 @@ export function ConsentBanner() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6 bg-surface/98 backdrop-blur-xl border-t border-border shadow-2xl animate-slide-up">
-      <div className="max-w-6xl mx-auto">
+    /*
+      VIKTIG: `pointer-events-none` på selve boksen og `pointer-events-auto` på
+      innholdet.
+
+      Bannern er `fixed bottom-0` og dekker de nederste ~149 px av skjermen på
+      tvers av hele bredden. Uten dette stjal den klikk fra alt som lå under:
+      målte på /bylivet/aktiviteter at `elementFromPoint` midt i kortene traff
+      `DIV.fixed.bottom-0` i stedet for lenken, så «Se aktiviteter i
+      registeret» ikke gjorde noe for de øverste kortene. På /bylivet/shopping
+      lå «45+ butikker»-merket på cy=894, inne i bannerens område (751–900).
+
+      Med gjennomsiktig hit-testing når klikkene fram til innholdet bak, mens
+      bannerens egne knapper og lenker fortsatt virker.
+    */
+    <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6 pointer-events-none">
+      <div className="pointer-events-auto bg-surface/98 backdrop-blur-xl border border-border shadow-2xl rounded-2xl animate-slide-up max-w-6xl mx-auto p-6 md:p-8">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           
           <div className="flex items-start gap-4 flex-1">
