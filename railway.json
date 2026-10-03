@@ -1,7 +1,0 @@
-{
-  "$schema": "https://railway.com/railway.schema.json",
-  "deploy": {
-    "preDeployCommand": "node scripts/ensure-schema.mjs && node scripts/seed-legacy-content.mjs",
-    "preDeployTimeoutSeconds": 600
-  }
-}

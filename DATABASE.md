@@ -2,13 +2,10 @@
 
 ## Kort versjon
 
-Skjemaet holdes i synk av **`npm run db:ensure`**, som kjører automatisk som
-pre-deploy-steg på Railway (se `railway.json`). Den oppretter det som mangler i
-databasen og rører ingenting som finnes. Du trenger ikke gjøre noe manuelt.
-
-Innholdet fra kundens tidligere nettsted skrives av **`npm run legacy:seed`**, som
-kjører i samme pre-deploy-steg. Den hopper over hvis innholdet allerede er der,
-så den er gratis å ha stående.
+Skjemaet holdes i synk av **`npm run db:ensure`**. Innholdet fra kundens
+tidligere nettsted skrives av **`npm run legacy:seed`**. Begge kjører automatisk
+ved oppstart av appen, gjennom `scripts/prestart.mjs` (se `start` i
+`package.json`). Du trenger ikke gjøre noe manuelt.
 
 | Kommando | Gjør |
 |---|---|
@@ -16,6 +13,22 @@ så den er gratis å ha stående.
 | `npm run legacy:seed` | Skriver migrert innhold fra `prisma/legacy-content.json` inn i databasen. Idempotent, `--force` og `--dry-run` støttes. |
 | `npm run db:baseline` | Genererer `prisma/migrations/20261003120000_baseline/migration.sql` på nytt fra skjemaet. |
 | `npm run db:migrate` | `prisma migrate deploy` – for vanlig migrasjonsdrift senere. |
+
+### Hvorfor ikke pre-deploy
+
+Railway kjørte tidligere dette som `preDeployCommand` i `railway.json`. Det viste
+seg upålitelig: bygge- og pre-deploy-konteksten når ikke alltid den private
+databasen (`postgres.railway.internal`), og feiler med `P1001: Can't reach
+database server`.
+
+Konsekvensen var lumsk: pre-deploy feilet → **hele deployen feilet** → den
+forrige versjonen fortsatte å kjøre. Nettstedet så friskt ut, men ingenting av
+det nye ble tatt i bruk, og feilen var usynlig utenfra.
+
+Derfor kjører begge stegene nå i **app-containeren** i stedet, via
+`scripts/prestart.mjs`, som garantert har databasetilgang. Det skriptet feiler
+aldri ut mot appen: en feil logges, men nettstedet starter uansett.
+
 
 ## Innholdet fra det gamle nettstedet
 
