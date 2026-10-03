@@ -123,6 +123,7 @@ export default function OmOssPage() {
               src="/images/tonsberg/prisutdeling-med-diplom-og-blomste.jpg" 
               alt="Prisutdeling med diplom og blomster" 
               fill
+              priority
               sizes="(max-width: 1024px) 100vw, 40vw"
               className="object-cover img-crop-top"
             />

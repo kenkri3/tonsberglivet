@@ -24,6 +24,7 @@ export default function ReiselivetPage() {
             src="/images/tonsberg/reiselivet-storgaten-vinter.jpg"
             alt="Storgaten i Tønsberg i vinterstemning"
             fill
+            priority
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover img-crop-top scale-105"
           />
