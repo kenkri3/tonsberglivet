@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import EventerClient from './EventerClient';
 import { prisma } from '@/lib/prisma';
+import { resolveLocalImage } from '@/lib/local-image';
 
 export const metadata: Metadata = {
   title: 'Hva skjer i Tønsberg - Eventer',
@@ -40,7 +41,7 @@ async function hentEgneArrangementer(visAlle: boolean) {
         startDato: e.startDate.toISOString(),
         startTid: e.startTime,
         kategori: e.category,
-        bilde: e.image?.url ?? null,
+        bilde: resolveLocalImage(e.image?.url) ?? null,
         billettlenke: e.externalUrl,
       })),
       totalt,

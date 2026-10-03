@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { resolveLocalImage } from '@/lib/local-image';
 import type { BusinessCategory, EventCategory } from '@prisma/client';
 
 /**
@@ -108,7 +109,7 @@ export async function hentKommendeArrangementer(
       startDato: e.startDate,
       startTid: e.startTime,
       kategori: e.category,
-      bilde: e.image?.url ?? null,
+      bilde: resolveLocalImage(e.image?.url) ?? null,
       billettlenke: e.externalUrl,
     }));
   } catch {

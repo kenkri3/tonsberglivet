@@ -142,29 +142,49 @@ async function main() {
   const data = JSON.parse(readFileSync(INNHOLD, 'utf8'));
   const arkiv = existsSync(ARKIV) ? JSON.parse(readFileSync(ARKIV, 'utf8')) : [];
 
-  // ── Bytte eksterne bildelenker til lokale når filen finnes ────────────────
-  // Bildene ble først registrert med kildens URL fordi de 78 MB store filene
-  // ikke lå i repoet. Nå gjør de det, og da skal nettstedet ikke være avhengig
-  // av at det gamle WordPress-anlegget fortsatt står oppe.
+  // ── Rette bildelenker som peker på en fil som ikke finnes ────────────────
+  // To problemer, begge fra tidligere importer:
   //
+  //   1. Lenken peker på kildens URL fordi bildene ikke lå i repoet ennå.
+  //   2. Lenken har feil filendelse – .webp der filen er .jpg. Dette er den
+  //      verre av de to: raden ser komplett ut i databasen, men next/image
+  //      svarer 400 og kortet viser et brutt bildeikon i nettleseren.
+  //
+  // Vi løser begge ved å se etter filen på disk med alle kjente endelser.
   // Steget er billig når det ikke er noe å gjøre (én spørring), og kjøres før
   // hopp-over-sjekken under, ellers ville lenkene aldri blitt oppdatert.
-  if (existsSync(LEGACY_BILDER)) {
+  const BILDEMAPPER = ['legacy', 'nyheter', 'tonsberg'];
+  const ENDELSER = ['.webp', '.jpg', '.jpeg', '.png', '.avif'];
+
+  /** Finner stien til filen på disk, uansett hvilken endelse lenken oppgir. */
+  const finnPaaDisk = (url) => {
+    const sti = String(url ?? '');
+    if (sti.startsWith('/images/') && existsSync(path.join(ROOT, 'public', sti))) return sti;
+
+    const fil = bildeFilnavn(sti);
+    const stamme = fil.replace(/\.[^.]+$/, '');
+    for (const mappe of BILDEMAPPER) {
+      for (const endelse of ENDELSER) {
+        const kandidat = `/images/${mappe}/${stamme}${endelse}`;
+        if (existsSync(path.join(ROOT, 'public', kandidat))) return kandidat;
+      }
+    }
+    return null;
+  };
+
+  if (existsSync(path.join(ROOT, 'public', 'images', 'legacy'))) {
     try {
-      const eksterne = await prisma.image.findMany({
-        where: { url: { startsWith: 'http' } },
-        select: { id: true, url: true },
-      });
-      let byttet = 0;
-      for (const bilde of eksterne) {
-        const fil = bildeFilnavn(bilde.url);
-        if (existsSync(path.join(LEGACY_BILDER, fil))) {
-          await prisma.image.update({ where: { id: bilde.id }, data: { url: `/images/legacy/${fil}` } });
-          byttet++;
+      const alle = await prisma.image.findMany({ select: { id: true, url: true } });
+      let rettet = 0;
+      for (const bilde of alle) {
+        const riktig = finnPaaDisk(bilde.url);
+        if (riktig && riktig !== bilde.url) {
+          await prisma.image.update({ where: { id: bilde.id }, data: { url: riktig } });
+          rettet++;
         }
       }
-      if (byttet > 0) {
-        console.log(`[seed-legacy] Byttet ${byttet} bildelenker fra kildens URL til lokale filer.`);
+      if (rettet > 0) {
+        console.log(`[seed-legacy] Rettet ${rettet} bildelenker til filer som faktisk finnes.`);
       }
     } catch (err) {
       console.warn('[seed-legacy] Kunne ikke oppdatere bildelenker:', err.message);

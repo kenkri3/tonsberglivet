@@ -29,6 +29,7 @@ const KATEGORI_ETIKETT: Record<string, string> = {
 
 async function hentArrangement(idOrSlug: string) {
   const { prisma } = await import('@/lib/prisma');
+  const { resolveLocalImage } = await import('@/lib/local-image');
 
   let e = null;
   try {
@@ -72,7 +73,7 @@ async function hentArrangement(idOrSlug: string) {
     highlights: [] as string[],
     isExpired: utgaatt,
     externalUrl: e.externalUrl ?? null,
-    imageUrl: e.image?.url ?? null,
+    imageUrl: resolveLocalImage(e.image?.url) ?? null,
     imageAlt: e.image?.alt ?? e.title,
   };
 }
