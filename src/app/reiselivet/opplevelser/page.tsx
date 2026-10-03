@@ -6,6 +6,12 @@ import { HeritageSection } from '@/components/culture/HeritageSection';
 import { OceanConditionsWidget } from '@/components/weather/OceanConditionsWidget';
 
 import Image from 'next/image';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
+
+// Innholdet hentes fra databasen ved hvert besøk.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Opplevelser, Kulturarv & Natur | Tønsberglivet',
@@ -39,7 +45,9 @@ const attractions = [
   },
 ];
 
-export default function OpplevelserPage() {
+export default async function OpplevelserPage() {
+  const steder = await hentBedrifter(BusinessCategory.AKTIVITET, 60);
+
   return (
     <main className="min-h-screen pb-20 space-y-12">
       <HeroSection
@@ -127,6 +135,29 @@ export default function OpplevelserPage() {
           </div>
         </div>
       </div>
+      {/* ── Fra bedriftsregisteret ── */}
+      <section className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Flere opplevelser i regionen
+            </h2>
+            <p className="text-sm text-foreground-muted mt-1">Alt som ligger i Tønsberglivets register over aktiviteter og opplevelser.</p>
+          </div>
+          <Link
+            href="/naeringslivet/bedrifter"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Se hele registeret &rarr;
+          </Link>
+        </div>
+
+        <BusinessGrid
+          bedrifter={steder}
+          tomTekst="Ingen steder er publisert i registeret ennå."
+        />
+      </section>
+
     </main>
   );
 }

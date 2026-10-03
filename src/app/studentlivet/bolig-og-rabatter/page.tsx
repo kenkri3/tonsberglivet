@@ -3,6 +3,12 @@ import { HeroSection } from '@/components/ui/HeroSection';
 import { GraduationCap, Home, Percent, HeartHandshake, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
+
+// Innholdet hentes fra databasen ved hvert besøk.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Studentbolig & Rabatter | Tønsberglivet',
@@ -40,7 +46,9 @@ const studentOffers = [
   },
 ];
 
-export default function StudentBoligOgRabatterPage() {
+export default async function StudentBoligOgRabatterPage() {
+  const steder = await hentBedrifter(undefined, 12);
+
   return (
     <main className="min-h-screen pb-20">
       <HeroSection
@@ -104,6 +112,29 @@ export default function StudentBoligOgRabatterPage() {
           </Link>
         </div>
       </div>
+      {/* ── Fra bedriftsregisteret ── */}
+      <section className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Steder og tilbud i byen
+            </h2>
+            <p className="text-sm text-foreground-muted mt-1">Hentet fra Tønsberglivets bedriftsregister.</p>
+          </div>
+          <Link
+            href="/naeringslivet/bedrifter"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Se hele registeret &rarr;
+          </Link>
+        </div>
+
+        <BusinessGrid
+          bedrifter={steder}
+          tomTekst="Ingen steder er publisert i registeret ennå."
+        />
+      </section>
+
     </main>
   );
 }

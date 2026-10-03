@@ -9,13 +9,21 @@ import { StudentlivetLogo } from '@/components/brand/BrandLogos';
 import { PublicTransportWidget } from '@/components/transit/PublicTransportWidget';
 import { NavJobsWidget } from '@/components/jobs/NavJobsWidget';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
+import { BusinessCategory } from '@prisma/client';
+import { hentBedrifter } from '@/lib/business-directory';
+import { BusinessGrid } from '@/components/business/BusinessGrid';
+
+// Innholdet hentes fra databasen ved hvert besøk.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Studentlivet i Tønsberg | Tønsberglivet',
   description: 'Student i Tønsberg? Finn informasjon om bolig, helse, studentrabatter og fritidstilbud.',
 };
 
-export default function StudentlivetPage() {
+export default async function StudentlivetPage() {
+  const steder = await hentBedrifter(undefined, 12);
+
   return (
     <main className="min-h-screen space-y-16 pb-20">
       {/* ── Bilde-Hero Banner ── */}
@@ -231,6 +239,29 @@ export default function StudentlivetPage() {
           ]}
         />
       </section>
+      {/* ── Fra bedriftsregisteret ── */}
+      <section className="container mx-auto px-4 max-w-7xl">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+              Steder for studenter
+            </h2>
+            <p className="text-sm text-foreground-muted mt-1">Et utvalg fra Tønsberglivets bedriftsregister.</p>
+          </div>
+          <Link
+            href="/naeringslivet/bedrifter"
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Se hele registeret &rarr;
+          </Link>
+        </div>
+
+        <BusinessGrid
+          bedrifter={steder}
+          tomTekst="Ingen steder er publisert i registeret ennå."
+        />
+      </section>
+
     </main>
   );
 }
