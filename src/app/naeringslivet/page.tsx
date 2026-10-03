@@ -20,8 +20,8 @@ export default function NaeringslivetPage() {
       <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/tonsberg-by-og-havn-sett-fra-lufte.jpg"
-            alt="Tønsberg by og havn sett fra luften"
+            src="/images/tonsberg/gruppebilde-ute-i-tonsberg-absolut.jpg"
+            alt="Gruppebilde ute i Tønsberg"
             fill
             priority
             sizes="100vw"
@@ -89,8 +89,8 @@ export default function NaeringslivetPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl group">
           <div className="lg:col-span-6 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
             <Image
-              src="/images/tonsberg/matgr-nder-paa-torvet-max-w-7xl-mx.jpg"
-              alt="Matgründer på Torvet"
+              src="/images/tonsberg/mann-med-sykkel-i-tonsberg-sentrum.jpg"
+              alt="Mann med sykkel i Tønsberg sentrum"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-700"

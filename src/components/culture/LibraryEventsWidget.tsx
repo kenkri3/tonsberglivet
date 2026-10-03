@@ -70,10 +70,11 @@ export function LibraryEventsWidget() {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <span className="flex items-center gap-1 truncate max-w-[70%]">
-                  <MapPin className="w-3 h-3 text-primary shrink-0" />
-                  <span className="truncate">{ev.location}</span>
+              <div className="flex items-start justify-between gap-2 pt-1">
+                {/* Stedsnavnet får bryte over to linjer i stedet for å kuttes. */}
+                <span className="flex items-start gap-1 min-w-0">
+                  <MapPin className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                  <span className="min-w-0 line-clamp-2 leading-snug break-words">{ev.location}</span>
                 </span>
                 <a
                   href={ev.link}

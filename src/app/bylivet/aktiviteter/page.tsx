@@ -64,7 +64,7 @@ export default function AktiviteterPage() {
         description="Fra tusenårig historie på Slottsfjellet til sprudlende kulturliv og vannaktiviteter på Kanalen."
         backgroundGradient="linear-gradient(135deg, #4C1D95, #7C3AED)"
         backgroundImage="/images/tonsberg/kultur-aktiviteter-historie-teater.jpg"
-        imageAlt="Vikingodden i Tønsberg"
+        imageAlt="Utendørskonsert i Tønsberg"
         priority
         compact={true}
       />

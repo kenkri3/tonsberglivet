@@ -46,7 +46,7 @@ export default function ShoppingPage() {
         description="I Tønsberg finner du en perfekt miks av tradisjonsrik sentrumshandel, spennende nisjebutikker og moderne kjøpesentre."
         backgroundGradient="linear-gradient(135deg, #1D4ED8, #0E7490)"
         backgroundImage="/images/tonsberg/shopping-i-tonsberg-unike-nisjebut.jpg"
-        imageAlt="Folkeliv og handel i Tønsberg sentrum"
+        imageAlt="Folkeliv i handlegaten i Tønsberg"
         priority
         compact={true}
       />

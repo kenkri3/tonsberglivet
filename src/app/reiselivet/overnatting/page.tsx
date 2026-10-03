@@ -49,7 +49,7 @@ export default function OvernattingPage() {
         description="Finn det perfekte stedet å bo – fra livlige bryggehoteller i Tønsberg sentrum til idylliske herregårder på Tjøme."
         backgroundGradient="linear-gradient(135deg, #b45309 0%, #d97706 50%, #16193d 100%)"
         backgroundImage="/images/tonsberg/overnatting-byhotell-skjaergaardsp.jpg"
-        imageAlt="Hotell ved brygga i Tønsberg"
+        imageAlt="Marina med seilbåter i Tønsberg"
         priority
         compact={true}
       />

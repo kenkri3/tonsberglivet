@@ -22,7 +22,7 @@ export default function ReiselivetPage() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/tonsberg/reiselivet-storgaten-vinter.jpg"
-            alt="Slottsfjellet og Reiselivet i Tønsberg"
+            alt="Storgaten i Tønsberg i vinterstemning"
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover img-crop-top scale-105"
@@ -101,8 +101,8 @@ export default function ReiselivetPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl group">
           <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
             <Image
-              src="/images/tonsberg/faerder-nasjonalpark-og-skjaergaar.jpg"
-              alt="Færder Nasjonalpark og Skjærgården"
+              src="/images/tonsberg/tonsberg-by-og-kanal-sett-fra-luft.jpg"
+              alt="Tønsberg by og kanal sett fra luften"
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-700"
@@ -164,8 +164,8 @@ export default function ReiselivetPage() {
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
               <Image
-                src="/images/tonsberg/quality-hotel-tonsberg-takbasseng-.jpg"
-                alt="Quality Hotel Tønsberg takbasseng"
+                src="/images/tonsberg/morkt-lokale-med-lyssetting-i-tons.jpg"
+                alt="Mørkt lokale med lyssetting i Tønsberg"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
@@ -200,8 +200,8 @@ export default function ReiselivetPage() {
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
               <Image
-                src="/images/tonsberg/hotel-klubben-ved-bryggen-relative.jpg"
-                alt="Hotel Klubben ved bryggen"
+                src="/images/tonsberg/seilskip-ved-brygga-i-tonsberg-rel.jpg"
+                alt="Seilskip ved brygga i Tønsberg"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
@@ -236,8 +236,8 @@ export default function ReiselivetPage() {
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
               <Image
-                src="/images/tonsberg/engo-gaard-paa-tjome-relative-aspe.jpg"
-                alt="Engø Gård på Tjøme"
+                src="/images/tonsberg/jordbrukslandskap-paa-tjome-relati.jpg"
+                alt="Jordbrukslandskap på Tjøme"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
@@ -272,8 +272,8 @@ export default function ReiselivetPage() {
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
             <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
               <Image
-                src="/images/tonsberg/havna-hotell-tjome-ved-skjaergaard.jpg"
-                alt="Havna Hotell Tjøme ved skjærgården"
+                src="/images/tonsberg/sjobod-og-badegjester-ved-vannet-p.jpg"
+                alt="Sjøbod og badegjester ved vannet på Tjøme"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
@@ -314,15 +314,15 @@ export default function ReiselivetPage() {
           photos={[
             {
               src: '/images/tonsberg/opplev-faerder-tonsbergs-reiseliv-.jpg',
-              alt: 'Bryggekanten i Tønsberg i kveldssol',
+              alt: 'Kvinne ved sjøen i Færder',
               caption: 'Kveldssol ved brygga',
               location: 'Tønsberg Brygge',
               category: 'Byliv & Kyst',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/slottsfjellet-ruinepark-og-taarnet.jpg',
-              alt: 'Slottsfjellet ruinepark og Tårnet',
+              src: '/images/tonsberg/kvinne-i-middelalderdrakt-paa-slot.jpg',
+              alt: 'Kvinne i middelalderdrakt på Slottsfjellet',
               caption: 'Slottsfjellet Middelalderborg',
               location: 'Slottsfjellet Tønsberg',
               category: 'Historie & Kultur',
@@ -330,7 +330,7 @@ export default function ReiselivetPage() {
             },
             {
               src: '/images/tonsberg/brygge-solnedgang.jpg',
-              alt: 'Tønsberg Brygge om kvelden',
+              alt: 'Solnedgang over Tønsberg Brygge med Slottsfjellet i bakgrunnen',
               caption: 'Sommerstemning på Brygga',
               location: 'Tønsberg Brygge',
               category: 'Uteliv & Gastronomi',

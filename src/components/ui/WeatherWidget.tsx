@@ -35,8 +35,8 @@ export function WeatherWidget() {
 
   return (
     <div
-      className="inline-flex items-center gap-2 px-3 py-1.5 bg-surface-muted border border-border
-                 rounded-full text-xs font-semibold text-foreground shadow-xs"
+      className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 bg-surface-muted border border-border
+                 rounded-full text-xs font-semibold text-foreground shadow-xs shrink-0"
       title={`Live vær i ${weather.location} fra Yr / Met.no`}
     >
       {renderIcon()}

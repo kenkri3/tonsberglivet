@@ -119,7 +119,7 @@ export default function BylivetPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
             <div className="relative aspect-[16/10] overflow-hidden">
-              <Image src="/images/tonsberg/gateliv-i-tonsberg-sentrum-grid-gr.jpg" alt="Gateliv i Tønsberg sentrum" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500" />
+              <Image src="/images/tonsberg/tonsberg-torv-med-domkirken-i-bakg.jpg" alt="Tønsberg Torv med Domkirken i bakgrunnen" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500" />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
                 Trehus & Kultur
               </span>
@@ -141,7 +141,7 @@ export default function BylivetPage() {
 
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
             <div className="relative aspect-[16/10] overflow-hidden">
-              <Image src="/images/tonsberg/folkefest-i-tonsberg-relative-aspe.jpg" alt="Folkefest i Tønsberg" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500" />
+              <Image src="/images/tonsberg/folkefest-med-flaggborter-i-tonsbe.jpg" alt="Folkefest med flaggborter i Tønsberg" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500" />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
                 Festival & Folkeliv
               </span>
@@ -236,55 +236,55 @@ export default function BylivetPage() {
           photos={[
             {
               src: '/images/tonsberg/bylivet-i-tonsberg-i-bilder-bildeg.jpg',
-              alt: 'Tønsberg Brygge om kvelden',
+              alt: 'Folkeliv på brygga i Tønsberg en sommerkveld',
               caption: 'Stemning på Tønsberg Brygge',
               location: 'Tønsberg Brygge',
               category: 'Uteservering & Uteliv',
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/spis-ute-uka-i-tonsberg-spis-ute-u.jpg',
-              alt: 'Spis Ute Uka i Tønsberg',
+              src: '/images/tonsberg/buffet-under-spis-ute-uka-i-tonsbe.jpg',
+              alt: 'Buffet under Spis Ute Uka i Tønsberg',
               caption: 'Spis Ute Uka & Gastronomi',
               location: 'Tønsberg Sentrum',
               category: 'Gastronomi',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/mat-og-servering-langs-brygga-loka.jpg',
-              alt: 'Mat og servering langs brygga',
+              src: '/images/tonsberg/gjester-paa-restaurant-i-tonsberg-.jpg',
+              alt: 'Gjester på restaurant i Tønsberg',
               caption: 'Lokal mat & Uteservering',
               location: 'Bryggekanten',
               category: 'Mat & Drikke',
               photographer: 'Fotograf Varpe',
             },
             {
-              src: '/images/tonsberg/markedsboder-med-klaer-og-haandver-4.jpg',
-              alt: 'Markedsboder med klær og håndverk i Tønsberg',
+              src: '/images/tonsberg/folkemengde-paa-tonsberg-torv-mark.jpg',
+              alt: 'Folkemengde på Tønsberg Torv',
               caption: 'Markedshandel i sentrum',
               location: 'Tønsberg Torv',
               category: 'Handel & Marked',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/gate-med-lys-og-folk-i-tonsberg-se.jpg',
-              alt: 'Gate med lys og folk i Tønsberg sentrum',
+              src: '/images/tonsberg/kvinne-som-danser-paa-tonsberg-tor.jpg',
+              alt: 'Kvinne som danser på Tønsberg Torv',
               caption: 'Stemning i gatene',
               location: 'Storgaten',
               category: 'Byliv & Stemning',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/folkefest-med-musikk-og-mat-i-tons.jpg',
-              alt: 'Folkefest med musikk og mat i Tønsberg',
+              src: '/images/tonsberg/fest-med-lilla-lyssetting-i-tonsbe.jpg',
+              alt: 'Fest med lilla lyssetting i Tønsberg',
               caption: 'Folkefest i byen',
               location: 'Tønsberg Brygge',
               category: 'Festival & Folkeliv',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/byen-kledd-i-regnbuens-farger-i-to.jpg',
-              alt: 'Byen kledd i regnbuens farger i Tønsberg',
+              src: '/images/tonsberg/markedsboder-med-klaer-paa-tonsber.jpg',
+              alt: 'Markedsboder med klær på Tønsberg Torv',
               caption: 'Regnbuen over byen',
               location: 'Tønsberg Sentrum',
               category: 'Fellesskap & Mangfold',

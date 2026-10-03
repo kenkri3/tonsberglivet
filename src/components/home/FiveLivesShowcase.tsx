@@ -16,6 +16,8 @@ interface LifePillar {
   tagline: string;
   description: string;
   image: string;
+  /** Beskriver bildet for skjermlesere. Uten den brukes pilarens navn. */
+  imageAlt?: string;
   href: string;
   accentColor: string;
   accentBg: string;
@@ -32,7 +34,8 @@ const pillars: LifePillar[] = [
     logo: <BylivetLogo className="h-7 w-auto fill-current" />,
     tagline: 'Handel, uteservering & kystmagi',
     description: 'Opplev den unike stemningen langs Tønsberg Brygge, spennende nisjebutikker i Storgaten og levende markeder på Tønsberg Torv.',
-    image: '/images/tonsberg/bylivet-h-7-w-auto-fill-current.jpg',
+    image: '/images/tonsberg/utsikt-mot-slottsfjellet-over-byfj.jpg',
+    imageAlt: 'Utsikt mot Slottsfjellet over Byfjorden i Tønsberg',
     href: '/bylivet',
     accentColor: '#1D4ED8',
     accentBg: 'from-blue-600 to-indigo-700',
@@ -53,7 +56,8 @@ const pillars: LifePillar[] = [
     logo: <HverdagslivetLogo className="h-7 w-auto fill-current" />,
     tagline: 'Det gode liv mellom sjø og skog',
     description: 'Korte avstander, trygge oppvekstmiljøer, fantastisk kyststi rett utenfor døren og et rikt foreningsliv gjør Tønsberg til fylkets mest populære bosted.',
-    image: '/images/tonsberg/hverdagslivet-h-7-w-auto-fill-curr.jpg',
+    image: '/images/tonsberg/kvinne-med-kaffekopp-i-en-sofa-hje.jpg',
+    imageAlt: 'Kvinne med kaffekopp i en sofa hjemme',
     href: '/hverdagslivet',
     accentColor: '#059669',
     accentBg: 'from-emerald-600 to-teal-700',
@@ -73,7 +77,8 @@ const pillars: LifePillar[] = [
     logo: <NaeringslivetLogo className="h-7 w-auto fill-current" />,
     tagline: 'Kraftsentrum for vekst og nyskaping',
     description: 'Et fremoverlent næringsliv med 7 500 bedrifter, ledende fagmiljøer innen IT, maritim teknologi og finans, og Gründerhuset Hi5 som arnested for vekst.',
-    image: '/images/tonsberg/naeringslivet-h-7-w-auto-fill-curr.jpg',
+    image: '/images/tonsberg/byggekran-mot-kveldshimmelen-i-ton.jpg',
+    imageAlt: 'Byggekran mot kveldshimmelen i Tønsberg',
     href: '/naeringslivet',
     accentColor: '#7C3AED',
     accentBg: 'from-purple-600 to-indigo-800',
@@ -93,7 +98,8 @@ const pillars: LifePillar[] = [
     logo: <ReiselivetLogo className="h-7 w-auto fill-current" />,
     tagline: 'Historiske perler & vill skjærgård',
     description: 'Fra det mektige Slottsfjelltårnet og tusen år gammel vikinghistorie til blankskurte svaberg ved Verdens Ende og Færder Nasjonalpark.',
-    image: '/images/tonsberg/reiselivet-h-7-w-auto-fill-current.jpg',
+    image: '/images/tonsberg/opplyst-paviljong-med-publikum-i-t.jpg',
+    imageAlt: 'Opplyst paviljong med publikum i Tønsberg',
     href: '/reiselivet',
     accentColor: '#D97706',
     accentBg: 'from-amber-600 to-orange-700',
@@ -113,7 +119,8 @@ const pillars: LifePillar[] = [
     logo: <StudentlivetLogo className="h-7 w-auto fill-current" />,
     tagline: 'Studiested med puls og samhold',
     description: 'USN Campus Vestfold byr på toppmoderne fasiliteter, et tettvevd studentfellesskap, gode boligordninger via SSN og rabatter i hele Tønsberg sentrum.',
-    image: '/images/tonsberg/studentlivet-h-7-w-auto-fill-curre.jpg',
+    image: '/images/tonsberg/band-som-opptrer-i-tonsberg-studen.jpg',
+    imageAlt: 'Band som opptrer i Tønsberg',
     href: '/studentlivet',
     accentColor: '#DC2626',
     accentBg: 'from-red-600 to-rose-700',
@@ -188,7 +195,7 @@ export function FiveLivesShowcase() {
         <div className="lg:col-span-7 relative min-h-[280px] lg:min-h-full overflow-hidden">
           <Image
             src={active.image}
-            alt={active.name}
+            alt={active.imageAlt ?? active.name}
             fill
             priority
             sizes="(max-width: 1024px) 100vw, 60vw"

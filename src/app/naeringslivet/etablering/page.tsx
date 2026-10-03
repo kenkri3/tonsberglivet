@@ -49,7 +49,7 @@ export default function EtableringPage() {
         description="Få hjelp til oppstart via Gründerhuset Hi5, START-programmet og sjekk ledige næringsarealer."
         backgroundGradient="linear-gradient(135deg, #1E3A5F, #1D4ED8)"
         backgroundImage="/images/tonsberg/etablering-naeringsarealer-etabler.jpg"
-        imageAlt="Gatebildet i Tønsberg sentrum"
+        imageAlt="Næringsbygg med Skagerrak Sparebank i Tønsberg"
         priority
         compact={true}
       />

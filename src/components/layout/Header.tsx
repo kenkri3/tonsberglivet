@@ -12,7 +12,7 @@ import {
 } from '@/components/brand/BrandLogos';
 
 const searchableItems = [
-  { title: 'Færderbiennalen & Sommerkultur', category: 'Bylivet', href: '/nyheter/faerderbiennalen' },
+  { title: 'Færderbiennalen setter Vestfold på verdenskartet', category: 'Bylivet', href: '/nyheter/faerderbiennalen-setter-vestfold-pa-verdenskartet' },
   { title: 'Slottsfjellet & Slottsfjelltårnet', category: 'Reiselivet', href: '/reiselivet/opplevelser' },
   { title: 'Torvleie & Standplass', category: 'Bylivet', href: '/bylivet/torvleie' },
   { title: 'Gründergata & Bedriftsetablering', category: 'Næringslivet', href: '/naeringslivet/etablering' },
@@ -130,7 +130,7 @@ export function Header() {
               aria-label="Tønsberglivet — Hjem"
             >
               <div className="flex items-center">
-                <TonsberglivetLogo className="h-7 sm:h-8 md:h-9 w-auto text-theme-brand group-hover:opacity-85 transition-all duration-300" />
+                <TonsberglivetLogo className="h-6 sm:h-7 md:h-8 lg:h-9 w-auto text-theme-brand group-hover:opacity-85 transition-all duration-300" />
               </div>
             </Link>
 
@@ -196,14 +196,15 @@ export function Header() {
               ))}
             </nav>
 
-            {/* Høyre side — verktøy */}
-            <div className="flex items-center gap-2.5">
+            {/* Høyre side — verktøy. Strammere gap på mobil slik at logo +
+                vær + søk + tema + meny får plass i 390 px uten overflyt. */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
               <WeatherWidget />
 
               {/* Søk-knapp med Cmd+K badge */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-full border border-border bg-surface hover:bg-surface-muted text-xs font-medium text-foreground-muted transition-all shadow-2xs"
+                className="flex items-center gap-2 px-2.5 sm:px-3.5 py-2 rounded-full border border-border bg-surface hover:bg-surface-muted text-xs font-medium text-foreground-muted transition-all shadow-2xs"
                 aria-label="Søk i portalen"
               >
                 <Search className="w-4 h-4 text-foreground-subtle" />

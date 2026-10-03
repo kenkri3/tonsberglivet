@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { fetchLiveTicketmasterEvents } from '@/lib/ticketmaster';
 import { groupEventPerformances, shortDateLabel } from '@/lib/event-grouping';
+import { getNewsArticles } from '@/lib/news-server';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
 import { TonsberglivetLogo } from '@/components/brand/BrandLogos';
 import { FiveLivesShowcase } from '@/components/home/FiveLivesShowcase';
@@ -19,12 +20,22 @@ export const metadata: Metadata = {
   description: 'Velkommen til Tønsberglivet. Omdømme- og byutviklingsselskapet som samler og styrker Norges eldste kystby.',
 };
 
+// Sakene hentes fra CMS/arkiv. Fem minutter holder forsiden fersk uten at
+// hvert besøk treffer databasen.
+export const revalidate = 300;
+
 export default async function Home() {
-  const events = await fetchLiveTicketmasterEvents();
+  const [events, newsArticles] = await Promise.all([
+    fetchLiveTicketmasterEvents(),
+    getNewsArticles(),
+  ]);
+
+  // Forsiden viser de tre ferskeste sakene – aldri eksempeltekst.
+  const [leadStory, ...otherStories] = newsArticles;
+  const sideStories = otherStories.slice(0, 2);
 
   // Samme produksjon går ofte flere ganger. Vi viser én produksjon per kort med
   // antall forestillinger og en dato-liste, i stedet for nesten identiske kort.
-  // Grupperingen sikrer samtidig at ingen bilde-URL brukes på to kort.
   const featuredEvents = groupEventPerformances(events)
     .slice(0, 6)
     .map((group) => ({
@@ -53,8 +64,8 @@ export default async function Home() {
         {/* Bakgrunnsbilde med cinematic dybde */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/tonsberg-brygge-og-havn-absolute-i.jpg"
-            alt="Tønsberg Brygge og Havn"
+            src="/images/tonsberg/solnedgang-over-byfjorden-med-slot.jpg"
+            alt="Solnedgang over byfjorden med Slottsfjellstårnet"
             fill
             priority
             sizes="100vw"
@@ -272,101 +283,102 @@ export default async function Home() {
           </Link>
         </div>
 
-        {/* Stort Hovedkort: Slottsfjellet & Færderbiennalen */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl hover:shadow-2xl transition-all group">
-          <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
-            <Image
-              src="/images/tonsberg/slottsfjellet-luftfoto-festomraadet.jpg"
-              alt="Slottsfjellet Tønsberg"
-              fill
-              sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-700"
-            />
-            <span className="absolute top-4 left-4 px-3.5 py-1 bg-surface/95 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
-              Bylivet & Kultur
-            </span>
-          </div>
-
-          <div className="lg:col-span-5 p-8 lg:p-12 flex flex-col justify-between space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 text-xs text-foreground-subtle">
-                <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-primary" /> 18. August 2026</span>
-                <span>•</span>
-                <span>4 min lesetid</span>
-              </div>
-
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight font-serif">
-                Slottsfjellet fylles av kunst og liv: Ny sesong for Færderbiennalen
-              </h3>
-
-              <p className="text-sm md:text-base text-foreground-muted leading-relaxed font-light">
-                Middelalderruinene på Slottsfjellet blir kulisse for internasjonal samtidskunst, utekonserter og lysinstallasjoner som forvandler Norges eldste by til en pulserende kulturarena.
-              </p>
+        {/* Stort hovedkort: den ferskeste saken fra redaksjonen */}
+        {leadStory && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 bg-surface rounded-3xl border border-border overflow-hidden shadow-xl hover:shadow-2xl transition-all group">
+            <div className="lg:col-span-7 relative aspect-[16/10] lg:aspect-auto overflow-hidden">
+              {leadStory.imageUrl ? (
+                <Image
+                  src={leadStory.imageUrl}
+                  alt={leadStory.imageAlt || leadStory.title}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 60vw"
+                  className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-700"
+                />
+              ) : null}
+              <span className="absolute top-4 left-4 px-3.5 py-1 bg-surface/95 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
+                {leadStory.categoryLabel}
+              </span>
             </div>
 
-            <div className="pt-4 border-t border-border flex items-center justify-between">
-              <Link
-                href="/nyheter/slottsfjellet-sesong"
-                className="inline-flex items-center gap-2 text-sm font-bold text-primary group-hover:text-primary-hover transition-colors"
+            <div className="lg:col-span-5 p-8 lg:p-12 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-xs text-foreground-subtle">
+                  <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-primary" /> {leadStory.date}</span>
+                  <span>•</span>
+                  <span>{leadStory.readTime}</span>
+                </div>
+
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight font-serif">
+                  {leadStory.title}
+                </h3>
+
+                <p className="text-sm md:text-base text-foreground-muted leading-relaxed font-light">
+                  {leadStory.excerpt}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-border flex items-center justify-between">
+                <Link
+                  href={`/nyheter/${leadStory.slug}`}
+                  className="inline-flex items-center gap-2 text-sm font-bold text-primary group-hover:text-primary-hover transition-colors"
+                >
+                  <span>Les hele saken</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <span className="text-xs font-semibold text-foreground-subtle">{leadStory.author}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* To mindre redaksjonelle kort: de neste sakene i rekken */}
+        {sideStories.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {sideStories.map((story) => (
+              <div
+                key={story.id}
+                className="bg-surface rounded-3xl border border-border overflow-hidden hover:shadow-lg transition-all group flex flex-col justify-between"
               >
-                <span>Les hele saken</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <span className="text-xs font-semibold text-foreground-subtle">Kulturseksjonen</span>
-            </div>
-          </div>
-        </div>
+                {story.imageUrl ? (
+                  <div className="relative aspect-[16/9] overflow-hidden">
+                    <Image
+                      src={story.imageUrl}
+                      alt={story.imageAlt || story.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                ) : null}
 
-        {/* To mindre redaksjonelle kort */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-4 hover:shadow-lg transition-all group flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-emerald-700 bg-emerald-50 dark:bg-emerald-950 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-                  Næringslivet
-                </span>
-                <span className="text-foreground-subtle">15. August 2026</span>
+                <div className="p-6 sm:p-8 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-primary bg-primary/10 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                        {story.categoryLabel}
+                      </span>
+                      <span className="text-foreground-subtle">{story.date}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                      {story.title}
+                    </h3>
+                    <p className="text-sm text-foreground-muted leading-relaxed font-light">
+                      {story.excerpt}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/nyheter/${story.slug}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline pt-2"
+                  >
+                    <span>Les hele saken</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                Gründergata i Tønsberg tiltrekker rekordmange teknologiselskaper
-              </h3>
-              <p className="text-sm text-foreground-muted leading-relaxed font-light">
-                Hi5-inkubatoren utvider med nye kontorplasser i Nedre Langgate etter en økning på 40% i nye gründerselskaper det siste året.
-              </p>
-            </div>
-            <Link
-              href="/naeringslivet"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline pt-2"
-            >
-              <span>Les mer om etablering</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+            ))}
           </div>
-
-          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-4 hover:shadow-lg transition-all group flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-amber-700 bg-amber-50 dark:bg-amber-950 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-                  Hverdagslivet
-                </span>
-                <span className="text-foreground-subtle">12. August 2026</span>
-              </div>
-              <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                Tønsberg kåret til en av Norges mest attraktive bostedskommuner
-              </h3>
-              <p className="text-sm text-foreground-muted leading-relaxed font-light">
-                Kombinasjonen av sjøutsikt, 1 time og 20 minutter til Oslo med tog og rikt kulturtilbud gjør at barnefamilier flytter i rekordfart.
-              </p>
-            </div>
-            <Link
-              href="/hverdagslivet"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline pt-2"
-            >
-              <span>10 gode grunner til å flytte</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* ── 7. TALL SOM TELLER — NORDIC DYNAMIC STATS ── */}
@@ -434,63 +446,63 @@ export default async function Home() {
           photos={[
             {
               src: '/images/tonsberg/hero-aerial.jpg',
-              alt: 'Tønsberg sett fra luften med brygge, kanal og byfjord',
+              alt: 'Tønsberg Brygge og byfjorden sett fra luften',
               caption: 'Tønsberg fra luften',
               location: 'Tønsberg Brygge & Kanalen',
               category: 'Byoversikt',
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/slottsfjellstaarnet-og-ruinene-i-t.jpg',
-              alt: 'Slottsfjellstårnet og ruinene i Tønsberg',
+              src: '/images/tonsberg/slottsfjellet-luftfoto-festomraadet.jpg',
+              alt: 'Middelalderfigurer ved Slottsfjellet om kvelden',
               caption: 'Slottsfjellet & Tårnet',
               location: 'Slottsfjellet, Tønsberg',
               category: 'Middelalder & Kultur',
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/tonsberg-brygge-om-kvelden-stemnin.jpg',
-              alt: 'Tønsberg Brygge om kvelden',
+              src: '/images/tonsberg/kvinne-med-gaveeske-i-en-butikk-st.jpg',
+              alt: 'Kvinne med gaveeske i en butikk',
               caption: 'Stemning på Tønsberg Brygge',
               location: 'Bryggekanten',
               category: 'Byliv & Mat',
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/skjaergaarden-og-faerder-nasjonalp.jpg',
-              alt: 'Skjærgården og Færder nasjonalpark',
+              src: '/images/tonsberg/picnic-paa-svabergene-i-faerder-na.jpg',
+              alt: 'Picnic på svabergene i Færder nasjonalpark',
               caption: 'Østre Bolærne & Skjærgården',
               location: 'Færder Nasjonalpark',
               category: 'Reiseliv & Natur',
               photographer: 'Visit Færder',
             },
             {
-              src: '/images/tonsberg/uteservering-og-matkultur-paa-bryg.jpg',
-              alt: 'Uteservering og matkultur på brygga',
+              src: '/images/tonsberg/familie-som-spiser-uteservering-pa.jpg',
+              alt: 'Familie som spiser uteservering på brygga',
               caption: 'Lokal mat & Uteservering',
               location: 'Tønsberg Brygge',
               category: 'Gastronomi',
               photographer: 'Fotograf Varpe',
             },
             {
-              src: '/images/tonsberg/gate-med-lys-og-folk-i-tonsberg-se-2.jpg',
-              alt: 'Gate med lys og folk i Tønsberg sentrum',
+              src: '/images/tonsberg/folk-i-gatene-ved-brygga-i-tonsber.jpg',
+              alt: 'Folk i gatene ved brygga i Tønsberg',
               caption: 'Gateliv i sentrum',
               location: 'Storgaten, Tønsberg',
               category: 'Byliv & Stemning',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/lokalproduserte-varer-fra-marked-i.jpg',
-              alt: 'Lokalproduserte varer fra marked i Tønsberg',
+              src: '/images/tonsberg/stand-med-lokalproduserte-varer-in.jpg',
+              alt: 'Stand med lokalproduserte varer innendørs i Tønsberg',
               caption: 'Høstmarked på Torvet',
               location: 'Tønsberg Torv',
               category: 'Marked & Lokalmat',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/barn-som-lager-kunst-i-tonsberg-ba.jpg',
-              alt: 'Barn som lager kunst i Tønsberg',
+              src: '/images/tonsberg/barnepublikum-foran-en-utendorssce.jpg',
+              alt: 'Barnepublikum foran en utendørsscene i Tønsberg',
               caption: 'Barn i byen',
               location: 'Tønsberg Sentrum',
               category: 'Familie & Kultur',
@@ -498,7 +510,7 @@ export default async function Home() {
             },
             {
               src: '/images/tonsberg/student-park.jpg',
-              alt: 'Studenter ved USN Campus Vestfold',
+              alt: 'Studenter på plenen ved USN Campus Vestfold',
               caption: 'Studentmiljøet ved USN',
               location: 'Campus Vestfold',
               category: 'Studentlivet',

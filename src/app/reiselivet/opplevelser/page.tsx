@@ -48,7 +48,7 @@ export default function OpplevelserPage() {
         description="Opplev Norges vakreste skjærgård, historiske middelalderborger, ikoniske svaberg og levende kystkultur."
         backgroundGradient="linear-gradient(135deg, #D97706, #0E7490)"
         backgroundImage="/images/tonsberg/opplevelser-kulturarv-natur-fra-vi.jpg"
-        imageAlt="Verdens Ende og Færder fyr"
+        imageAlt="Vippefyret på Verdens Ende"
         priority
         compact={true}
       />

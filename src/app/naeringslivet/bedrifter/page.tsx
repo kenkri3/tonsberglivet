@@ -25,7 +25,7 @@ export default function BedrifterPage() {
         description="Tønsberg er næringshovedstaden i Vestfold med et drivende næringsliv innen helse, finans, IT og gründerånd. Søk i offisielle registerdata fra Brønnøysundregistrene nedenfor."
         backgroundGradient="linear-gradient(135deg, #7C3AED, #8B5CF6)"
         backgroundImage="/images/tonsberg/arbeidsliv-verneutstyr.jpg"
-        imageAlt="Næringsbygg i Tønsberg"
+        imageAlt="Lærling med hørselsvern og vernebriller"
         priority
         compact={true}
       />

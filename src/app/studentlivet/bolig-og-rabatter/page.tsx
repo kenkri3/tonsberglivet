@@ -14,25 +14,29 @@ const studentOffers = [
     title: 'Studentsamskipnaden (SSN)',
     category: 'Bolig & Velferd',
     desc: 'SSN tilbyr moderne studentboliger på Campus Vestfold og Eik, samt generøs helserefusjonsordning for studenter.',
-    image: '/images/tonsberg/studentsamskipnaden-ssn-studentrab.jpg',
+    image: '/images/tonsberg/studentsamskipnaden-ssn-student-so.jpg',
+    imageAlt: 'Student som leser en bok',
   },
   {
     title: 'Studentrabatter i Sentrum',
     category: 'Handel & Kafé',
     desc: 'Vis gyldig studentbevis og få eksklusive studentrabatter hos over 40 butikker, kaffebarer og treningssentre.',
-    image: '/images/tonsberg/studentrabatter-i-sentrum-ung-aren.jpg',
+    image: '/images/tonsberg/studentrabatter-i-sentrum-ungdom-s.jpg',
+    imageAlt: 'Ungdom som heier i Tønsberg sentrum',
   },
   {
     title: 'Ung Arena+ Tønsberg',
     category: 'Helse & Møteplass',
     desc: 'Lavterskel helsetilbud, rådgivning, karriereveiledning og sosiale kvelder for unge og studenter.',
-    image: '/images/tonsberg/ung-arena-tonsberg-kollektivtransp.jpg',
+    image: '/images/tonsberg/ung-arena-tonsberg-lopegruppe-fora.jpg',
+    imageAlt: 'Løpegruppe foran butikkene i Tønsberg',
   },
   {
     title: 'Kollektivtransport & Tog',
     category: 'VKT & Vy',
     desc: 'Svært gode bussforbindelser mellom Tønsberg sentrum, Bakkenteigen og direkte togforbindelse mot Oslo.',
-    image: '/images/tonsberg/kollektivtransport-tog.jpg',
+    image: '/images/tonsberg/kollektivtransport-tog-aktiviteter.jpg',
+    imageAlt: 'Aktiviteter om bord på et skip i Tønsberg',
   },
 ];
 
@@ -45,7 +49,7 @@ export default function StudentBoligOgRabatterPage() {
         description="Få full oversikt over SSN sine studentboliger, studentrabatter i byen og gratis helsetjenester."
         backgroundGradient="linear-gradient(135deg, #DC2626, #EF4444)"
         backgroundImage="/images/tonsberg/studentbolig-rabatter-studere-ved-.jpg"
-        imageAlt="Studenter i Tønsberg"
+        imageAlt="Strandpromenade med studentboliger i Tønsberg"
         priority
         compact={true}
       />
@@ -60,7 +64,7 @@ export default function StudentBoligOgRabatterPage() {
               <div className="relative h-56 w-full overflow-hidden bg-surface-muted">
                 <Image
                   src={o.image}
-                  alt={o.title}
+                  alt={o.imageAlt ?? o.title}
                   fill
                   className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
                   sizes="(max-width: 768px) 100vw, 50vw"

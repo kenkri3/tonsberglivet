@@ -18,7 +18,7 @@ export default function PresseromPage() {
         description="Her finner du oppdaterte pressemeldinger, bildefiler, logoer og kontaktinformasjon for pressen."
         backgroundGradient="linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%)"
         backgroundImage="/images/tonsberg/presserom-mediekontakt-pressemeldi.jpg"
-        imageAlt="Tønsberg sentrum sett fra luften"
+        imageAlt="Havneområde med kran i Tønsberg"
         priority
       />
 

@@ -182,6 +182,18 @@ export function ArticleJsonLd({
   category?: string;
   imageUrl?: string;
 }) {
+  // Kategorietiketten («Næringslivet») er ikke det samme som URL-segmentet
+  // («naeringslivet»). Uten denne tabellen pekte brødsmulen på en side som ikke finnes.
+  const CATEGORY_PATHS: Record<string, string> = {
+    bylivet: '/bylivet',
+    hverdagslivet: '/hverdagslivet',
+    næringslivet: '/naeringslivet',
+    naeringslivet: '/naeringslivet',
+    reiselivet: '/reiselivet',
+    studentlivet: '/studentlivet',
+  };
+  const categoryPath = CATEGORY_PATHS[category.toLowerCase()] ?? '/nyheter';
+
   const schema = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -224,7 +236,7 @@ export function ArticleJsonLd({
             '@type': 'ListItem',
             position: 2,
             name: category,
-            item: `https://tonsberglivet.no/${category.toLowerCase()}`,
+            item: `https://tonsberglivet.no${categoryPath}`,
           },
           {
             '@type': 'ListItem',

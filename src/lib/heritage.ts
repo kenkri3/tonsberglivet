@@ -58,7 +58,7 @@ export const TONSBERG_HERITAGE_SITES: HeritageSite[] = [
     fullDesc: 'Olavsklostret var et mektig klosteranlegg innviet til Olav den hellige. Deler av klosteret og den unike rundkirken ligger bevart under Tønsberg bibliotek og ved Storgaten.',
     location: 'Storgaten / Biblioteket, 3126 Tønsberg',
     coordinates: { lat: 59.2688, lng: 10.4095 },
-    imageUrl: '/images/tonsberg/nordens-storste-bevarte-rundkirke-.jpg',
+    imageUrl: '/images/tonsberg/slottsfjellet-taarnet-festival.jpg',
     heritageId: 'Kulturminne-ID: 21394',
     tips: 'Se de bevarte hvelvingene og klosterveggene integrert inne i Tønsberg og Færder bibliotek.'
   },

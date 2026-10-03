@@ -108,7 +108,7 @@ export default function ImageBankPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newTitle,
-          url: newUrl || '/images/tonsberg/folkefest-med-musikk-og-mat-i-tons.jpg',
+          url: newUrl || '/images/tonsberg/fest-med-lilla-lyssetting-i-tonsbe.jpg',
           folder: newFolder,
           photographer: newPhotographer,
           aiTags: analyzedTags.length > 0 ? analyzedTags : ['Tønsberg', newFolder],

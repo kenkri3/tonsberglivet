@@ -23,8 +23,8 @@ export default function HverdagslivetPage() {
       <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/bo-og-leve-i-tonsbergregionen-abso.jpg"
-            alt="Bo og leve i Tønsbergregionen"
+            src="/images/tonsberg/solstoler-med-slottsfjellstaarnet-.jpg"
+            alt="Solstoler med Slottsfjellstårnet i bakgrunnen"
             fill
             priority
             sizes="100vw"
@@ -159,23 +159,23 @@ export default function HverdagslivetPage() {
           photos={[
             {
               src: '/images/tonsberg/hverdagslivet-i-tonsberg-i-bilder-.jpg',
-              alt: 'Nabolag og gatemiljø i Tønsberg',
+              alt: 'Boligområde med bekk og lekende barn i Tønsberg',
               caption: 'Nabolag & Nærmiljø',
               location: 'Tønsberg',
               category: 'Bo & Oppvekst',
               photographer: 'Tønsberglivet Arkiv',
             },
             {
-              src: '/images/tonsberg/aktiviteter-for-barnefamilier-i-to.jpg',
-              alt: 'Aktiviteter for barnefamilier i Tønsberg',
+              src: '/images/tonsberg/maskotene-ellie-og-timba-paa-tonsb.jpg',
+              alt: 'Maskotene Ellie og Timba på Tønsberg Torv',
               caption: 'Barnevennlige Tønsberg',
               location: 'Tønsberg Sentrum',
               category: 'Oppvekst & Familie',
               photographer: 'Tønsberglivet',
             },
             {
-              src: '/images/tonsberg/sommer-i-tonsberg-sommerdager-i-re.jpg',
-              alt: 'Sommer i Tønsberg',
+              src: '/images/tonsberg/gutter-som-hopper-i-sjoen-i-tonsbe.jpg',
+              alt: 'Gutter som hopper i sjøen i Tønsberg',
               caption: 'Sommerdager i regionen',
               location: 'Tønsberg & Færder',
               category: 'Fellesskap',

@@ -32,7 +32,7 @@ export default function PartnerePage() {
         description="Et forpliktende partnerskap mellom kommunen, gårdeiere og næringslivet for å styrke Tønsbergs posisjon som fylkets handels- og opplevelseshovedstad."
         backgroundGradient="linear-gradient(135deg, #065f46 0%, #0d9488 50%, #16193d 100%)"
         backgroundImage="/images/tonsberg/vaare-partnere-sammen-for-tonsberg.jpg"
-        imageAlt="Gatebildet i Tønsberg sentrum"
+        imageAlt="Fire kvinner fra partnerbedriftene i Tønsberg"
         priority
         compact={true}
       />

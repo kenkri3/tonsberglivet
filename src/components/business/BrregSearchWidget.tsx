@@ -119,7 +119,9 @@ export function BrregSearchWidget() {
                 </span>
               </div>
 
-              <h4 className="font-bold text-foreground group-hover:text-primary transition-colors text-base line-clamp-1">
+              {/* To linjer på mobil – firmanavn er hovedinformasjonen og bør
+                  ikke klippes til én linje («1-2-TRE ELEMENTPRODUKSJON AS»). */}
+              <h4 className="font-bold text-foreground group-hover:text-primary transition-colors text-base line-clamp-2 leading-snug">
                 {c.name}
               </h4>
 
@@ -128,10 +130,14 @@ export function BrregSearchWidget() {
               </p>
             </div>
 
-            <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-foreground-subtle">
-              <span className="flex items-center gap-1 truncate max-w-[70%]">
-                <MapPin className="w-3 h-3 shrink-0 text-primary" />
-                <span className="truncate">{c.address || `${c.city || 'Tønsberg'}`}</span>
+            <div className="pt-3 border-t border-border flex items-start justify-between gap-2 text-xs text-foreground-subtle">
+              {/* Adressen får bryte over inntil to linjer i stedet for å bli
+                  kuttet («Båtsmannsveien 49B, 3150 TOLVS…»). */}
+              <span className="flex items-start gap-1 min-w-0">
+                <MapPin className="w-3 h-3 shrink-0 text-primary mt-0.5" />
+                <span className="min-w-0 line-clamp-2 leading-snug break-words">
+                  {c.address || `${c.city || 'Tønsberg'}`}
+                </span>
               </span>
               <a
                 href={`https://virksomhet.brreg.no/nb/oppslag/enheter/${c.orgNr}`}

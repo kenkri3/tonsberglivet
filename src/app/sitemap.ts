@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
+import { getNewsArticles } from '@/lib/news-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +22,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: '/eventer/1', priority: 0.8, changeFrequency: 'daily' as const },
     { url: '/eventer/2', priority: 0.8, changeFrequency: 'daily' as const },
     { url: '/eventer/3', priority: 0.8, changeFrequency: 'daily' as const },
-    // Nyheter & Artikler
+    // Nyheter & Artikler – de enkelte sakene legges til lenger ned, fra samme
+    // kilde som /nyheter og /nyheter/[id] faktisk bruker.
     { url: '/nyheter', priority: 0.9, changeFrequency: 'daily' as const },
-    { url: '/nyheter/1', priority: 0.8, changeFrequency: 'weekly' as const },
-    { url: '/nyheter/2', priority: 0.8, changeFrequency: 'weekly' as const },
-    { url: '/nyheter/3', priority: 0.8, changeFrequency: 'weekly' as const },
     // Reiselivet
     { url: '/reiselivet', priority: 0.85, changeFrequency: 'weekly' as const },
     { url: '/reiselivet/opplevelser', priority: 0.8, changeFrequency: 'weekly' as const },
@@ -56,26 +55,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route.priority,
   }));
 
-  // Hent dynamisk publiserte artikler fra databasen
+  // Nyhetssaker: publiserte artikler fra databasen + det redaksjonelle arkivet.
+  // Samme kilde som /nyheter og /nyheter/[id], slik at sitemap aldri lenker til
+  // en sak som ikke finnes (og aldri til en sak som viser feil innhold).
   try {
-    const dbArticles = await prisma.article.findMany({
-      where: { published: true },
-      select: { slug: true, updatedAt: true },
-      take: 100,
-    });
+    const newsArticles = await getNewsArticles();
 
-    for (const art of dbArticles) {
-      if (art.slug) {
-        sitemapItems.push({
-          url: `${baseUrl}/nyheter/${art.slug}`,
-          lastModified: art.updatedAt || new Date(),
-          changeFrequency: 'weekly',
-          priority: 0.8,
-        });
-      }
+    for (const article of newsArticles) {
+      const lastModified = new Date(article.publishedAt);
+      sitemapItems.push({
+        url: `${baseUrl}/nyheter/${article.slug}`,
+        lastModified: Number.isNaN(lastModified.getTime()) ? new Date() : lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      });
     }
-  } catch (e) {
-    // Fortsett uten DB-artikler ved feil
+  } catch {
+    // Fortsett uten nyhetssaker ved feil
   }
 
   // Hent dynamisk publiserte arrangementer (Event)
