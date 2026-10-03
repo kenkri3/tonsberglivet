@@ -802,12 +802,12 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/legacy/streetfoodfestival.jpg",
-    "filename": "Matmarked lokale raavarer besok bo",
-    "alt": "Matmarked lokale raavarer besok bo",
-    "width": 1200,
-    "height": 1600,
-    "sizeBytes": 70069,
+    "url": "/images/legacy/Bacalaofestival.jpg",
+    "filename": "Bacalaofestivalen på Tønsberg Torv",
+    "alt": "Deltakere fra Team Bacalao under Bacalaofestivalen på Tønsberg Torv",
+    "width": 1600,
+    "height": 1200,
+    "sizeBytes": 387788,
     "format": "jpg",
     "folder": "Generelt",
     "tags": [
@@ -1582,12 +1582,12 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/legacy/celebration-nationalday-restaurant-quality-hotel-tonsberg.jpg",
-    "filename": "Quality Hotel Tønsberg",
-    "alt": "Quality Hotel Tønsberg",
-    "width": 1080,
-    "height": 1080,
-    "sizeBytes": 370682,
+    "url": "/images/legacy/fall-campaign-hostferie-offer-getaway-package-quality-hotel-tonsberg.jpg",
+    "filename": "Takbassenget på Quality Hotel Tønsberg",
+    "alt": "Gjester som bader i det oppvarmede takbassenget på Quality Hotel Tønsberg",
+    "width": 1200,
+    "height": 900,
+    "sizeBytes": 87679,
     "format": "jpg",
     "folder": "Reiselivet",
     "tags": [
@@ -1747,13 +1747,13 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/student-park.jpg",
-    "filename": "Strandpromenade med studentboliger i Tønsberg",
-    "alt": "Strandpromenade med studentboliger i Tønsberg",
-    "width": 1584,
-    "height": 1280,
-    "sizeBytes": 107391,
-    "format": "jpg",
+    "url": "/images/legacy/Faerderbiennalen-nytt-bilde.jpeg",
+    "filename": "Svaberg og åpent hav ved Færder",
+    "alt": "Svaberg og åpent hav ved Færder utenfor Tønsberg",
+    "width": 1920,
+    "height": 1165,
+    "sizeBytes": 150217,
+    "format": "jpeg",
     "folder": "Studentlivet",
     "tags": [
       "Tønsberg",
@@ -1777,12 +1777,12 @@ const IMAGES = [
     "location": "Tønsberg"
   },
   {
-    "url": "/images/tonsberg/studentlivet-usn.jpg",
-    "filename": "Studenter i gangen på USN Campus Vestfold",
-    "alt": "Studenter i gangen på USN Campus Vestfold",
-    "width": 1440,
-    "height": 1280,
-    "sizeBytes": 165204,
+    "url": "/images/legacy/18-Soloppgangkonsert-1-oversikt-Foto-Jon-Klasbu.jpg",
+    "filename": "Soloppgangskonsert sett fra oven",
+    "alt": "Publikum samlet på svabergene under soloppgangskonserten ved sjøen",
+    "width": 1600,
+    "height": 948,
+    "sizeBytes": 261102,
     "format": "jpg",
     "folder": "Studentlivet",
     "tags": [

@@ -28,7 +28,7 @@ const hotels = [
     location: 'Oseberg, Tønsberg Brygge', 
     category: 'Bryggehotell & Spa', 
     desc: 'Luksuriøst hotell ved vannkanten med spektakulært oppvarmet takbasseng, The Sense restaurant og førsteklasses velvære.',
-    image: '/images/legacy/celebration-nationalday-restaurant-quality-hotel-tonsberg.jpg'
+    image: '/images/legacy/fall-campaign-hostferie-offer-getaway-package-quality-hotel-tonsberg.jpg'
   },
   { 
     name: 'Engø Gård Hotel & Restaurant', 

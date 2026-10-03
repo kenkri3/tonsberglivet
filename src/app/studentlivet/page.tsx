@@ -30,8 +30,8 @@ export default async function StudentlivetPage() {
       <header className="relative min-h-[60vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/tonsberg/studentlivet-usn.jpg"
-            alt="Studenter i gangen på USN Campus Vestfold"
+            src="/images/legacy/18-Soloppgangkonsert-1-oversikt-Foto-Jon-Klasbu.jpg"
+            alt="Publikum samlet på svabergene under soloppgangskonserten ved sjøen i Tønsberg"
             fill
             priority
             sizes="100vw"

@@ -56,8 +56,8 @@ export default async function StudentBoligOgRabatterPage() {
         subtitle="Studere ved USN Campus Vestfold / Tønsberg"
         description="Få full oversikt over SSN sine studentboliger, studentrabatter i byen og gratis helsetjenester."
         backgroundGradient="linear-gradient(135deg, #DC2626, #EF4444)"
-        backgroundImage="/images/tonsberg/student-park.jpg"
-        imageAlt="Strandpromenade med studentboliger i Tønsberg"
+        backgroundImage="/images/legacy/Faerderbiennalen-nytt-bilde.jpeg"
+        imageAlt="Svaberg og åpent hav ved Færder, like utenfor Tønsberg"
         priority
         compact={true}
       />
