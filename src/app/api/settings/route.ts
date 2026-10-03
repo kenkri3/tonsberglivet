@@ -34,11 +34,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    const oneMinKey = await getSetting('1_min_ai') || await getSetting('one_min_ai_key');
-    const geminiKey = await getSetting('gemini_api_key');
-    const braveKey = await getSetting('brave_api_key');
-    const tavilyKey = await getSetting('tavily_api_key');
-    const apifyKey = await getSetting('apify_api_key');
     const ticketmasterKey = await getSetting('ticketmaster_api_key');
     const resendKey = await getSetting('resend_api_key');
     const smtpUrl = await getSetting('smtp_url');
@@ -71,21 +66,9 @@ export async function GET(request: Request) {
     const gscSiteUrl = (await getSetting('gsc_site_url', '')) || 'https://tonsberglivet.no';
     const gscVerificationCode = await readFirstSetting(GSC_SETTING_KEYS);
 
-    const effectiveOneMin = oneMinKey || process.env['1_MIN_AI'] || process.env.ONE_MIN_AI || process.env.ONE_MIN_AI_API_KEY;
-
     return NextResponse.json({
       success: true,
       data: {
-        oneMinApiKey: maskSecret(effectiveOneMin),
-        oneMinConfigured: !!effectiveOneMin,
-        geminiApiKey: maskSecret(geminiKey || process.env.GEMINI_API_KEY),
-        geminiConfigured: !!(geminiKey || process.env.GEMINI_API_KEY),
-        braveApiKey: maskSecret(braveKey || process.env.BRAVE_API_KEY),
-        braveConfigured: !!(braveKey || process.env.BRAVE_API_KEY),
-        tavilyApiKey: maskSecret(tavilyKey || process.env.TAVILY_API_KEY),
-        tavilyConfigured: !!(tavilyKey || process.env.TAVILY_API_KEY),
-        apifyApiKey: maskSecret(apifyKey || process.env.APIFY_API_KEY),
-        apifyConfigured: !!(apifyKey || process.env.APIFY_API_KEY),
         ticketmasterApiKey: maskSecret(ticketmasterKey || process.env.TICKETMASTER_API_KEY),
         ticketmasterConfigured: !!(ticketmasterKey || process.env.TICKETMASTER_API_KEY),
         resendApiKey: maskSecret(resendKey || process.env.RESEND_API_KEY),
@@ -176,12 +159,11 @@ export async function POST(request: Request) {
     }
 
     // 2. Samlet form-lagring
+    // KI-noeklene (1_MIN_AI, GEMINI_API_KEY, BRAVE_API_KEY, TAVILY_API_KEY,
+    // APIFY_API_KEY) har ikke lenger felt i panelet. De settes som
+    // miljoevariabler i Railway, og leses derfra i ai-config.ts og
+    // web-intelligence.ts. Allerede lagrede verdier i databasen beholdes.
     const {
-      oneMinApiKey,
-      geminiApiKey,
-      braveApiKey,
-      tavilyApiKey,
-      apifyApiKey,
       ticketmasterApiKey,
       resendApiKey,
       smtpUrl,
@@ -205,21 +187,6 @@ export async function POST(request: Request) {
       googleBusinessAccessToken,
     } = body;
 
-    if (oneMinApiKey && !oneMinApiKey.includes('••••')) {
-      await persist('1_min_ai', oneMinApiKey.trim(), 'AI');
-    }
-    if (geminiApiKey && !geminiApiKey.includes('••••')) {
-      await persist('gemini_api_key', geminiApiKey.trim(), 'AI');
-    }
-    if (braveApiKey && !braveApiKey.includes('••••')) {
-      await persist('brave_api_key', braveApiKey.trim(), 'AI');
-    }
-    if (tavilyApiKey && !tavilyApiKey.includes('••••')) {
-      await persist('tavily_api_key', tavilyApiKey.trim(), 'AI');
-    }
-    if (apifyApiKey && !apifyApiKey.includes('••••')) {
-      await persist('apify_api_key', apifyApiKey.trim(), 'AI');
-    }
     if (ticketmasterApiKey && !ticketmasterApiKey.includes('••••')) {
       await persist('ticketmaster_api_key', ticketmasterApiKey.trim(), 'INTEGRATIONS');
     }

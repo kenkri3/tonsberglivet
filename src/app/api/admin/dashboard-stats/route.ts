@@ -183,7 +183,7 @@ export async function GET(request: Request) {
         label: 'AI-motor (1min.AI / Gemini)',
         statusText: (oneMinKey || geminiKey) ? 'Tilkoblet (EU GDPR / Mistral)' : 'Mangler API-nøkkel',
         actionRequired: !(oneMinKey || geminiKey),
-        actionHelp: 'Sett 1_MIN_AI i Railway eller BYOK under Admin > Innstillinger.',
+        actionHelp: 'Sett 1_MIN_AI eller GEMINI_API_KEY som miljøvariabel i Railway.',
       },
       brreg: {
         configured: totalBrregTonsbergIsLive,

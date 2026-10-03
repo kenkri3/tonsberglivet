@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     if (!apiKey && !oneMinKey) {
       return NextResponse.json({
         success: false,
-        error: 'AI-tjenesten er ikke konfigurert på serveren: Ingen aktiv AI API-nøkkel funnet. Vennligst legg inn 1_MIN_AI i Railway eller Gemini-nøkkel under Admin > Innstillinger (BYOK).',
+        error: 'AI-tjenesten er ikke konfigurert på serveren: Ingen aktiv AI API-nøkkel funnet. Sett 1_MIN_AI (eller GEMINI_API_KEY) som miljøvariabel i Railway.',
       }, { status: 503 });
     }
 

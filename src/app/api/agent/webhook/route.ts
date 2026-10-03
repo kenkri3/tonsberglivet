@@ -611,7 +611,7 @@ export async function POST(request: Request) {
     if (!apiKey) {
       return NextResponse.json({
         response_type: 'ephemeral',
-        text: `⚠️ *Ingen Gemini API-nøkkel funnet.* Legg inn Tønsberglivets gratis Google AI Studio-nøkkel under Admin > Innstillinger i portalen.`,
+        text: `⚠️ *Ingen Gemini API-nøkkel funnet.* Sett GEMINI_API_KEY som miljøvariabel i Railway.`,
       });
     }
 
@@ -676,7 +676,7 @@ async function generateAndSaveContent(topic: string) {
   if (!apiKey) {
     return NextResponse.json({
       response_type: 'ephemeral',
-      text: `⚠️ *Ingen Gemini API-nøkkel funnet.* Vennligst legg inn Tønsberglivets gratisnøkkel under Admin > Innstillinger.`,
+      text: `⚠️ *Ingen Gemini API-nøkkel funnet.* Sett GEMINI_API_KEY som miljøvariabel i Railway.`,
     });
   }
 

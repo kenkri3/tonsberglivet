@@ -107,7 +107,7 @@ export async function POST(request: Request) {
           success: false,
           error:
             'AI-bildetjenesten er ikke konfigurert på serveren: Ingen aktiv Gemini API-nøkkel funnet. ' +
-            'Legg inn egen nøkkel under Admin > Innstillinger (BYOK). Bildet er ikke analysert.',
+            'Sett GEMINI_API_KEY som miljøvariabel i Railway. Bildet er ikke analysert.',
         },
         { status: 503 }
       );

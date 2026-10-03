@@ -75,7 +75,7 @@ export async function searchBrave(query: string, count: number = 6): Promise<Web
       engine: 'brave',
       query,
       results: [],
-      error: 'Brave API-nøkkel er ikke konfigurert. Legg den inn i /admin/innstillinger (BYOK).',
+      error: 'Brave API-nøkkel er ikke konfigurert. Sett BRAVE_API_KEY som miljøvariabel i Railway.',
     };
   }
 
@@ -149,7 +149,7 @@ export async function searchTavily(
       engine: 'tavily',
       query,
       results: [],
-      error: 'Tavily API-nøkkel er ikke konfigurert. Legg den inn i /admin/innstillinger (BYOK).',
+      error: 'Tavily API-nøkkel er ikke konfigurert. Sett TAVILY_API_KEY som miljøvariabel i Railway.',
     };
   }
 
@@ -346,6 +346,6 @@ export async function smartWebSearch(
     engine: 'none',
     query,
     results: [],
-    error: 'Verken Brave API eller Tavily API-nøkkel er konfigurert. Konfigurer minst én i /admin/innstillinger under BYOK.',
+    error: 'Verken Brave API eller Tavily API-nøkkel er konfigurert. Sett BRAVE_API_KEY eller TAVILY_API_KEY som miljøvariabel i Railway.',
   };
 }

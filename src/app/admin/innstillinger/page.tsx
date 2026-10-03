@@ -43,24 +43,12 @@ export default function InnstillingerPage() {
   const [gscVerificationCode, setGscVerificationCode] = useState('');
   const [gscConfigured, setGscConfigured] = useState(false);
 
-  // BYOK & Keys
-  const [oneMinApiKey, setOneMinApiKey] = useState('');
-  const [oneMinConfigured, setOneMinConfigured] = useState(false);
-  const [showOneMinKey, setShowOneMinKey] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [braveApiKey, setBraveApiKey] = useState('');
-  const [tavilyApiKey, setTavilyApiKey] = useState('');
-  const [apifyApiKey, setApifyApiKey] = useState('');
+  // Noekler som fortsatt kan settes herfra.
+  // KI-noeklene (1_MIN_AI, GEMINI_API_KEY, BRAVE_API_KEY, TAVILY_API_KEY,
+  // APIFY_API_KEY) settes som miljoevariabler i Railway og har derfor ingen
+  // felt i panelet lenger.
   const [ticketmasterApiKey, setTicketmasterApiKey] = useState('');
-  const [geminiConfigured, setGeminiConfigured] = useState(false);
-  const [braveConfigured, setBraveConfigured] = useState(false);
-  const [tavilyConfigured, setTavilyConfigured] = useState(false);
-  const [apifyConfigured, setApifyConfigured] = useState(false);
   const [ticketmasterConfigured, setTicketmasterConfigured] = useState(false);
-  const [showGeminiKey, setShowGeminiKey] = useState(false);
-  const [showBraveKey, setShowBraveKey] = useState(false);
-  const [showTavilyKey, setShowTavilyKey] = useState(false);
-  const [showApifyKey, setShowApifyKey] = useState(false);
   const [showTicketmasterKey, setShowTicketmasterKey] = useState(false);
   const [testingAi, setTestingAi] = useState(false);
   const [aiTestResult, setAiTestResult] = useState<string | null>(null);
@@ -129,16 +117,6 @@ export default function InnstillingerPage() {
       const res = await fetch('/api/settings');
       const json = await res.json();
       if (json.success && json.data) {
-        setOneMinApiKey(json.data.oneMinApiKey || '');
-        setOneMinConfigured(json.data.oneMinConfigured);
-        setGeminiApiKey(json.data.geminiApiKey || '');
-        setGeminiConfigured(json.data.geminiConfigured);
-        setBraveApiKey(json.data.braveApiKey || '');
-        setBraveConfigured(json.data.braveConfigured);
-        setTavilyApiKey(json.data.tavilyApiKey || '');
-        setTavilyConfigured(json.data.tavilyConfigured);
-        setApifyApiKey(json.data.apifyApiKey || '');
-        setApifyConfigured(json.data.apifyConfigured);
         setTicketmasterApiKey(json.data.ticketmasterApiKey || '');
         setTicketmasterConfigured(json.data.ticketmasterConfigured);
         setResendApiKey(json.data.resendApiKey || '');
@@ -205,11 +183,6 @@ export default function InnstillingerPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          oneMinApiKey,
-          geminiApiKey,
-          braveApiKey,
-          tavilyApiKey,
-          apifyApiKey,
           ticketmasterApiKey,
           resendApiKey,
           smtpUrl,
@@ -453,10 +426,7 @@ export default function InnstillingerPage() {
           }`}
         >
           <KeyRound className="w-4 h-4" />
-          KI & API-nøkler
-          {geminiConfigured && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block ml-1" />
-          )}
+          API-nøkler
         </button>
 
         <button
@@ -550,128 +520,27 @@ export default function InnstillingerPage() {
       {/* TAB 1: BYOK */}
       {activeTab === 'byok' && (
         <div className="space-y-6">
-          {/* 1min.AI Seksjon (Railway 1_MIN_AI / OpenAI-kompatibel / EU GDPR) */}
-          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  1min.AI API-nøkkel (1_MIN_AI i Railway)
-                </h3>
-                <p className="text-sm text-foreground-muted mt-1">
-                  Brukes til AI-velkomstmailer til nystartede bedrifter, chatboten og innholdsgenerering. Støtter OpenAI-kompatible modeller med europeisk databehandling (EU GDPR).
-                </p>
-              </div>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  oneMinConfigured
-                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                }`}
-              >
-                {oneMinConfigured ? 'Tilkoblet (1_MIN_AI Aktiv)' : 'Ikke registrert ennå'}
-              </span>
-            </div>
 
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
-                1min.AI API-nøkkel (eller satt i Railway under "1_MIN_AI")
-              </label>
-              <div className="relative">
-                <input
-                  type={showOneMinKey ? 'text' : 'password'}
-                  value={oneMinApiKey}
-                  onChange={(e) => setOneMinApiKey(e.target.value)}
-                  placeholder="Skriv inn nøkkel eller la stå for å arve fra Railway (1_MIN_AI)..."
-                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowOneMinKey(!showOneMinKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
-                >
-                  {showOneMinKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
-                <span className="text-foreground-muted">
-                  Ivaretar GDPR og personvernregler for offentlig sektor ved å prioritere modeller vertet i EU/EØS.
-                </span>
-                <a
-                  href="https://docs.1min.ai/docs/api/openai-compatible"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
-                >
-                  1min.AI API Dokumentasjon <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Google Gemini Seksjon */}
-          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-indigo-500" />
-                  Google Gemini API (Valgfri / Alternativ BYOK)
-                </h3>
-                <p className="text-sm text-foreground-muted mt-1">
-                  Valgfri sekundær nøkkel for multimodal bildeanalyse og Gemini 2.5 Flash.
-                </p>
-              </div>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  geminiConfigured
-                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                    : 'bg-surface-muted text-foreground-subtle border border-border'
-                }`}
-              >
-                {geminiConfigured ? 'Tilkoblet (Aktiv)' : 'Valgfritt'}
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
-                Gemini API-nøkkel
-              </label>
-              <div className="relative">
-                <input
-                  type={showGeminiKey ? 'text' : 'password'}
-                  value={geminiApiKey}
-                  onChange={(e) => setGeminiApiKey(e.target.value)}
-                  placeholder="AIzaSy..."
-                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowGeminiKey(!showGeminiKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
-                >
-                  {showGeminiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
-                <span className="text-foreground-muted">
-                  Nøkkelen lagres trygt og benyttes kun for Tønsberglivet.
-                </span>
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
-                >
-                  Google AI Studio <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
+          {/* Test av KI-forbindelsen. Noeklene settes som miljoevariabler i
+              Railway (1_MIN_AI, GEMINI_API_KEY) eller leses fra allerede
+              lagrede verdier, saa panelet trenger ikke egne noekkelfelt. */}
+          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-4">
+            <div>
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Zap className="w-5 h-5 text-primary" />
+                Test KI-forbindelsen
+              </h3>
+              <p className="text-sm text-foreground-muted mt-1">
+                Sender en kort testforespoersel til AI-endepunktet og rapporterer hva
+                serveren svarer. Noekler settes som miljoevariabler i Railway.
+              </p>
             </div>
 
             <div className="flex items-center gap-4 pt-2">
               <button
                 type="button"
                 onClick={testAiConnection}
-                disabled={testingAi || (!geminiApiKey && !geminiConfigured && !oneMinConfigured && !oneMinApiKey)}
+                disabled={testingAi}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-surface-muted hover:bg-border text-foreground font-bold text-xs rounded-xl transition-colors border border-border disabled:opacity-50"
               >
                 {testingAi ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-primary" />}
@@ -680,183 +549,6 @@ export default function InnstillingerPage() {
               {aiTestResult && (
                 <span className="text-xs font-medium text-foreground">{aiTestResult}</span>
               )}
-            </div>
-          </div>
-
-          {/* BRAVE SEARCH API */}
-          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <ExternalLink className="w-5 h-5 text-orange-500" />
-                  Brave Search API (Sanntids nettsøk)
-                </h3>
-                <p className="text-sm text-foreground-muted mt-1">
-                  Gir den autonome agenten lynrask tilgang til ferske nyheter om Tønsberg, åpningstider, pressemeldinger og nettkilder.
-                </p>
-              </div>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  braveConfigured
-                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                }`}
-              >
-                {braveConfigured ? 'Aktiv (Tilkoblet)' : 'Valgfri / Ikke satt'}
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
-                Brave Search API-nøkkel
-              </label>
-              <div className="relative">
-                <input
-                  type={showBraveKey ? 'text' : 'password'}
-                  value={braveApiKey}
-                  onChange={(e) => setBraveApiKey(e.target.value)}
-                  placeholder="BSA..."
-                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowBraveKey(!showBraveKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
-                >
-                  {showBraveKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
-                <span className="text-foreground-muted">
-                  Gir agenten mulighet til å utføre uavhengige Brave-søk.
-                </span>
-                <a
-                  href="https://brave.com/search/api/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
-                >
-                  Hent Brave API-nøkkel (gratis kvote) <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* TAVILY SEARCH API */}
-          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-indigo-500" />
-                  Tavily AI Search API (Dyp Research)
-                </h3>
-                <p className="text-sm text-foreground-muted mt-1">
-                  Spesialdesignet forsknings- og faktasøkemotor for LLM-agenter. Finner faktabaserte kilder og sammendrag for artikler.
-                </p>
-              </div>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  tavilyConfigured
-                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                    : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
-                }`}
-              >
-                {tavilyConfigured ? 'Aktiv (Tilkoblet)' : 'Valgfri / Ikke satt'}
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
-                Tavily API-nøkkel
-              </label>
-              <div className="relative">
-                <input
-                  type={showTavilyKey ? 'text' : 'password'}
-                  value={tavilyApiKey}
-                  onChange={(e) => setTavilyApiKey(e.target.value)}
-                  placeholder="tvly-..."
-                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowTavilyKey(!showTavilyKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
-                >
-                  {showTavilyKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
-                <span className="text-foreground-muted">
-                  Syntetiserer forskningsrapporter og verifiserer kilder automatisk.
-                </span>
-                <a
-                  href="https://tavily.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
-                >
-                  Hent gratis Tavily API-nøkkel <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* APIFY WEB SCRAPER API */}
-          <div className="bg-surface rounded-3xl border border-border p-6 sm:p-8 space-y-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-emerald-500" />
-                  Apify Web Scraper API (Nettleser- og dokumentskraping)
-                </h3>
-                <p className="text-sm text-foreground-muted mt-1">
-                  Lar agenten skrape og hente komplett innhold fra eksterne nettsider (Foynhagen, Oseberg kulturhus, Tønsberg kommune m.m.).
-                </p>
-              </div>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  apifyConfigured
-                    ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                    : 'bg-surface-muted text-foreground-muted border border-border'
-                }`}
-              >
-                {apifyConfigured ? 'Aktiv (Tilkoblet)' : 'Innebygd direkteleser aktiv'}
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
-                Apify API-token
-              </label>
-              <div className="relative">
-                <input
-                  type={showApifyKey ? 'text' : 'password'}
-                  value={apifyApiKey}
-                  onChange={(e) => setApifyApiKey(e.target.value)}
-                  placeholder="apify_api_..."
-                  className="w-full pr-12 pl-4 py-3 bg-background border border-border rounded-xl text-sm font-mono text-foreground focus:ring-2 focus:ring-primary outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowApifyKey(!showApifyKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground p-1"
-                >
-                  {showApifyKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
-                <span className="text-foreground-muted">
-                  Systemet har også innebygd resilient direkteleser som fallback.
-                </span>
-                <a
-                  href="https://apify.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-bold inline-flex items-center gap-1"
-                >
-                  Hent Apify-token <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
             </div>
           </div>
 
