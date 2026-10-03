@@ -39,6 +39,7 @@ const adminNav = [
   { label: 'Team & Samhandling',  href: '/admin/team',              icon: UserCheck,     badge: 'team' as const },
   { label: 'Autonom Agent Hub',   href: '/admin/agent',             icon: Bot,           badge: 'live' as const },
   { label: 'Artikler',            href: '/admin/artikler',          icon: FileText },
+  { label: 'Sider',               href: '/admin/sider',             icon: FileText },
   { label: 'Torvleie & Byrom',    href: '/admin/booking',           icon: MapPin },
   { label: 'Byskjermer & Marked', href: '/admin/marketing',         icon: Tv },
   { label: 'Trafikk & Innsikt',   href: '/admin/insights',          icon: TrendingUp,    badge: 'live' as const },
