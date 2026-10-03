@@ -11,6 +11,8 @@
  */
 
 import archiveData from '@/data/news-archive.json';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import {
   formatIsoDate,
   estimateReadTime,
@@ -24,6 +26,45 @@ import {
 } from '@/lib/news-meta';
 
 export * from '@/lib/news-meta';
+
+/**
+ * Bildestiene i arkivet er tekst, og en ny import kan laste ned samme bilde med
+ * en annen filendelse. Da peker arkivet på en fil som ikke finnes, og kortet
+ * viser et ødelagt bilde. Her velger vi filen som faktisk ligger på disk.
+ *
+ * Kjøres én gang per serverprosess (ARCHIVED_NEWS bygges ved modullasting).
+ */
+const LOCAL_IMAGE_CACHE = new Map<string, string>();
+
+function resolveLocalImage(src: string | undefined): string | undefined {
+  if (!src) return undefined;
+  if (!src.startsWith('/images/')) return src;
+
+  const cached = LOCAL_IMAGE_CACHE.get(src);
+  if (cached) return cached;
+
+  const dot = src.lastIndexOf('.');
+  const stem = dot > src.lastIndexOf('/') ? src.slice(0, dot) : src;
+  const candidates = [
+    src,
+    `${stem}.webp`,
+    `${stem}.jpg`,
+    `${stem}.jpeg`,
+    `${stem}.png`,
+    `${stem}.avif`,
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(path.join(process.cwd(), 'public', candidate))) {
+      LOCAL_IMAGE_CACHE.set(src, candidate);
+      return candidate;
+    }
+  }
+
+  // Ingen treff: behold originalen så feilen er synlig i loggen, ikke skjult.
+  console.warn(`[nyheter] Bilde mangler på disk: ${src}`);
+  return src;
+}
 
 interface ArchiveImage {
   src: string;
@@ -76,10 +117,12 @@ export const ARCHIVED_NEWS: NewsArticle[] = ARCHIVE_ENTRIES.map((entry) => {
     author: entry.author,
     excerpt: entry.excerpt,
     content: plainText,
-    blocks: entry.blocks,
+    blocks: entry.blocks.map((block) =>
+      block.type === 'image' ? { ...block, src: resolveLocalImage(block.src) ?? block.src } : block,
+    ),
     tags: [],
     readTime: estimateReadTime(plainText.join(' ')),
-    imageUrl: entry.featuredImage?.src,
+    imageUrl: resolveLocalImage(entry.featuredImage?.src),
     imageAlt: entry.featuredImage?.alt ?? entry.title,
     origin: 'arkiv' as const,
     sourceUrl: entry.sourceUrl,

@@ -91,8 +91,8 @@
   "featuredImage": {
    "src": "/images/nyheter/tusenvis-velger-regionen-var-slik-hyller-vi-dem.jpg",
    "alt": "Tusenvis velger regionen vår – slik hyller vi dem",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tusenvis-velger-regionen-var-slik-hyller-vi-dem/"
  },
@@ -186,8 +186,8 @@
   "featuredImage": {
    "src": "/images/nyheter/faerderbiennalen-setter-vestfold-pa-verdenskartet.jpg",
    "alt": "Færderbiennalen setter Vestfold på verdenskartet",
-   "width": 400,
-   "height": 600
+   "width": 1066,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/faerderbiennalen-setter-vestfold-pa-verdenskartet/"
  },
@@ -424,8 +424,8 @@
   "featuredImage": {
    "src": "/images/nyheter/fra-kjokkengulvet-til-torvet-na-vager-helene-a-satse-pa-drommen.jpg",
    "alt": "Fra kjøkkengulvet til Torvet: Nå våger Helene å satse på drømmen",
-   "width": 450,
-   "height": 600
+   "width": 1201,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/fra-kjokkengulvet-til-torvet-na-vager-helene-a-satse-pa-drommen/"
  },
@@ -507,8 +507,8 @@
   "featuredImage": {
    "src": "/images/nyheter/na-kles-byen-i-regnbuens-farger.jpg",
    "alt": "Nå kles byen i regnbuens farger",
-   "width": 600,
-   "height": 349
+   "width": 1600,
+   "height": 930
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/na-kles-byen-i-regnbuens-farger/"
  },
@@ -595,8 +595,8 @@
   "featuredImage": {
    "src": "/images/nyheter/grundergata-dette-er-kulturarven-var.jpg",
    "alt": "Gründergata: – Dette er kulturarven vår",
-   "width": 600,
-   "height": 450
+   "width": 1600,
+   "height": 1200
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/grundergata-dette-er-kulturarven-var/"
  },
@@ -667,8 +667,8 @@
   "featuredImage": {
    "src": "/images/nyheter/pa-tokt-inn-i-tonsbergs-kystkultur.jpg",
    "alt": "På tokt inn i Tønsbergs kystkultur",
-   "width": 600,
-   "height": 338
+   "width": 1600,
+   "height": 900
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/pa-tokt-inn-i-tonsbergs-kystkultur/"
  },
@@ -726,8 +726,8 @@
   "featuredImage": {
    "src": "/images/nyheter/gratiskonsert-en-utadaesjaelaplevelse-pa-brygga.jpg",
    "alt": "Gratiskonsert: En «utadæsjælåplevelse» på brygga",
-   "width": 600,
-   "height": 453
+   "width": 1600,
+   "height": 1207
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/gratiskonsert-en-utadaesjaelaplevelse-pa-brygga/"
  },
@@ -798,8 +798,8 @@
   "featuredImage": {
    "src": "/images/nyheter/100-ar-siden-sist-na-skjer-det-igjen.webp",
    "alt": "100 år siden sist – nå skjer det igjen",
-   "width": 600,
-   "height": 394
+   "width": 618,
+   "height": 406
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/100-ar-siden-sist-na-skjer-det-igjen/"
  },
@@ -866,8 +866,8 @@
   "featuredImage": {
    "src": "/images/nyheter/velkommen-til-tonsbergdagen-2026.jpg",
    "alt": "Velkommen til Tønsbergdagen 2026",
-   "width": 598,
-   "height": 600
+   "width": 1366,
+   "height": 1370
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/velkommen-til-tonsbergdagen-2026/"
  },
@@ -929,8 +929,8 @@
   "featuredImage": {
    "src": "/images/nyheter/vikingodden-der-var-egen-historie-leves-ut-i-natid.jpg",
    "alt": "Vikingodden: Der vår egen historie leves ut i nåtid",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/vikingodden-der-var-egen-historie-leves-ut-i-natid/"
  },
@@ -1004,10 +1004,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/tonsbergprisen-som-utstillingsvindu-for-lokale-bedrifter.webp",
+   "src": "/images/nyheter/tonsbergprisen-som-utstillingsvindu-for-lokale-bedrifter.jpg",
    "alt": "Tønsbergprisen som utstillingsvindu for lokale bedrifter",
-   "width": 600,
-   "height": 553
+   "width": 1290,
+   "height": 1190
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsbergprisen-som-utstillingsvindu-for-lokale-bedrifter/"
  },
@@ -1066,10 +1066,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/with-til-seterkafeen-i-sommer.webp",
+   "src": "/images/nyheter/with-til-seterkafeen-i-sommer.jpg",
    "alt": "With til Seterkafeen i sommer",
-   "width": 600,
-   "height": 400
+   "width": 1280,
+   "height": 853
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/with-til-seterkafeen-i-sommer/"
  },
@@ -1134,8 +1134,8 @@
   "featuredImage": {
    "src": "/images/nyheter/advokatfirmaet-hvor-menneskene-kommer-forst.jpg",
    "alt": "Advokatfirmaet hvor menneskene kommer først",
-   "width": 600,
-   "height": 450
+   "width": 1600,
+   "height": 1200
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/advokatfirmaet-hvor-menneskene-kommer-forst/"
  },
@@ -1228,8 +1228,8 @@
   "featuredImage": {
    "src": "/images/nyheter/skagerrak-sparebank-lokal-for-alle-penga.jpg",
    "alt": "Skagerrak Sparebank, lokalbanken for alle penga",
-   "width": 596,
-   "height": 600
+   "width": 1440,
+   "height": 1450
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/skagerrak-sparebank-lokal-for-alle-penga/"
  },
@@ -1328,8 +1328,8 @@
   "featuredImage": {
    "src": "/images/nyheter/en-lordag-for-gjenbruk-handel-og-hyggelige-moter.jpg",
    "alt": "En lørdag med gjenbruk, handel og hyggelige møter",
-   "width": 600,
-   "height": 448
+   "width": 1440,
+   "height": 1075
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/en-lordag-for-gjenbruk-handel-og-hyggelige-moter/"
  },
@@ -1456,8 +1456,8 @@
   "featuredImage": {
    "src": "/images/nyheter/feumer-et-nytt-europeisk-bistrokonsept-pa-tonsberg-brygge.jpg",
    "alt": "Feumer – et nytt europeisk bistrokonsept på Tønsberg brygge",
-   "width": 600,
-   "height": 338
+   "width": 1600,
+   "height": 900
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/feumer-et-nytt-europeisk-bistrokonsept-pa-tonsberg-brygge/"
  },
@@ -1536,10 +1536,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/gamle-solvskjeer-blir-nye-smykker.webp",
+   "src": "/images/nyheter/gamle-solvskjeer-blir-nye-smykker.jpg",
    "alt": "Gamle sølvskjeer blir nye smykker",
-   "width": 451,
-   "height": 600
+   "width": 896,
+   "height": 1193
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/gamle-solvskjeer-blir-nye-smykker/"
  },
@@ -1598,10 +1598,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/etterlyser-tydeligere-sentrumssatsing-i-ny-kultur-og-reiselivsstrategi.webp",
+   "src": "/images/nyheter/etterlyser-tydeligere-sentrumssatsing-i-ny-kultur-og-reiselivsstrategi.jpg",
    "alt": "Etterlyser tydeligere sentrumssatsing i ny kultur- og reiselivsstrategi",
-   "width": 600,
-   "height": 338
+   "width": 1600,
+   "height": 900
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/etterlyser-tydeligere-sentrumssatsing-i-ny-kultur-og-reiselivsstrategi/"
  },
@@ -1698,8 +1698,8 @@
   "featuredImage": {
    "src": "/images/nyheter/rukus-group-samler-krefter-for-helarskultur-i-tonsberg.jpg",
    "alt": "Rukus Group samler krefter for helårskultur i Tønsberg",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/rukus-group-samler-krefter-for-helarskultur-i-tonsberg/"
  },
@@ -1840,10 +1840,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/de-nominerte-er-2.webp",
+   "src": "/images/nyheter/de-nominerte-er-2.jpg",
    "alt": "De nominerte er…..",
-   "width": 600,
-   "height": 440
+   "width": 1600,
+   "height": 1174
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/de-nominerte-er-2/"
  },
@@ -2211,8 +2211,8 @@
   "featuredImage": {
    "src": "/images/nyheter/variert-arbeidsliv-og-mer-tid-til-det-som-faktisk-betyr-noe-derfor-velger-sa-mange-tonsberg.avif",
    "alt": "Variert arbeidsliv og mer tid til det som faktisk betyr noe: Derfor velger så mange Tønsberg",
-   "width": 600,
-   "height": 399
+   "width": 1600,
+   "height": 1064
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/variert-arbeidsliv-og-mer-tid-til-det-som-faktisk-betyr-noe-derfor-velger-sa-mange-tonsberg/"
  },
@@ -2283,10 +2283,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/nyapning-i-torvgarden-seven-utvider-sitt-univers.webp",
+   "src": "/images/nyheter/nyapning-i-torvgarden-seven-utvider-sitt-univers.jpg",
    "alt": "Nyåpning i Torvgården: Seven utvider sitt univers",
-   "width": 600,
-   "height": 482
+   "width": 608,
+   "height": 488
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/nyapning-i-torvgarden-seven-utvider-sitt-univers/"
  },
@@ -2342,8 +2342,8 @@
   "featuredImage": {
    "src": "/images/nyheter/tonsbergfest-2026-en-reise-gjennom-tonsbergregionens-historie.jpg",
    "alt": "Tønsbergfest 2026, en reise gjennom Tønsbergregionens historie",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsbergfest-2026-en-reise-gjennom-tonsbergregionens-historie/"
  },
@@ -2438,10 +2438,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/stolpejakten-gjor-tonsberg-og-faerder-til-et-toppturmal.webp",
+   "src": "/images/nyheter/stolpejakten-gjor-tonsberg-og-faerder-til-et-toppturmal.jpg",
    "alt": "Stolpejakten gjør Tønsberg og Færder til et toppturmål",
-   "width": 469,
-   "height": 600
+   "width": 895,
+   "height": 1145
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/stolpejakten-gjor-tonsberg-og-faerder-til-et-toppturmal/"
  },
@@ -2498,8 +2498,8 @@
   "featuredImage": {
    "src": "/images/nyheter/horingssvar-til-tonsberg-kommune.jpg",
    "alt": "Sentrum, næringsliv og helårige opplevelser må få en tydeligere plass",
-   "width": 600,
-   "height": 199
+   "width": 1600,
+   "height": 532
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/sentrum-naeringsliv-og-helarige-opplevelser-ma-fa-en-tydeligere-plass/"
  },
@@ -2579,8 +2579,8 @@
   "featuredImage": {
    "src": "/images/nyheter/rekordengasjement-for-plastryddedagen.jpg",
    "alt": "Rekordengasjement for plastryddedagen",
-   "width": 600,
-   "height": 393
+   "width": 1500,
+   "height": 982
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/rekordengasjement-for-plastryddedagen/"
  },
@@ -2665,8 +2665,8 @@
   "featuredImage": {
    "src": "/images/nyheter/tonsberg-sentrum-har-alt-du-trenger-til-varen-og-paske.jpg",
    "alt": "Tønsberg sentrum har alt du trenger til våren og påske",
-   "width": 450,
-   "height": 600
+   "width": 1600,
+   "height": 1200
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsberg-sentrum-har-alt-du-trenger-til-varen-og-paske/"
  },
@@ -2890,8 +2890,8 @@
   "featuredImage": {
    "src": "/images/nyheter/anja-vil-sette-vikingene-og-tonsberg-pa-kartet.jpg",
    "alt": "Anja vil sette vikingene og Tønsberg på kartet",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/anja-vil-sette-vikingene-og-tonsberg-pa-kartet/"
  },
@@ -2974,8 +2974,8 @@
   "featuredImage": {
    "src": "/images/nyheter/hvem-fortjener-a-bli-hedret-i-tonsberg-og-faerder.jpg",
    "alt": "Hvem fortjener å bli hedret i Tønsberg og Færder?",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/hvem-fortjener-a-bli-hedret-i-tonsberg-og-faerder/"
  },
@@ -3108,8 +3108,8 @@
   "featuredImage": {
    "src": "/images/nyheter/vil-produsere-fremtidens-mat-lokalt-i-tonsberg.jpg",
    "alt": "Vil produsere fremtidens mat lokalt i Tønsberg",
-   "width": 600,
-   "height": 527
+   "width": 1440,
+   "height": 1264
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/vil-produsere-fremtidens-mat-lokalt-i-tonsberg/"
  },
@@ -3151,8 +3151,8 @@
   "featuredImage": {
    "src": "/images/nyheter/handelens-dager-19-21-mars.jpg",
    "alt": "Handelens dager 19.–21. mars",
-   "width": 450,
-   "height": 600
+   "width": 1201,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/handelens-dager-19-21-mars/"
  },
@@ -3205,8 +3205,8 @@
   "featuredImage": {
    "src": "/images/nyheter/gjenbruksmarked-blir-til-brukt-og-vintage-pa-farmannstorvet.jpg",
    "alt": "Gjenbruksmarked blir til «Brukt og Vintage» på Farmannstorvet",
-   "width": 600,
-   "height": 433
+   "width": 972,
+   "height": 702
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/gjenbruksmarked-blir-til-brukt-og-vintage-pa-farmannstorvet/"
  },
@@ -3269,10 +3269,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/quality-hotel-tonsberg-mobiliserer-til-hjerteaksjon-for-unicef.webp",
+   "src": "/images/nyheter/quality-hotel-tonsberg-mobiliserer-til-hjerteaksjon-for-unicef.jpg",
    "alt": "Quality Hotel Tønsberg mobiliserer til hjerteaksjon for UNICEF",
-   "width": 600,
-   "height": 449
+   "width": 1600,
+   "height": 1198
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/quality-hotel-tonsberg-mobiliserer-til-hjerteaksjon-for-unicef/"
  },
@@ -3332,10 +3332,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/polse-og-politikk-premiere.webp",
+   "src": "/images/nyheter/polse-og-politikk-premiere.jpg",
    "alt": "Pølse og politikk premiere!",
-   "width": 600,
-   "height": 250
+   "width": 618,
+   "height": 258
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/polse-og-politikk-premiere/"
  },
@@ -3442,10 +3442,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/barnehager-i-toppklasse-gjor-tonsberg-og-faerder-attraktive-for-barnefamilier.webp",
+   "src": "/images/nyheter/barnehager-i-toppklasse-gjor-tonsberg-og-faerder-attraktive-for-barnefamilier.jpg",
    "alt": "Barnehager i toppklasse gjør Tønsberg og Færder attraktive for barnefamilier",
-   "width": 461,
-   "height": 600
+   "width": 1229,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/barnehager-i-toppklasse-gjor-tonsberg-og-faerder-attraktive-for-barnefamilier/"
  },
@@ -3532,10 +3532,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/vinterferien-som-tok-av.webp",
+   "src": "/images/nyheter/vinterferien-som-tok-av.jpg",
    "alt": "Vinterferien som tok av",
-   "width": 600,
-   "height": 600
+   "width": 1080,
+   "height": 1080
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/vinterferien-som-tok-av/"
  },
@@ -3554,10 +3554,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/tonsberglivet-styrker-kompetansen-pa-serveringsbransjen.webp",
+   "src": "/images/nyheter/tonsberglivet-styrker-kompetansen-pa-serveringsbransjen.jpg",
    "alt": "Tønsberglivet styrker kompetansen på serveringsbransjen",
-   "width": 600,
-   "height": 340
+   "width": 750,
+   "height": 425
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsberglivet-styrker-kompetansen-pa-serveringsbransjen/"
  },
@@ -3596,10 +3596,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/er-du-medlem-i-et-lag-eller-i-en-frivillig-organisasjon-se-hit.webp",
+   "src": "/images/nyheter/er-du-medlem-i-et-lag-eller-i-en-frivillig-organisasjon-se-hit.jpg",
    "alt": "Er du medlem i et lag eller i en frivillig organisasjon? Se hit",
-   "width": 600,
-   "height": 429
+   "width": 1527,
+   "height": 1091
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/er-du-medlem-i-et-lag-eller-i-en-frivillig-organisasjon-se-hit/"
  },
@@ -3667,8 +3667,8 @@
   "featuredImage": {
    "src": "/images/nyheter/et-funn-som-forteller-oss-noe-om-historien-var.jpg",
    "alt": "Et funn som forteller oss noe om historien vår",
-   "width": 600,
-   "height": 486
+   "width": 1050,
+   "height": 850
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/et-funn-som-forteller-oss-noe-om-historien-var/"
  },
@@ -3769,8 +3769,8 @@
   "featuredImage": {
    "src": "/images/nyheter/otropediteknikk-er-bedriften-som-forandrer-liv.jpg",
    "alt": "Otropediteknikk er bedriften som forandrer liv",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/otropediteknikk-er-bedriften-som-forandrer-liv/"
  },
@@ -3851,8 +3851,8 @@
   "featuredImage": {
    "src": "/images/nyheter/farmannstorvet-loftes-frem-nasjonalt.jpg",
    "alt": "Farmannstorvet løftes frem nasjonalt",
-   "width": 600,
-   "height": 338
+   "width": 1600,
+   "height": 900
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/farmannstorvet-loftes-frem-nasjonalt/"
  },
@@ -3907,10 +3907,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/hvordan-ble-valentinsdagen-til.webp",
+   "src": "/images/nyheter/hvordan-ble-valentinsdagen-til.jpg",
    "alt": "Hvordan ble valentinsdagen til?",
-   "width": 517,
-   "height": 600
+   "width": 1180,
+   "height": 1370
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/hvordan-ble-valentinsdagen-til/"
  },
@@ -3989,7 +3989,7 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/fra-grunderliv-til-ol-start-matthew-smiths-uvanlige-vei-fra-johannesburg-til-tonsberg.webp",
+   "src": "/images/nyheter/fra-grunderliv-til-ol-start-matthew-smiths-uvanlige-vei-fra-johannesburg-til-tonsberg.jpg",
    "alt": "Fra gründerliv til OL‑start, Matthew Smiths uvanlige vei fra Johannesburg til Tønsberg",
    "width": 510,
    "height": 502
@@ -4067,7 +4067,7 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/slik-kan-du-glede-mor-pa-morsdagen-i-tonsberg.webp",
+   "src": "/images/nyheter/slik-kan-du-glede-mor-pa-morsdagen-i-tonsberg.jpg",
    "alt": "Her er våre beste morsdagstips",
    "width": 454,
    "height": 392
@@ -4120,8 +4120,8 @@
   "featuredImage": {
    "src": "/images/nyheter/legg-vinterferien-fra-norges-eldste-by-til-verdens-ende.jpg",
    "alt": "Legg vinterferien fra Norges eldste by til Verdens Ende",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/legg-vinterferien-fra-norges-eldste-by-til-verdens-ende/"
  },
@@ -4157,10 +4157,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/er-du-medlem-i-et-lag-eller-i-en-frivillig-organisasjon-se-hit.webp",
+   "src": "/images/nyheter/er-du-medlem-i-et-lag-eller-i-en-frivillig-organisasjon-se-hit.jpg",
    "alt": "Torvboder på Tønsberg Torv klare til bruk!",
-   "width": 600,
-   "height": 429
+   "width": 1527,
+   "height": 1091
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/torvboder-pa-tonsberg-torv-klare-til-bruk/"
  },
@@ -4237,8 +4237,8 @@
   "featuredImage": {
    "src": "/images/nyheter/na-kan-du-fa-drop-in-kontorplass-midt-i-tonsberg-sentrum.jpg",
    "alt": "Nå kan du få drop-in kontorplass midt i Tønsberg sentrum",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/na-kan-du-fa-drop-in-kontorplass-midt-i-tonsberg-sentrum/"
  },
@@ -4283,8 +4283,8 @@
   "featuredImage": {
    "src": "/images/nyheter/tonsberglivet-henter-tv-2-leder.jpg",
    "alt": "Tønsberglivet henter TV 2-leder",
-   "width": 600,
-   "height": 450
+   "width": 1600,
+   "height": 1200
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsberglivet-henter-tv-2-leder/"
  },
@@ -4328,10 +4328,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/hele-tonsberg-far-leke-med-dukker.webp",
+   "src": "/images/nyheter/hele-tonsberg-far-leke-med-dukker.jpg",
    "alt": "Hele Tønsberg får leke med dukker",
-   "width": 600,
-   "height": 341
+   "width": 1600,
+   "height": 909
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/hele-tonsberg-far-leke-med-dukker/"
  },
@@ -4452,8 +4452,8 @@
   "featuredImage": {
    "src": "/images/nyheter/vintertrening-i-tonsberg-januar-er-maneden-der-mange-vil-tilbake-i-rutine.jpg",
    "alt": "Vintertrening i Tønsberg: – Januar er måneden der mange vil tilbake i rutine",
-   "width": 600,
-   "height": 485
+   "width": 1488,
+   "height": 1204
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/vintertrening-i-tonsberg-januar-er-maneden-der-mange-vil-tilbake-i-rutine/"
  },
@@ -4518,8 +4518,8 @@
   "featuredImage": {
    "src": "/images/nyheter/brodrene-freberg-vant-prestisjetung-pris.jpg",
    "alt": "Brødrene Freberg vant prestisjetung pris",
-   "width": 528,
-   "height": 600
+   "width": 768,
+   "height": 872
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/brodrene-freberg-vant-prestisjetung-pris/"
  },
@@ -4699,10 +4699,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/gabbi-apner-galleri-49-i-kjente-lokaler.webp",
+   "src": "/images/nyheter/gabbi-apner-galleri-49-i-kjente-lokaler.jpg",
    "alt": "Gabbi åpner Galleri 49 i kjente lokaler",
-   "width": 449,
-   "height": 600
+   "width": 731,
+   "height": 976
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/gabbi-apner-galleri-49-i-kjente-lokaler/"
  },
@@ -4757,8 +4757,8 @@
   "featuredImage": {
    "src": "/images/nyheter/nytt-ar-i-tonsberg-og-byen-inviterer-til-gode-kupp.jpg",
    "alt": "Nytt år i Tønsberg, og byen inviterer til gode kupp",
-   "width": 400,
-   "height": 600
+   "width": 1067,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/nytt-ar-i-tonsberg-og-byen-inviterer-til-gode-kupp/"
  },
@@ -4792,8 +4792,8 @@
   "featuredImage": {
    "src": "/images/nyheter/her-horer-du-tonsberglivets-egen-podkast.jpg",
    "alt": "Her hører du Tønsberglivets egen podkast",
-   "width": 600,
-   "height": 600
+   "width": 1600,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/her-horer-du-tonsberglivets-egen-podkast/"
  },
@@ -4859,8 +4859,8 @@
   "featuredImage": {
    "src": "/images/nyheter/interkommunalt-planprogram-for-kaldnes-vest.jpg",
    "alt": "Interkommunalt planprogram for Kaldnes vest",
-   "width": 600,
-   "height": 346
+   "width": 1290,
+   "height": 744
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/interkommunalt-planprogram-for-kaldnes-vest/"
  },
@@ -4982,8 +4982,8 @@
   "featuredImage": {
    "src": "/images/nyheter/horingssvar-til-tonsberg-kommune.jpg",
    "alt": "Høringssvar til Tønsberg kommune",
-   "width": 600,
-   "height": 199
+   "width": 1600,
+   "height": 532
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/horingssvar-til-tonsberg-kommune/"
  },
@@ -5012,8 +5012,8 @@
   "featuredImage": {
    "src": "/images/nyheter/apen-julaften-i-tonsberg-med-julefilm-juletrepynting-og-julemiddag.jpg",
    "alt": "Åpen julaften i Tønsberg – med julefilm, juletrepynting og julemiddag",
-   "width": 488,
-   "height": 600
+   "width": 1170,
+   "height": 1440
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/apen-julaften-i-tonsberg-med-julefilm-juletrepynting-og-julemiddag/"
  },
@@ -5072,10 +5072,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/marit-bringer-kvalitet-og-godt-humor-til-tonsbergs-undertoyshandel.webp",
+   "src": "/images/nyheter/marit-bringer-kvalitet-og-godt-humor-til-tonsbergs-undertoyshandel.jpg",
    "alt": "Marit bringer kvalitet og godt humør til Tønsbergs undertøyshandel",
-   "width": 600,
-   "height": 432
+   "width": 1600,
+   "height": 1152
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/marit-bringer-kvalitet-og-godt-humor-til-tonsbergs-undertoyshandel/"
  },
@@ -5116,8 +5116,8 @@
   "featuredImage": {
    "src": "/images/nyheter/gratulerer-til-arets-vinner.jpg",
    "alt": "Gratulerer til årets vinner",
-   "width": 600,
-   "height": 520
+   "width": 819,
+   "height": 710
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/gratulerer-til-arets-vinner/"
  },
@@ -5204,10 +5204,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/nar-kreativitet-og-raushet-finner-sin-plass-i-forjulstiden.webp",
+   "src": "/images/nyheter/nar-kreativitet-og-raushet-finner-sin-plass-i-forjulstiden.jpg",
    "alt": "Når kreativitet og raushet finner sin plass i førjulstiden",
-   "width": 404,
-   "height": 600
+   "width": 547,
+   "height": 813
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/nar-kreativitet-og-raushet-finner-sin-plass-i-forjulstiden/"
  },
@@ -5276,8 +5276,8 @@
   "featuredImage": {
    "src": "/images/nyheter/fra-norges-eldste-by-til-verdens-ende-sammen-styrker-vi-regionen.jpg",
    "alt": "Fra Norges eldste by til Verdens Ende – sammen styrker vi regionen",
-   "width": 544,
-   "height": 600
+   "width": 1306,
+   "height": 1440
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/fra-norges-eldste-by-til-verdens-ende-sammen-styrker-vi-regionen/"
  },
@@ -5346,8 +5346,8 @@
   "featuredImage": {
    "src": "/images/nyheter/tonsberglivet-og-tonsberg-domkirke-inviterer-til-norges-lengste-luciatog.jpg",
    "alt": "Tønsberglivet og Tønsberg Domkirke inviterer til Norges lengste Luciatog",
-   "width": 600,
-   "height": 400
+   "width": 1080,
+   "height": 720
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsberglivet-og-tonsberg-domkirke-inviterer-til-norges-lengste-luciatog/"
  },
@@ -5388,8 +5388,8 @@
   "featuredImage": {
    "src": "/images/nyheter/lokal-julehandel-er-en-investering-i-byen.jpg",
    "alt": "Lokal julehandel er en investering i byen",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/lokal-julehandel-er-en-investering-i-byen/"
  },
@@ -5439,8 +5439,8 @@
   "featuredImage": {
    "src": "/images/nyheter/hvilket-vindu-er-julens-fineste.jpg",
    "alt": "Hvilket vindu er julens fineste?",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/hvilket-vindu-er-julens-fineste/"
  },
@@ -5535,10 +5535,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/glod-i-vintermorket-slik-far-du-huden-til-a-strale-for-jul.webp",
+   "src": "/images/nyheter/glod-i-vintermorket-slik-far-du-huden-til-a-strale-for-jul.jpg",
    "alt": "Glød i vintermørket: Slik får du huden til å stråle før jul",
-   "width": 371,
-   "height": 600
+   "width": 989,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/glod-i-vintermorket-slik-far-du-huden-til-a-strale-for-jul/"
  },
@@ -5589,10 +5589,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/julestemning-og-store-planer-hos-bogart.webp",
+   "src": "/images/nyheter/julestemning-og-store-planer-hos-bogart.jpg",
    "alt": "Julestemning og store planer hos Bogart",
-   "width": 411,
-   "height": 600
+   "width": 958,
+   "height": 1400
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/julestemning-og-store-planer-hos-bogart/"
  },
@@ -5673,8 +5673,8 @@
   "featuredImage": {
    "src": "/images/nyheter/velkommen-til-julegrantenning-pa-tonsberg-torv.jpg",
    "alt": "Velkommen til julegrantenning på Tønsberg Torv",
-   "width": 600,
-   "height": 428
+   "width": 1600,
+   "height": 1142
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/velkommen-til-julegrantenning-pa-tonsberg-torv/"
  },
@@ -5757,10 +5757,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/togbutikken-er-tonsbergs-skjulte-drommeunivers-som-har-blitt-en-nasjonal-suksess.webp",
+   "src": "/images/nyheter/togbutikken-er-tonsbergs-skjulte-drommeunivers-som-har-blitt-en-nasjonal-suksess.jpg",
    "alt": "Togbutikken er Tønsbergs skjulte drømmeunivers som har blitt en nasjonal suksess",
-   "width": 502,
-   "height": 600
+   "width": 899,
+   "height": 1075
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/togbutikken-er-tonsbergs-skjulte-drommeunivers-som-har-blitt-en-nasjonal-suksess/"
  },
@@ -5808,10 +5808,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/bli-med-pa-julemoro-hos-vestfoldmuseene.webp",
+   "src": "/images/nyheter/bli-med-pa-julemoro-hos-vestfoldmuseene.jpg",
    "alt": "Bli med på julemoro hos Vestfoldmuseene",
-   "width": 600,
-   "height": 460
+   "width": 615,
+   "height": 471
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/bli-med-pa-julemoro-hos-vestfoldmuseene/"
  },
@@ -5896,8 +5896,8 @@
   "featuredImage": {
    "src": "/images/nyheter/aurora-21-viser-at-lidenskap-kan-sla-skoleprestasjoner.jpg",
    "alt": "Aurora (21) viser at lidenskap kan slå skoleprestasjoner",
-   "width": 600,
-   "height": 450
+   "width": 1200,
+   "height": 900
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/aurora-21-viser-at-lidenskap-kan-sla-skoleprestasjoner/"
  },
@@ -5960,10 +5960,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/kjartan-og-perfekt-ur-gjor-jula-ekstra-spesiell.webp",
+   "src": "/images/nyheter/kjartan-og-perfekt-ur-gjor-jula-ekstra-spesiell.jpg",
    "alt": "Kjartan og Perfekt UR gjør jula ekstra spesiell",
-   "width": 411,
-   "height": 600
+   "width": 818,
+   "height": 1194
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/kjartan-og-perfekt-ur-gjor-jula-ekstra-spesiell/"
  },
@@ -6066,10 +6066,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/20-ar-med-magi-og-musikk-i-tonsberg-domkirke.webp",
+   "src": "/images/nyheter/20-ar-med-magi-og-musikk-i-tonsberg-domkirke.jpg",
    "alt": "20 år med magi og musikk i Tønsberg Domkirke",
-   "width": 600,
-   "height": 396
+   "width": 1600,
+   "height": 1056
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/20-ar-med-magi-og-musikk-i-tonsberg-domkirke/"
  },
@@ -6166,8 +6166,8 @@
   "featuredImage": {
    "src": "/images/nyheter/en-jul-for-alle.jpg",
    "alt": "En jul for alle",
-   "width": 600,
-   "height": 479
+   "width": 1446,
+   "height": 1155
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/en-jul-for-alle/"
  },
@@ -6240,8 +6240,8 @@
   "featuredImage": {
    "src": "/images/nyheter/en-jul-for-alle-2.jpg",
    "alt": "Bidra slik at flere får en god jul",
-   "width": 600,
-   "height": 429
+   "width": 960,
+   "height": 686
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/en-jul-for-alle-2/"
  },
@@ -6290,8 +6290,8 @@
   "featuredImage": {
    "src": "/images/nyheter/epleslang-med-mening-mer-enn-bare-eplemost-fra-tonsberg-og-faerder-ikke-publiser-enda.jpg",
    "alt": "Epleslang med mening – mer enn bare eplemost fra Tønsberg og Færder",
-   "width": 400,
-   "height": 600
+   "width": 667,
+   "height": 1000
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/epleslang-med-mening-mer-enn-bare-eplemost-fra-tonsberg-og-faerder-ikke-publiser-enda/"
  },
@@ -6368,8 +6368,8 @@
   "featuredImage": {
    "src": "/images/nyheter/finn-den-perfekte-farsdagsgaven-i-tonsberg.jpg",
    "alt": "Finn den perfekte farsdagsgaven i Tønsberg",
-   "width": 600,
-   "height": 429
+   "width": 1600,
+   "height": 1143
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/finn-den-perfekte-farsdagsgaven-i-tonsberg/"
  },
@@ -6448,10 +6448,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/vinterlystenning-markerer-starten-pa-julen-i-tonsberg.webp",
+   "src": "/images/nyheter/vinterlystenning-markerer-starten-pa-julen-i-tonsberg.jpg",
    "alt": "Vinterlystenning markerer starten på julen i Tønsberg",
-   "width": 600,
-   "height": 564
+   "width": 823,
+   "height": 774
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/vinterlystenning-markerer-starten-pa-julen-i-tonsberg/"
  },
@@ -6500,10 +6500,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/tekstilaften-hvordan-fa-en-mer-baerekraftig-garderobe.webp",
+   "src": "/images/nyheter/tekstilaften-hvordan-fa-en-mer-baerekraftig-garderobe.jpg",
    "alt": "Tekstilaften: Hvordan få en mer bærekraftig garderobe",
-   "width": 600,
-   "height": 448
+   "width": 1490,
+   "height": 1112
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tekstilaften-hvordan-fa-en-mer-baerekraftig-garderobe/"
  },
@@ -6552,8 +6552,8 @@
   "featuredImage": {
    "src": "/images/nyheter/christian-har-en-forkjaerlighet-for-lokale-ravarer.jpg",
    "alt": "Christian har en forkjærlighet for lokale råvarer",
-   "width": 600,
-   "height": 600
+   "width": 1600,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/christian-har-en-forkjaerlighet-for-lokale-ravarer/"
  },
@@ -6618,8 +6618,8 @@
   "featuredImage": {
    "src": "/images/nyheter/bli-med-pa-vinterlystenning-i-stoltenbergparken.jpg",
    "alt": "Bli med på vinterlystenning i Stoltenbergparken",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/bli-med-pa-vinterlystenning-i-stoltenbergparken/"
  },
@@ -6666,10 +6666,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/nyt-tonsberg-ga-en-okning-i-handel-mat-og-opplevelser.webp",
+   "src": "/images/nyheter/nyt-tonsberg-ga-en-okning-i-handel-mat-og-opplevelser.jpg",
    "alt": "Nyt Tønsberg ga en økning i handel, mat og opplevelser",
-   "width": 600,
-   "height": 452
+   "width": 826,
+   "height": 622
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/nyt-tonsberg-ga-en-okning-i-handel-mat-og-opplevelser/"
  },
@@ -6718,8 +6718,8 @@
   "featuredImage": {
    "src": "/images/nyheter/emma-har-store-ambisjoner-for-bade-engo-og-regionen.jpg",
    "alt": "Emma har store ambisjoner for både Engø og regionen",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/emma-har-store-ambisjoner-for-bade-engo-og-regionen/"
  },
@@ -6758,10 +6758,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/kunst-moter-teknologi.webp",
+   "src": "/images/nyheter/kunst-moter-teknologi.jpg",
    "alt": "Kunst møter teknologi",
-   "width": 600,
-   "height": 447
+   "width": 1600,
+   "height": 1191
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/kunst-moter-teknologi/"
  },
@@ -6826,8 +6826,8 @@
   "featuredImage": {
    "src": "/images/nyheter/en-gave-fra-byen-til-byen.jpg",
    "alt": "En gave fra byen til byen",
-   "width": 600,
-   "height": 337
+   "width": 1201,
+   "height": 675
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/en-gave-fra-byen-til-byen/"
  },
@@ -6920,8 +6920,8 @@
   "featuredImage": {
    "src": "/images/nyheter/tonsberg-er-norges-vikinghovedstad.jpg",
    "alt": "– Tønsberg er Norges vikinghovedstad",
-   "width": 429,
-   "height": 600
+   "width": 1143,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsberg-er-norges-vikinghovedstad/"
  },
@@ -6970,8 +6970,8 @@
   "featuredImage": {
    "src": "/images/nyheter/foynhagen-og-slottsfjell-sorger-for-enorm-omsetning-i-byen.jpg",
    "alt": "Foynhagen og Slottsfjell sørger for enorm omsetning i byen",
-   "width": 600,
-   "height": 450
+   "width": 1600,
+   "height": 1200
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/foynhagen-og-slottsfjell-sorger-for-enorm-omsetning-i-byen/"
  },
@@ -7008,8 +7008,8 @@
   "featuredImage": {
    "src": "/images/nyheter/arets-viktigste-dugnad.jpg",
    "alt": "Årets viktigste dugnad",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/arets-viktigste-dugnad/"
  },
@@ -7040,10 +7040,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/bli-med-pa-hostmarked-pa-tjome-sentrum.webp",
+   "src": "/images/nyheter/bli-med-pa-hostmarked-pa-tjome-sentrum.jpg",
    "alt": "Bli med på årets høstmarked",
-   "width": 473,
-   "height": 600
+   "width": 812,
+   "height": 1030
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/bli-med-pa-hostmarked-pa-tjome-sentrum/"
  },
@@ -7076,8 +7076,8 @@
   "featuredImage": {
    "src": "/images/nyheter/verdensdagen-for-psykisk-helse.jpg",
    "alt": "Markerer Verdensdagen for psykisk helse",
-   "width": 548,
-   "height": 600
+   "width": 1170,
+   "height": 1282
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/verdensdagen-for-psykisk-helse/"
  },
@@ -7102,8 +7102,8 @@
   "featuredImage": {
    "src": "/images/nyheter/ekstremvaeret-amy-skaper-utfordringer.jpg",
    "alt": "Ekstremværet «Amy» skaper utfordringer",
-   "width": 600,
-   "height": 379
+   "width": 1440,
+   "height": 910
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/ekstremvaeret-amy-skaper-utfordringer/"
  },
@@ -7312,10 +7312,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/nyt-tonsberg-ga-en-okning-i-handel-mat-og-opplevelser.webp",
+   "src": "/images/nyheter/nyt-tonsberg-ga-en-okning-i-handel-mat-og-opplevelser.jpg",
    "alt": "Nyt Tønsberg i høstferien – her finner du mat og moro",
-   "width": 600,
-   "height": 452
+   "width": 826,
+   "height": 622
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/nyt-tonsberg-i-hostferien-ekstra-gode-priser-pa-byens-restauranter-og-spisesteder/"
  },
@@ -7352,8 +7352,8 @@
   "featuredImage": {
    "src": "/images/nyheter/en-stemningsfylt-kveld-pa-huset.jpg",
    "alt": "En stemningsfylt kveld på Huset",
-   "width": 600,
-   "height": 439
+   "width": 765,
+   "height": 560
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/en-stemningsfylt-kveld-pa-huset/"
  },
@@ -7554,8 +7554,8 @@
   "featuredImage": {
    "src": "/images/nyheter/hostfestival-i-faerder-3-12-oktober.jpg",
    "alt": "Fyll høstferien med opplevelser for hele familien",
-   "width": 600,
-   "height": 455
+   "width": 1278,
+   "height": 970
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/hostfestival-i-faerder-3-12-oktober/"
  },
@@ -7590,10 +7590,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/butikkene-i-storgaten-onsker-neoz-velkommen.webp",
+   "src": "/images/nyheter/butikkene-i-storgaten-onsker-neoz-velkommen.jpg",
    "alt": "Butikkene i Storgaten ønsker Neoz velkommen",
-   "width": 600,
-   "height": 535
+   "width": 1182,
+   "height": 1054
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/butikkene-i-storgaten-onsker-neoz-velkommen/"
  },
@@ -7676,8 +7676,8 @@
   "featuredImage": {
    "src": "/images/nyheter/klart-for-arets-innflytterfest.jpg",
    "alt": "Klart for årets innflytterfest",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/klart-for-arets-innflytterfest/"
  },
@@ -7719,8 +7719,8 @@
   "featuredImage": {
    "src": "/images/nyheter/na-blir-det-liv-og-rore-i-byen.jpg",
    "alt": "Nå blir det liv og røre i byen",
-   "width": 600,
-   "height": 250
+   "width": 1600,
+   "height": 667
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/na-blir-det-liv-og-rore-i-byen/"
  },
@@ -7759,10 +7759,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/en-viktig-moteplass-for-naeringslivet.webp",
+   "src": "/images/nyheter/en-viktig-moteplass-for-naeringslivet.jpg",
    "alt": "En viktig møteplass for næringslivet",
-   "width": 600,
-   "height": 428
+   "width": 1034,
+   "height": 738
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/en-viktig-moteplass-for-naeringslivet/"
  },
@@ -7815,8 +7815,8 @@
   "featuredImage": {
    "src": "/images/nyheter/slottsfjell-ung-gratis-konsert-for-barn-og-unge.jpg",
    "alt": "Offisiell åpning av Slottsfjell- Gratis konsert for barn og unge på Tønsberg Torv",
-   "width": 600,
-   "height": 400
+   "width": 1600,
+   "height": 1067
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/slottsfjell-ung-gratis-konsert-for-barn-og-unge/"
  },
@@ -7838,8 +7838,8 @@
   "featuredImage": {
    "src": "/images/nyheter/gjenbruksmarked-30-august.jpg",
    "alt": "Gjenbruksmarked 30.august",
-   "width": 600,
-   "height": 450
+   "width": 1600,
+   "height": 1200
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/gjenbruksmarked-30-august/"
  },
@@ -7869,8 +7869,8 @@
   "featuredImage": {
    "src": "/images/nyheter/vet-du-forskjell-pa-hvit-og-gronn-asparges.jpg",
    "alt": "Vet du forskjell på hvit og grønn asparges?",
-   "width": 552,
-   "height": 600
+   "width": 1290,
+   "height": 1402
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/vet-du-forskjell-pa-hvit-og-gronn-asparges/"
  },
@@ -7891,8 +7891,8 @@
   "featuredImage": {
    "src": "/images/nyheter/feiring-av-lokal-matkultur.jpg",
    "alt": "Feiring av lokal matkultur",
-   "width": 600,
-   "height": 450
+   "width": 1600,
+   "height": 1200
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/feiring-av-lokal-matkultur/"
  },
@@ -7929,8 +7929,8 @@
   "featuredImage": {
    "src": "/images/nyheter/tonsberg-historien-sitter-i-veggene.jpg",
    "alt": "Historien sitter i veggene",
-   "width": 600,
-   "height": 338
+   "width": 1200,
+   "height": 675
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsberg-historien-sitter-i-veggene/"
  },
@@ -7979,8 +7979,8 @@
   "featuredImage": {
    "src": "/images/nyheter/opplevelser-i-hoyden.jpg",
    "alt": "Opplevelser i høyden",
-   "width": 600,
-   "height": 334
+   "width": 985,
+   "height": 549
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/opplevelser-i-hoyden/"
  },
@@ -8027,10 +8027,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/fr-norges-eldste-by-til-verdens-ende.webp",
+   "src": "/images/nyheter/fr-norges-eldste-by-til-verdens-ende.jpg",
    "alt": "Fra Norges eldste by til Verdens Ende",
-   "width": 600,
-   "height": 346
+   "width": 1600,
+   "height": 923
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/fr-norges-eldste-by-til-verdens-ende/"
  },
@@ -8061,10 +8061,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/nye-torgboder-apne-for-booking.webp",
+   "src": "/images/nyheter/nye-torgboder-apne-for-booking.jpg",
    "alt": "Nye torgboder åpne for booking!",
-   "width": 600,
-   "height": 390
+   "width": 926,
+   "height": 602
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/nye-torgboder-apne-for-booking/"
  },
@@ -8113,8 +8113,8 @@
   "featuredImage": {
    "src": "/images/nyheter/takk-for-i-ar.jpg",
    "alt": "Takk for i år!",
-   "width": 600,
-   "height": 400
+   "width": 1440,
+   "height": 961
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/takk-for-i-ar/"
  },
@@ -8163,8 +8163,8 @@
   "featuredImage": {
    "src": "/images/nyheter/jahn-teigen-utstillingen-apnet-i-tonsberg-i-dag.jpg",
    "alt": "Jahn Teigen utstillingen åpnet i Tønsberg!",
-   "width": 600,
-   "height": 400
+   "width": 1440,
+   "height": 960
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/jahn-teigen-utstillingen-apnet-i-tonsberg-i-dag/"
  },
@@ -8213,7 +8213,7 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/tonsbergdagen-19-juni-2025.webp",
+   "src": "/images/nyheter/tonsbergdagen-19-juni-2025.jpg",
    "alt": "Tønsbergdagen 19.juni 2025",
    "width": 480,
    "height": 440
@@ -8236,10 +8236,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/tonsbergfest.webp",
+   "src": "/images/nyheter/tonsbergfest.jpg",
    "alt": "Tønsbergfest 2025",
-   "width": 600,
-   "height": 413
+   "width": 1600,
+   "height": 1103
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/tonsbergfest/"
  },
@@ -8279,7 +8279,7 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/tonsberglivet-sommermagasin.webp",
+   "src": "/images/nyheter/tonsberglivet-sommermagasin.jpg",
    "alt": "Tønsberglivet med nytt sommermagasin",
    "width": 498,
    "height": 416
@@ -8328,8 +8328,8 @@
   "featuredImage": {
    "src": "/images/nyheter/torgboder-klare-for-tonsberg-torv.jpg",
    "alt": "Torgboder klare for Tønsberg Torv!",
-   "width": 600,
-   "height": 331
+   "width": 1600,
+   "height": 883
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/torgboder-klare-for-tonsberg-torv/"
  },
@@ -8394,8 +8394,8 @@
   "featuredImage": {
    "src": "/images/nyheter/17-mai-feiring-i-tonsbergregionen.jpg",
    "alt": "17.mai feiring i Tønsbergregionen",
-   "width": 481,
-   "height": 600
+   "width": 1120,
+   "height": 1398
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/17-mai-feiring-i-tonsbergregionen/"
  },
@@ -8537,8 +8537,8 @@
   "featuredImage": {
    "src": "/images/nyheter/de-nominerte-er.jpg",
    "alt": "Tønsbergprisen 2025",
-   "width": 600,
-   "height": 400
+   "width": 1440,
+   "height": 961
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/de-nominerte-er/"
  },
@@ -8650,8 +8650,8 @@
   "featuredImage": {
    "src": "/images/nyheter/hva-skjer-i-tonsberg-for-ungdom.jpg",
    "alt": "Hva skjer i Tønsberg for ungdom?",
-   "width": 600,
-   "height": 325
+   "width": 1600,
+   "height": 867
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/hva-skjer-i-tonsberg-for-ungdom/"
  },
@@ -8680,8 +8680,8 @@
   "featuredImage": {
    "src": "/images/nyheter/gratis-konsert-med-d-d-e-pa-tonsbergfest-2025.jpg",
    "alt": "Gratis konsert med D.D.E på Tønsbergfest 2025!",
-   "width": 399,
-   "height": 600
+   "width": 1065,
+   "height": 1600
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/gratis-konsert-med-d-d-e-pa-tonsbergfest-2025/"
  },
@@ -8754,8 +8754,8 @@
   "featuredImage": {
    "src": "/images/nyheter/samarbeid-om-attraksjon.jpg",
    "alt": "Offentlig-privat samhandling skaper en sterkere attraksjonskraft",
-   "width": 600,
-   "height": 337
+   "width": 1600,
+   "height": 898
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/samarbeid-om-attraksjon/"
  },
@@ -8786,10 +8786,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/faerder-kommune-inngar-samarbeidsavtale-med-tonsberglivet.webp",
+   "src": "/images/nyheter/faerder-kommune-inngar-samarbeidsavtale-med-tonsberglivet.jpg",
    "alt": "Færder kommune inngår samarbeidsavtale med Tønsberglivet",
-   "width": 578,
-   "height": 600
+   "width": 672,
+   "height": 698
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/faerder-kommune-inngar-samarbeidsavtale-med-tonsberglivet/"
  },
@@ -8858,10 +8858,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/omraderegulering-knutepunkt-tonsberg-varsel-om-planoppstart-og-horing-av-planprogram.webp",
+   "src": "/images/nyheter/omraderegulering-knutepunkt-tonsberg-varsel-om-planoppstart-og-horing-av-planprogram.jpg",
    "alt": "Områderegulering Knutepunkt Tønsberg – varsel om planoppstart og høring av planprogram",
-   "width": 600,
-   "height": 419
+   "width": 764,
+   "height": 534
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/omraderegulering-knutepunkt-tonsberg-varsel-om-planoppstart-og-horing-av-planprogram/"
  },
@@ -8906,8 +8906,8 @@
   "featuredImage": {
    "src": "/images/nyheter/plastryddedagen.jpg",
    "alt": "Rekordpåmelding til plastryddedagen 2025",
-   "width": 600,
-   "height": 439
+   "width": 1290,
+   "height": 943
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/plastryddedagen/"
  },
@@ -8952,8 +8952,8 @@
   "featuredImage": {
    "src": "/images/nyheter/hvem-vinner-arets-tonsbergpris.jpg",
    "alt": "Hvem vinner årets Tønsbergpris?",
-   "width": 600,
-   "height": 409
+   "width": 1319,
+   "height": 900
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/hvem-vinner-arets-tonsbergpris/"
  },
@@ -8972,10 +8972,10 @@
    }
   ],
   "featuredImage": {
-   "src": "/images/nyheter/velkommen-til-gjenbruksmarked-pa-torvet-og-i-radhusgaten.webp",
+   "src": "/images/nyheter/velkommen-til-gjenbruksmarked-pa-torvet-og-i-radhusgaten.jpg",
    "alt": "Velkommen til gjenbruksmarked på Torvet!",
-   "width": 600,
-   "height": 327
+   "width": 1420,
+   "height": 774
   },
   "sourceUrl": "https://tonsberglivet.no/nyheter/velkommen-til-gjenbruksmarked-pa-torvet-og-i-radhusgaten/"
  }
