@@ -5,6 +5,7 @@ import { HeroSection } from '@/components/ui/HeroSection';
 import { EventCard } from '@/components/ui/Cards';
 import { Filter, Ticket, RefreshCw, Search } from 'lucide-react';
 import { TicketmasterEvent } from '@/lib/ticketmaster';
+import { groupEventPerformances, shortDateLabel } from '@/lib/event-grouping';
 import { LibraryEventsWidget } from '@/components/culture/LibraryEventsWidget';
 
 const categories = ['Alle', 'Konsert', 'Kultur', 'Teater', 'Aktiviteter', 'Mat & Drikke'];
@@ -29,20 +30,12 @@ export default function EventerClient() {
       .finally(() => setLoading(false));
   }, []);
 
-  const allEvents = ticketmasterEvents.map((tm) => ({
-    id: tm.id,
-    title: tm.title,
-    date: tm.date,
-    time: tm.time,
-    location: tm.location,
-    category: tm.category,
-    href: tm.ticketUrl,
-    imageUrl: tm.imageUrl,
-    priceRange: tm.priceRange,
-    isTicketmaster: true,
-  }));
+  // Samme produksjon går ofte flere ganger (Snedronningen fire kvelder, Julegalla
+  // fem). Vi viser én produksjon per kort med antall og en liste over datoene,
+  // i stedet for nesten identiske kort.
+  const groupedEvents = groupEventPerformances(ticketmasterEvents);
 
-  const filteredEvents = allEvents.filter((e) => {
+  const filteredEvents = groupedEvents.filter((e) => {
     const matchesCategory = activeCategory === 'Alle' || e.category.toLowerCase().includes(activeCategory.toLowerCase());
     const matchesSearch =
       !searchQuery ||
@@ -58,7 +51,7 @@ export default function EventerClient() {
         subtitle="Arrangementer, show, konserter & kultur i Norges eldste by"
         backgroundGradient="linear-gradient(135deg, #1D4ED8, #7C3AED)"
         backgroundImage="/images/tonsberg/hva-skjer-i-tonsberg-arrangementer.jpg"
-        imageAlt="Konsertscene i Tønsberg"
+        imageAlt="Dirigent foran publikum på Slottsfjellfestivalen"
         priority
         compact={true}
       />
@@ -74,7 +67,10 @@ export default function EventerClient() {
               <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                 Ticketmaster Direktestrøm
                 <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold rounded-full">
-                  SANNTID • {ticketmasterEvents.length} LIVE ARRANGEMENTER
+                  SANNTID • {groupedEvents.length} PRODUKSJONER
+                  {ticketmasterEvents.length > groupedEvents.length
+                    ? ` / ${ticketmasterEvents.length} FORESTILLINGER`
+                    : ''}
                 </span>
               </h3>
               <p className="text-xs text-foreground-muted">
@@ -124,16 +120,21 @@ export default function EventerClient() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredEvents.map((event) => (
-              <div key={event.id} className="relative group">
+              <div key={event.key} className="relative group">
                 <EventCard
                   title={event.title}
-                  date={event.date}
-                  time={event.time}
+                  date={event.next.date}
+                  time={event.next.time}
                   location={event.location}
                   category={event.category}
-                  href={event.href}
+                  href={event.next.ticketUrl}
                   imageUrl={event.imageUrl}
-                  priceRange={event.priceRange}
+                  priceRange={event.next.priceRange}
+                  performances={
+                    event.performances.length > 1
+                      ? event.performances.map((p) => ({ date: shortDateLabel(p.date), time: p.time }))
+                      : undefined
+                  }
                 />
               </div>
             ))}

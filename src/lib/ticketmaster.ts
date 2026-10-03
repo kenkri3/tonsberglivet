@@ -133,18 +133,35 @@ export function formatDisplayTime(dateInput: string, explicitTime?: string): str
 /**
  * Fallback-bilde når Ticketmaster ikke leverer artwork.
  * Skal alltid være et ekte bilde fra Tønsberg – aldri et internasjonalt arkivbilde.
+ * Generisk plassholderbilde. BEHOLDES kun for bakoverkompatibilitet –
+ * den brukes IKKE lenger som erstatning når et arrangement mangler eget bilde.
+ * Ett felles stockfoto på tvers av ulike arrangementer gjorde at flere kort
+ * viste nøyaktig samme bilde, og det så ut som duplikater. Kortene har sin egen
+ * ryddige tomtilstand (dato-banner / kategoriikon), som er ærligere.
  */
 export const TONSBERG_EVENT_FALLBACK_IMAGE = '/images/tonsberg/generelt-ticketmaster.jpg';
+
+/**
+ * Plukker ut arrangementets EGET bilde. Returnerer tom streng når Ticketmaster
+ * ikke har noe bilde – vi dikter aldri opp et bilde som ikke hører til.
+ */
+function pickEventArtwork(candidates: Array<string | undefined | null>): string {
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim() !== '') return c.trim();
+  }
+  return '';
+}
 
 /** Normalizes raw Ticketmaster API response into standardized portal event objects.
  */
 export function normalizeTicketmasterEvent(item: any): TicketmasterEvent {
   const dates = item?.dates?.start;
   const venue = item?._embedded?.venues?.[0];
-  const image = item?.images?.find((img: any) => img.ratio === '16_9' && img.width >= 1000)?.url ||
-                item?.images?.find((img: any) => img.width > 600)?.url ||
-                item?.images?.[0]?.url ||
-                TONSBERG_EVENT_FALLBACK_IMAGE;
+  const image = pickEventArtwork([
+    item?.images?.find((img: any) => img.ratio === '16_9' && img.width >= 1000)?.url,
+    item?.images?.find((img: any) => img.width > 600)?.url,
+    item?.images?.[0]?.url,
+  ]);
   const price = item?.priceRanges?.[0];
   const dateIso = dates?.dateTime || (dates?.localDate ? `${dates.localDate}T19:00:00Z` : new Date().toISOString());
   const vName = normalizeVenueName(venue?.name || '', venue?.city?.name || 'Tønsberg');
@@ -226,13 +243,20 @@ async function scrapeDirectTmPageEvents(url: string): Promise<ScrapedRawEvent[]>
                   : '';
                 if (!directUrl.includes('/event/')) continue;
 
-                let image = TONSBERG_EVENT_FALLBACK_IMAGE;
+                // Artistbilde hvis Ticketmaster har det – ellers tomt, slik at
+                // kortet viser sin egen dato-flate i stedet for et lånt foto.
+                let image = '';
                 if (item.artists && Array.isArray(item.artists)) {
                   for (const a of item.artists) {
                     const img = a.imageUrls;
                     if (img) {
-                      image = img.RETINA_LANDSCAPE_16_9 || img.RETINA_PORTRAIT_16_9 || img.TABLET_LANDSCAPE_16_9 || img.ARTIST_PAGE_3_2 || image;
-                      break;
+                      image = pickEventArtwork([
+                        img.RETINA_LANDSCAPE_16_9,
+                        img.RETINA_PORTRAIT_16_9,
+                        img.TABLET_LANDSCAPE_16_9,
+                        img.ARTIST_PAGE_3_2,
+                      ]);
+                      if (image) break;
                     }
                   }
                 }
@@ -308,11 +332,12 @@ async function fetchTicketmasterApiEvents(apiKey: string): Promise<ScrapedRawEve
     for (const item of localEvents) {
       const venue = item._embedded?.venues?.[0];
       const vName = normalizeVenueName(venue?.name || '', venue?.city?.name || 'Tønsberg');
-      const bestImage = item.images?.find((img: any) => img.ratio === '16_9' && img.width >= 1000)?.url ||
-                        item.images?.find((img: any) => img.ratio === '16_9' && img.width >= 600)?.url ||
-                        item.images?.find((img: any) => img.width >= 600)?.url ||
-                        item.images?.[0]?.url ||
-                        TONSBERG_EVENT_FALLBACK_IMAGE;
+      const bestImage = pickEventArtwork([
+        item.images?.find((img: any) => img.ratio === '16_9' && img.width >= 1000)?.url,
+        item.images?.find((img: any) => img.ratio === '16_9' && img.width >= 600)?.url,
+        item.images?.find((img: any) => img.width >= 600)?.url,
+        item.images?.[0]?.url,
+      ]);
       const priceRange = item.priceRanges?.[0]
         ? `Fra ${item.priceRanges[0].min} ${item.priceRanges[0].currency || 'kr'}`
         : undefined;

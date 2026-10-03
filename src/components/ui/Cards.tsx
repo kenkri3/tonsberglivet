@@ -49,11 +49,23 @@ interface EventCardProps {
   category?: string;
   href: string;
   imageUrl?: string;
+  /** Beskriver bildet for skjermlesere. Uten den brukes kortets tittel. */
+  imageAlt?: string;
   priceRange?: string;
+  /**
+   * Alle forestillinger når samme produksjon går flere ganger. Settes den,
+   * viser kortet antall forestillinger og en kompakt dato-liste i stedet for
+   * å fylle rutenettet med nesten identiske kort.
+   */
+  performances?: Array<{ date: string; time?: string }>;
 }
 
-export function EventCard({ title, date, time, location, category, href, imageUrl, priceRange }: EventCardProps) {
+export function EventCard({ title, date, time, location, category, href, imageUrl, imageAlt, priceRange, performances }: EventCardProps) {
   const isExternal = href.startsWith('http');
+  const performanceList = performances ?? [];
+  const isMulti = performanceList.length > 1;
+  const visiblePerformances = performanceList.slice(0, 5);
+  const hiddenCount = performanceList.length - visiblePerformances.length;
   return (
     <Link
       href={href}
@@ -66,7 +78,7 @@ export function EventCard({ title, date, time, location, category, href, imageUr
           <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-900">
             <Image
               src={imageUrl}
-              alt={title}
+              alt={imageAlt ?? title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
@@ -91,13 +103,20 @@ export function EventCard({ title, date, time, location, category, href, imageUr
         <div className="p-5 flex-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between gap-2 mb-2">
-              {category && (
-                <span className="inline-block px-2.5 py-0.5 text-[11px] font-semibold bg-primary-light text-primary rounded-full">
-                  {category}
-                </span>
-              )}
+              <div className="flex items-center flex-wrap gap-1.5 min-w-0">
+                {category && (
+                  <span className="inline-block px-2.5 py-0.5 text-[11px] font-semibold bg-primary-light text-primary rounded-full">
+                    {category}
+                  </span>
+                )}
+                {isMulti && (
+                  <span className="inline-block px-2.5 py-0.5 text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 rounded-full whitespace-nowrap">
+                    {performanceList.length} forestillinger
+                  </span>
+                )}
+              </div>
               {priceRange && (
-                <span className="text-xs font-bold text-foreground-muted">
+                <span className="text-xs font-bold text-foreground-muted shrink-0">
                   {priceRange}
                 </span>
               )}
@@ -107,6 +126,29 @@ export function EventCard({ title, date, time, location, category, href, imageUr
             </h3>
             {location && (
               <p className="text-xs text-foreground-muted line-clamp-1">{location}</p>
+            )}
+            {isMulti && (
+              <div className="mt-2.5">
+                <span className="block text-[10px] font-bold uppercase tracking-wide text-foreground-subtle mb-1">
+                  Alle forestillinger
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {visiblePerformances.map((p, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-block text-[10px] font-semibold bg-surface-muted border border-border text-foreground-muted px-2 py-0.5 rounded-full whitespace-nowrap"
+                    >
+                      {p.date}
+                      {p.time ? ` ${p.time}` : ''}
+                    </span>
+                  ))}
+                  {hiddenCount > 0 && (
+                    <span className="inline-block text-[10px] font-semibold text-foreground-subtle px-2 py-0.5">
+                      +{hiddenCount} flere
+                    </span>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
@@ -127,9 +169,11 @@ interface NewsCardProps {
   category?: string;
   href: string;
   imageUrl?: string;
+  /** Beskriver bildet for skjermlesere. Uten den brukes kortets tittel. */
+  imageAlt?: string;
 }
 
-export function NewsCard({ title, excerpt, date, category, href, imageUrl }: NewsCardProps) {
+export function NewsCard({ title, excerpt, date, category, href, imageUrl, imageAlt }: NewsCardProps) {
   return (
     <Link href={href} className="group block h-full">
       <article className="bg-surface rounded-2xl overflow-hidden border border-border/80 hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
@@ -138,7 +182,7 @@ export function NewsCard({ title, excerpt, date, category, href, imageUrl }: New
           {imageUrl ? (
             <Image
               src={imageUrl}
-              alt={title}
+              alt={imageAlt ?? title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"

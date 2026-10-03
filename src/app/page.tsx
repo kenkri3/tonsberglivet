@@ -7,6 +7,7 @@ import {
   Store, Home as HomeIcon, Palmtree, Ticket, Flame, Award, ShieldCheck
 } from 'lucide-react';
 import { fetchLiveTicketmasterEvents } from '@/lib/ticketmaster';
+import { groupEventPerformances, shortDateLabel } from '@/lib/event-grouping';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
 import { TonsberglivetLogo } from '@/components/brand/BrandLogos';
 import { FiveLivesShowcase } from '@/components/home/FiveLivesShowcase';
@@ -20,6 +21,28 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const events = await fetchLiveTicketmasterEvents();
+
+  // Samme produksjon går ofte flere ganger. Vi viser én produksjon per kort med
+  // antall forestillinger og en dato-liste, i stedet for nesten identiske kort.
+  // Grupperingen sikrer samtidig at ingen bilde-URL brukes på to kort.
+  const featuredEvents = groupEventPerformances(events)
+    .slice(0, 6)
+    .map((group) => ({
+      id: group.key,
+      title: group.title,
+      date: group.next.date,
+      time: group.next.time,
+      imageUrl: group.imageUrl,
+      category: group.category,
+      description: group.description,
+      venueName: group.location,
+      location: group.location,
+      ticketUrl: group.next.ticketUrl,
+      performances:
+        group.performances.length > 1
+          ? group.performances.map((p) => ({ date: shortDateLabel(p.date), time: p.time }))
+          : [],
+    }));
 
   return (
     <div className="min-h-screen space-y-20 pb-24 overflow-x-hidden">
@@ -122,7 +145,7 @@ export default async function Home() {
 
         {/* Arrangement Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.slice(0, 6).map((ev) => (
+          {featuredEvents.map((ev) => (
             <div
               key={ev.id}
               className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1"
@@ -168,15 +191,40 @@ export default async function Home() {
               {/* Tekstinnhold */}
               <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary-light px-2.5 py-0.5 rounded-full">
-                    {ev.category}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary-light px-2.5 py-0.5 rounded-full">
+                      {ev.category}
+                    </span>
+                    {ev.performances.length > 1 && (
+                      <span className="text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                        {ev.performances.length} forestillinger
+                      </span>
+                    )}
+                  </div>
                   <h3 className="font-bold text-lg text-foreground mt-2 group-hover:text-primary transition-colors line-clamp-2">
                     {ev.title}
                   </h3>
                   <p className="text-xs text-foreground-muted mt-2 line-clamp-2 leading-relaxed">
                     {ev.description}
                   </p>
+                  {ev.performances.length > 1 && (
+                    <div className="mt-2.5 flex flex-wrap gap-1">
+                      {ev.performances.slice(0, 4).map((p, idx) => (
+                        <span
+                          key={idx}
+                          className="text-[10px] font-semibold bg-surface-muted border border-border text-foreground-muted px-2 py-0.5 rounded-full whitespace-nowrap"
+                        >
+                          {p.date}
+                          {p.time ? ` ${p.time}` : ''}
+                        </span>
+                      ))}
+                      {ev.performances.length > 4 && (
+                        <span className="text-[10px] font-semibold text-foreground-subtle px-2 py-0.5">
+                          +{ev.performances.length - 4} flere
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-border flex items-center justify-between">
