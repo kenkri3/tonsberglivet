@@ -90,8 +90,8 @@ export default function OmOssPage() {
         subtitle="Hvem er vi?" 
         description="Tønsberglivet AS er et non-profit bysamarbeid som samler kommune, næringsliv og innbyggere for å utvikle regionen til et enda mer pulserende og attraktivt sted."
         backgroundGradient="linear-gradient(135deg, #16193d 0%, #1e3a5f 50%, #0c0e24 100%)"
-        backgroundImage="/images/legacy/1_Oversiktsbilde-1600x900-1.jpg"
-        imageAlt="Grev Wedels gate i Tønsberg med galleri og trehusbebyggelse"
+        backgroundImage="/images/legacy/frivilligbors-7.jpg"
+        imageAlt="To personer håndhilser på en frivilligbørs i Tønsberg"
         priority
         compact={true}
       />
