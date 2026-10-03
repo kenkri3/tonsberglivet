@@ -9,6 +9,11 @@
 
 /* --- Lys modus (standard) --- */
 :root {
+  /* Forteller nettleseren at siden er lys. Uten denne tegner den innebygde
+     kontroller (rullefelt, datovelgere, autofyll) mørke når operativsystemet
+     står i mørkmodus — selv om vi selv rendrer lyst. */
+  color-scheme: light;
+
   --background: #FAFAF8;
   --surface: #FFFFFF;
   --surface-elevated: #FFFFFF;
@@ -52,6 +57,9 @@
 
 /* --- Mørk modus --- */
 .dark {
+  /* Kun når brukeren selv har valgt mørkt tema. */
+  color-scheme: dark;
+
   --background: #0F172A;
   --surface: #1E293B;
   --surface-elevated: #334155;

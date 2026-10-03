@@ -9,10 +9,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
-  ],
+  // Lys er standardskinnet. Vi annonserer derfor én lys farge i stedet for å
+  // la nettleseren velge ut fra operativsystemets mørkmodus.
+  themeColor: "#ffffff",
 };
 
 const inter = Inter({
@@ -72,14 +71,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="nb" className={`${inter.variable} ${playfair.variable} h-full`} suppressHydrationWarning>
       <head>
-        {/* Forhindre flash av feil tema */}
+        {/*
+          Forhindrer flash av feil tema ved lasting.
+
+          Lys er standard for hele systemet. Vi ser derfor BARE på et aktivt
+          valg brukeren selv har tatt (localStorage). Vi faller ikke tilbake på
+          operativsystemets `prefers-color-scheme` — gjorde vi det, ble hele
+          nettstedet mørkt for alle som har mørkmodus i Windows eller macOS,
+          uavhengig av hva vi har bestemt at standarden skal være.
+        */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('tonsberglivet-theme');
-                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  if (localStorage.getItem('tonsberglivet-theme') === 'dark') {
                     document.documentElement.classList.add('dark');
                   }
                 } catch(e) {}

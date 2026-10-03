@@ -17,11 +17,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem('tonsberglivet-theme') as Theme | null;
-    if (stored) {
+    // Lys er standard for hele systemet. Kun et aktivt valg fra brukeren
+    // (lagret i localStorage) kan gjøre siden mørk. Vi spør derfor ikke
+    // operativsystemet — `prefers-color-scheme: dark` ville gjort nettstedet
+    // mørkt for alle med mørkmodus på maskinen.
+    const stored = localStorage.getItem('tonsberglivet-theme');
+    if (stored === 'dark' || stored === 'light') {
       setTheme(stored);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark');
     }
   }, []);
 
