@@ -25,7 +25,7 @@ export default function NaeringslivetPage() {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center"
+            className="object-cover img-crop-top"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/45" />
         </div>
@@ -93,7 +93,7 @@ export default function NaeringslivetPage() {
               alt="Matgründer på Torvet"
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-700"
             />
             <span className="absolute top-4 left-4 px-3.5 py-1 bg-surface/95 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
               Gründerprofil

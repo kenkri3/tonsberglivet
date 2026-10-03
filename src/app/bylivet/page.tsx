@@ -26,7 +26,7 @@ export default function BylivetPage() {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center"
+            className="object-cover img-crop-top"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/45" />
         </div>
@@ -119,7 +119,7 @@ export default function BylivetPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
             <div className="relative aspect-[16/10] overflow-hidden">
-              <Image src="/images/tonsberg/gateliv-i-tonsberg-sentrum-grid-gr.jpg" alt="Gateliv i Tønsberg sentrum" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+              <Image src="/images/tonsberg/gateliv-i-tonsberg-sentrum-grid-gr.jpg" alt="Gateliv i Tønsberg sentrum" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500" />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
                 Trehus & Kultur
               </span>
@@ -141,7 +141,7 @@ export default function BylivetPage() {
 
           <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-md group flex flex-col justify-between">
             <div className="relative aspect-[16/10] overflow-hidden">
-              <Image src="/images/tonsberg/folkefest-i-tonsberg-relative-aspe.jpg" alt="Folkefest i Tønsberg" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-105 transition-transform duration-500" />
+              <Image src="/images/tonsberg/folkefest-i-tonsberg-relative-aspe.jpg" alt="Folkefest i Tønsberg" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500" />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
                 Festival & Folkeliv
               </span>

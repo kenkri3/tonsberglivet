@@ -192,7 +192,7 @@ export function FiveLivesShowcase() {
             fill
             priority
             sizes="(max-width: 1024px) 100vw, 60vw"
-            className="object-cover object-center transition-all duration-700 scale-100 hover:scale-105"
+            className="object-cover img-crop-top transition-all duration-700 scale-100 hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-slate-950/40 lg:to-slate-950" />
           

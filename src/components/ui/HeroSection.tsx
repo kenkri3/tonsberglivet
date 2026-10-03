@@ -53,7 +53,7 @@ export function HeroSection({
           fill
           priority={priority}
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-cover img-crop-top"
         />
       )}
 
@@ -78,8 +78,7 @@ export function HeroSection({
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           {subtitle && (
-            <span className="inline-block px-4 py-1.5 mb-6 text-xs font-semibold tracking-wider uppercase
-                           bg-white/10 backdrop-blur-sm rounded-full text-white/90 border border-white/20">
+            <span className="inline-block px-4 py-1.5 mb-6 text-xs font-semibold tracking-wider uppercase bg-white/10 backdrop-blur-sm rounded-full text-white/90 border border-white/20">
               {subtitle}
             </span>
           )}
@@ -105,10 +104,7 @@ export function HeroSection({
               {ctaLabel && ctaHref && (
                 <Link
                   href={ctaHref}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-900
-                             font-semibold rounded-xl hover:bg-white/90
-                             transition-all duration-200 shadow-lg hover:shadow-xl
-                             hover:-translate-y-0.5 group"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-slate-900 font-semibold rounded-xl hover:bg-white/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 group"
                 >
                   {ctaLabel}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -117,9 +113,7 @@ export function HeroSection({
               {secondaryCtaLabel && secondaryCtaHref && (
                 <Link
                   href={secondaryCtaHref}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white
-                             font-semibold rounded-xl hover:bg-white/20 backdrop-blur-sm
-                             border border-white/20 transition-all duration-200"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all duration-200"
                 >
                   {secondaryCtaLabel}
                 </Link>

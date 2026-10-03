@@ -27,7 +27,7 @@ export default function StudentlivetPage() {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center"
+            className="object-cover img-crop-top"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
         </div>

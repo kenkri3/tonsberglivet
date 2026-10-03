@@ -42,7 +42,7 @@ export default function TorvleiePage() {
                     alt="Markedsboder på Tønsberg Torv"
                     fill
                     sizes="(max-width: 1024px) 50vw, 25vw"
-                    className="object-cover"
+                    className="object-cover img-crop-top"
                   />
                 </figure>
                 <figure className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border">
@@ -51,7 +51,7 @@ export default function TorvleiePage() {
                     alt="Lokalproduserte varer til salgs på torvet"
                     fill
                     sizes="(max-width: 1024px) 50vw, 25vw"
-                    className="object-cover"
+                    className="object-cover img-crop-top"
                   />
                 </figure>
               </div>

@@ -42,7 +42,7 @@ export default function KontaktPage() {
                   src="/images/tonsberg/gatebildet-i-tonsberg-sentrum-spac.jpg"
                   alt="Gatebildet i Tønsberg sentrum"
                   fill
-                  className="object-cover"
+                  className="object-cover img-crop-top"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />

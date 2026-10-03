@@ -124,7 +124,7 @@ export default function OmOssPage() {
               alt="Utsikt over Tønsberg by og brygge" 
               fill
               sizes="(max-width: 1024px) 100vw, 40vw"
-              className="object-cover"
+              className="object-cover img-crop-top"
             />
           </div>
         </section>

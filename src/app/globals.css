@@ -235,6 +235,32 @@ select:focus-visible {
   }
 }
 
+/* ═══════════════════════════════════════════
+   BESKJÆRINGSPUNKT FOR BILDER
+   ═══════════════════════════════════════════
+   Problemet: mange kildemaler er kvadratiske eller i portrettformat
+   (25 av 128 bilder i /images/tonsberg er under 1,2 i forhold). I en bred
+   beholder — hero på 82vh, eller et kort med aspect-[16/9] — viser
+   `object-cover` bare det midterste av bildet. Ved 16:9 av et 3:4-bilde
+   vises kun 42 % av høyden, og `object-position: center` kappet da bort
+   29 % fra toppen. Det er ansiktene.
+
+   Løsningen er å flytte beskjøringsvinduet oppover. 35 % er målt fram til
+   det beste kompromisset: høyt nok til å beholde ansikter i portrettbilder,
+   lavt nok til å ikke vise bare himmel i landskapsbilder.
+
+   `object-top` er IKKE et godt standardvalg — det viste bare bygningen i
+   testbildet, uten folkene. */
+.img-crop-top {
+  object-position: center 35%;
+}
+
+/* For beholdere som er høyere enn de er brede (f.eks. smale kort på mobil),
+   der det er mindre å beskjære og midten er riktig. */
+.img-crop-center {
+  object-position: center;
+}
+
 /* Horisontale scroller-lister skal ikke vise scrollbar */
 .scrollbar-none {
   scrollbar-width: none;

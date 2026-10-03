@@ -135,7 +135,7 @@ export default function ProsjekterPage() {
                       alt={prosjekt.title}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                     <span className="absolute top-3 right-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-surface/90 backdrop-blur-md text-primary shadow-sm">

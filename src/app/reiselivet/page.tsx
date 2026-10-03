@@ -25,7 +25,7 @@ export default function ReiselivetPage() {
             alt="Slottsfjellet og Reiselivet i Tønsberg"
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover object-center scale-105"
+            className="object-cover img-crop-top scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-slate-950/75 to-slate-950/40" />
         </div>
@@ -105,7 +105,7 @@ export default function ReiselivetPage() {
               alt="Færder Nasjonalpark og Skjærgården"
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-700"
             />
             <span className="absolute top-4 left-4 px-3.5 py-1 bg-surface/95 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
               Færder Nasjonalpark
@@ -168,7 +168,7 @@ export default function ReiselivetPage() {
                 alt="Quality Hotel Tønsberg takbasseng"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 border border-border">
                 Takbasseng & Spa
@@ -204,7 +204,7 @@ export default function ReiselivetPage() {
                 alt="Hotel Klubben ved bryggen"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 border border-border">
                 Klassiker & Kultur
@@ -240,7 +240,7 @@ export default function ReiselivetPage() {
                 alt="Engø Gård på Tjøme"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 border border-border">
                 Eksklusiv Gourmet
@@ -276,7 +276,7 @@ export default function ReiselivetPage() {
                 alt="Havna Hotell Tjøme ved skjærgården"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
               />
               <span className="absolute top-3 left-3 px-3 py-1 bg-surface/90 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 border border-border">
                 Skjærgårdshotell

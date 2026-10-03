@@ -67,7 +67,7 @@ export default function OvernattingPage() {
                   alt={h.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                 <span className="absolute top-4 left-4 text-xs font-bold text-white bg-amber-600/90 backdrop-blur-md px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">

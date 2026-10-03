@@ -35,7 +35,7 @@ export default async function Home() {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center scale-105 animate-fade-in opacity-55"
+            className="object-cover img-crop-top scale-105 animate-fade-in opacity-55"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#16193d] via-[#16193d]/60 to-[#16193d]/30" />
         </div>
@@ -127,15 +127,23 @@ export default async function Home() {
               key={ev.id}
               className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1"
             >
-              {/* Bilde med spillested-badge */}
+              {/* Bilde med spillested-badge. Mangler arrangementet eget bilde, viser
+                  vi en merkevareflate i stedet for et lånt stockfoto – ellers fikk
+                  flere kort nøyaktig samme bilde og så ut som duplikater. */}
               <div className="relative aspect-[16/9] overflow-hidden bg-slate-950">
-                <Image
-                  src={ev.imageUrl || '/images/tonsberg/relative-aspect-16-9-overflow-hidd.jpg'}
-                  alt={ev.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+                {ev.imageUrl ? (
+                  <Image
+                    src={ev.imageUrl}
+                    alt={ev.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-hover to-[#16193d] flex items-center justify-center">
+                    <Calendar className="w-14 h-14 text-white/25" />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                 
                 {/* Dato-chip */}
@@ -224,7 +232,7 @@ export default async function Home() {
               alt="Slottsfjellet Tønsberg"
               fill
               sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-700"
             />
             <span className="absolute top-4 left-4 px-3.5 py-1 bg-surface/95 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-foreground border border-border">
               Bylivet & Kultur

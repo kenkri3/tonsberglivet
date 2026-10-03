@@ -14,15 +14,12 @@ export function SectionCard({ title, description, href, gradient, icon }: Sectio
   return (
     <Link href={href} className="group block h-full">
       <div
-        className="relative overflow-hidden rounded-3xl p-7 sm:p-8 h-full min-h-[220px]
-                    flex flex-col justify-between transition-all duration-300
-                    bg-surface border border-border/80 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1"
+        className="relative overflow-hidden rounded-3xl p-7 sm:p-8 h-full min-h-[220px] flex flex-col justify-between transition-all duration-300 bg-surface border border-border/80 hover:border-primary/40 hover:shadow-xl hover:-translate-y-1"
       >
         <div>
           {icon && (
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-sm
-                         group-hover:scale-105 transition-transform"
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-105 transition-transform"
               style={{ background: gradient }}
             >
               {icon}
@@ -64,8 +61,7 @@ export function EventCard({ title, date, time, location, category, href, imageUr
       target={isExternal ? '_blank' : undefined}
       rel={isExternal ? 'noopener noreferrer' : undefined}
     >
-      <article className="bg-surface rounded-2xl overflow-hidden border border-border
-                          hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+      <article className="bg-surface rounded-2xl overflow-hidden border border-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
         {imageUrl ? (
           <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-900">
             <Image
@@ -73,7 +69,7 @@ export function EventCard({ title, date, time, location, category, href, imageUr
               alt={title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             <div className="absolute top-3 left-3 bg-surface/90 backdrop-blur-md rounded-xl px-2.5 py-1 text-center shadow-md border border-border">
@@ -136,9 +132,7 @@ interface NewsCardProps {
 export function NewsCard({ title, excerpt, date, category, href, imageUrl }: NewsCardProps) {
   return (
     <Link href={href} className="group block h-full">
-      <article className="bg-surface rounded-2xl overflow-hidden border border-border/80
-                          hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 h-full
-                          flex flex-col">
+      <article className="bg-surface rounded-2xl overflow-hidden border border-border/80 hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
         {/* Nyhetsbilde eller dekorativ gradient */}
         <div className="relative aspect-[16/10] overflow-hidden bg-surface-muted">
           {imageUrl ? (
@@ -147,7 +141,7 @@ export function NewsCard({ title, excerpt, date, category, href, imageUrl }: New
               alt={title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="object-cover img-crop-top group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 via-surface-muted to-accent/20 flex items-center justify-center">
@@ -190,8 +184,7 @@ interface BusinessCardProps {
 
 export function BusinessCard({ name, category, address, description }: BusinessCardProps) {
   return (
-    <article className="bg-surface rounded-2xl p-6 border border-border
-                        hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+    <article className="bg-surface rounded-2xl p-6 border border-border hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       {/* Logo-plassholder */}
       <div className="w-14 h-14 rounded-xl bg-surface-muted flex items-center justify-center mb-4">
         <span className="text-xl font-bold text-primary">
@@ -199,8 +192,7 @@ export function BusinessCard({ name, category, address, description }: BusinessC
         </span>
       </div>
 
-      <span className="inline-block px-3 py-1 text-xs font-medium bg-accent-light
-                       text-accent rounded-full mb-3">
+      <span className="inline-block px-3 py-1 text-xs font-medium bg-accent-light text-accent rounded-full mb-3">
         {category}
       </span>
       <h3 className="text-lg font-semibold text-foreground mb-1">{name}</h3>
