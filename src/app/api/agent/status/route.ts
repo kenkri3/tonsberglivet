@@ -9,17 +9,16 @@ export const dynamic = "force-dynamic";
  *
  * MERK: Denne ruten svarte tidligere alltid `status:"active"` og hardkodet
  * `features.*: true` for fire egenskaper ingenting verifiserte, samtidig som
- * den avslørte de første/siste fire tegnene av en innsjekket reserve-nøkkel.
- * Masken er nå fjernet helt: repoet er offentlig, så `99vP...s0qT` pekte rett
- * på den innsjekkede standardnøkkelen og gjorde resten av maskeringen verdiløs.
+ * den avslørte de første/siste fire tegnene av en reserve-nøkkel. Masken er nå
+ * fjernet helt, og nøkkelen selv er ute av repoet og rotert – se
+ * `src/app/api/bot-frame/route.ts` for hvorfor den ikke skal tilbake.
  *
  * `status` sier fortsatt bare om noe er KONFIGURERT. For å vite om agenten
  * faktisk får hentet data, bruk `?deep=1` (krever admin) – den kjører et ekte
  * verktøykall hele veien gjennom agenten og tilbake til vårt eget MCP-endepunkt.
  */
 
-/** Standardnøkkelen som ligger i repoet. Er denne i bruk, er den offentlig kjent. */
-const COMMITTED_DEFAULT_BOT_KEY = "";
+/** Standardnøkkelen lå tidligere her. Den er fjernet fra repoet og rotert. */
 
 const DEEP_PROBE_TTL_MS = 5 * 60 * 1000;
 let lastProbe: { at: number; result: AgentProbeResult } | null = null;
@@ -39,9 +38,9 @@ export async function GET(request: NextRequest) {
     success: true,
     status: environmentConfigured ? 'active' : 'not_configured',
     environmentConfigured,
-    // Aldri nøkkelbiter her – ruten er åpen for alle.
-    // Denne er trygg å oppgi: verdien ligger i det offentlige repoet.
-    usesCommittedDefaultKey: agentApi === COMMITTED_DEFAULT_BOT_KEY,
+    // Aldri nøkkelbiter her – ruten er åpen for alle. Vi oppgir heller ikke
+    // lenger om nøkkelen er «den kjente», for det finnes ikke noen kjent
+    // standardnøkkel i repoet etter at den ble fjernet og rotert.
     mcpEndpointConfigured: Boolean(
       process.env.AGENT_MCP_ENDPOINT || process.env.AGENT_MCP_URL
     ),

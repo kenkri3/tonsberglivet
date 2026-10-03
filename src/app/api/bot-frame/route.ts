@@ -3,23 +3,27 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 /**
- * Standard bot-ID. Dette er en offentlig verdi (den ligger i en offentlig
- * landingsside-URL), men den skal bare brukes når ingenting er konfigurert.
- */
-const DEFAULT_BOT_KEY = "";
-
-/**
  * `?bot_api=` gjorde tidligere denne ruten til en ÅPEN PROXY: hvem som helst
  * kunne be tonsberglivet.no hente hvilken som helst annen bot fra leverandøren
  * og presentere den under vårt domene. Vi godtar derfor bare den konfigurerte
- * nøkkelen, eller den kjente standardnøkkelen når ingenting er konfigurert.
+ * nøkkelen.
+ *
+ * Nøkkelen lå tidligere hardkodet her som en standardverdi. Den gjorde dermed
+ * repoet til kilden for en gyldig nøkkel, og repoet er offentlig. Nå kommer den
+ * bare fra miljøet, og mangler den, sier vi fra i stedet for å falle tilbake på
+ * en kjent verdi.
  */
 function resolveBotKey(requested: string | null): { key: string } | { error: string } {
-  const configured =
-    process.env.AGENT_API || process.env.NEXT_PUBLIC_AGENT_API || DEFAULT_BOT_KEY;
+  const configured = process.env.AGENT_API || process.env.NEXT_PUBLIC_AGENT_API;
+
+  if (!configured) {
+    return {
+      error: 'Bot er ikke konfigurert på serveren. Sett AGENT_API i miljøet.',
+    };
+  }
 
   if (!requested) return { key: configured };
-  if (requested === configured || requested === DEFAULT_BOT_KEY) return { key: requested };
+  if (requested === configured) return { key: requested };
 
   return {
     error:
