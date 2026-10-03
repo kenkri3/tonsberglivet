@@ -10,6 +10,7 @@ import { fetchLiveTicketmasterEvents } from '@/lib/ticketmaster';
 import { groupEventPerformances, shortDateLabel } from '@/lib/event-grouping';
 import { getNewsArticles } from '@/lib/news-server';
 import { PhotoGallery } from '@/components/ui/PhotoGallery';
+import { TonsberglivetLogo } from '@/components/brand/BrandLogos';
 import { FiveLivesShowcase } from '@/components/home/FiveLivesShowcase';
 import { GiftCardFeature } from '@/components/home/GiftCardFeature';
 import { CityPulseBar } from '@/components/home/CityPulseBar';
@@ -22,24 +23,6 @@ export const metadata: Metadata = {
 // Sakene hentes fra CMS/arkiv. Fem minutter holder forsiden fersk uten at
 // hvert besøk treffer databasen.
 export const revalidate = 300;
-
-/**
- * CTA-en i heroen skal henge sammen med klokken: «i dag» om formiddagen,
- * «i kveld» utover ettermiddagen, «i morgen» etter midnatt. Uten dette står
- * «Hva skjer i kveld?» der klokken 08 om morgenen også.
- */
-function eventCtaLabel(): string {
-  const hour = Number(
-    new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Oslo',
-      hour: '2-digit',
-      hour12: false,
-    }).format(new Date()),
-  );
-  if (hour < 16) return 'Hva skjer i dag?';
-  if (hour < 23) return 'Hva skjer i kveld?';
-  return 'Hva skjer i morgen?';
-}
 
 export default async function Home() {
   const [events, newsArticles] = await Promise.all([
@@ -75,64 +58,64 @@ export default async function Home() {
   return (
     <div className="min-h-screen space-y-20 pb-24 overflow-x-hidden">
       
-      {/* ── 1. CINEMATIC HERO ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="relative overflow-hidden rounded-[2rem] bg-[#16193d] shadow-2xl min-h-[68vh] md:min-h-[74vh] flex items-center">
+      {/* ── 1. CINEMATIC HERO MED OFFISIELL MERKEVARE ── */}
+      <section className="relative min-h-[82vh] flex items-center justify-center overflow-hidden bg-[#16193d]">
+        
+        {/* Bakgrunnsbilde med cinematic dybde */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/tonsberg/solnedgang-over-byfjorden-med-slot.jpg"
+            alt="Solnedgang over byfjorden med Slottsfjellstårnet"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover img-crop-top scale-105 animate-fade-in opacity-55"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#16193d] via-[#16193d]/60 to-[#16193d]/30" />
+        </div>
 
-          {/* Bildet skal faktisk synes – derfor et scrim over venstre halvdel der
-              teksten står, i stedet for et jevnt mørkt slør over hele motivet. */}
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/images/tonsberg/solnedgang-over-byfjorden-med-slot.jpg"
-              alt="Solnedgang over byfjorden med Slottsfjellstårnet"
-              fill
-              priority
-              sizes="(max-width: 1280px) 100vw, 1280px"
-              className="object-cover img-crop-top opacity-90"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#16193d] via-[#16193d]/75 to-[#16193d]/10" />
-            <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#16193d] to-transparent" />
-          </div>
-
-          <div className="relative z-10 px-6 sm:px-10 lg:px-14 py-16 md:py-20 w-full">
-            <div className="max-w-3xl space-y-6">
-
-              {/* Merkevaren står i headeren som er sticky like over – her holder det
-                  med etiketten og slagordet. */}
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-slate-200 border border-white/20 text-[11px] font-semibold tracking-[0.2em] uppercase">
-                <span>Grunnlagt 871 e.Kr. • Norges eldste by</span>
-              </div>
-
-              {/* Tittel med Playfair Display serif aksent */}
-              <h1 className="text-white text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05]">
-                Livet, slik det <br />
-                <span className="font-serif italic font-normal text-amber-200/95">skal leves.</span>
-              </h1>
-
-              {/* Ingress */}
-              <p className="text-base sm:text-lg text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow-sm">
-                Tønsberglivet er fellesskapet som samler og styrker byen vår — for mer synlighet, mer stolthet, mer liv og mer kraft.
-              </p>
-
-              {/* Handlinger */}
-              <div className="flex flex-wrap items-center gap-3.5 pt-4">
-                <Link
-                  href="/bylivet"
-                  className="px-8 py-4 bg-primary hover:bg-primary-hover text-white rounded-full font-bold text-sm shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 group"
-                >
-                  <span>Utforsk Bylivet</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link
-                  href="/eventer"
-                  className="px-8 py-4 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/25 text-white rounded-full font-medium text-sm transition-all flex items-center gap-2"
-                >
-                  <Calendar className="w-4 h-4 text-amber-300" />
-                  <span>{eventCtaLabel()}</span>
-                </Link>
-              </div>
-
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-28 relative z-10 w-full">
+          <div className="max-w-3xl space-y-6">
+            
+            {/* Merkevarelogo SVG */}
+            <div className="animate-fade-in">
+              <TonsberglivetLogo className="h-10 sm:h-12 md:h-14 w-auto text-[#d3dafe] drop-shadow-md" />
             </div>
+
+            {/* Subtil merkevare-etikett */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-slate-200 border border-white/20 text-[11px] font-semibold tracking-[0.2em] uppercase">
+              <span>Grunnlagt 871 e.Kr. • Norges eldste by</span>
+            </div>
+
+            {/* Tittel med Playfair Display serif aksent */}
+            <h1 className="text-white text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.02]">
+              Livet, slik det <br />
+              <span className="font-serif italic font-normal text-amber-200/95">skal leves.</span>
+            </h1>
+
+            {/* Ingress */}
+            <p className="text-base sm:text-lg md:text-xl text-slate-200 leading-relaxed font-light max-w-2xl drop-shadow-sm">
+              Tønsberglivet er fellesskapet som samler og styrker Norges eldste by — for mer synlighet, mer stolthet, mer liv og mer kraft.
+            </p>
+
+            {/* Handlinger */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-4">
+              <Link
+                href="/bylivet"
+                className="px-8 py-4 bg-primary hover:bg-primary-hover text-white rounded-full font-bold text-sm shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 group"
+              >
+                <span>Utforsk Bylivet</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/eventer"
+                className="px-8 py-4 bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/25 text-white rounded-full font-medium text-sm transition-all flex items-center gap-2"
+              >
+                <Calendar className="w-4 h-4 text-amber-300" />
+                <span>Hva skjer i kveld?</span>
+              </Link>
+            </div>
+
           </div>
         </div>
       </section>
