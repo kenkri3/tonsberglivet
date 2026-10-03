@@ -10,6 +10,29 @@ export interface ChatMessageItem {
   quickReplies?: Array<{ title: string; payload: string }>;
 }
 
+/** Hvem en samtale er tildelt akkurat nå. */
+export interface ChatAssignment {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  assignedAt: string;
+  /** Navnet på den som tildelte – «Cecilie sendte denne til Kenneth». */
+  assignedByName?: string;
+  /** Valgfri beskjed fra den som sendte samtalen videre. */
+  note?: string;
+}
+
+/** Én linje i tildelingsloggen. Vises bare internt – aldri til den besøkende. */
+export interface ChatAssignmentEvent {
+  at: string;
+  action: 'assigned' | 'reassigned' | 'released';
+  fromUserName?: string | null;
+  toUserName?: string | null;
+  toUserId?: string | null;
+  byName?: string | null;
+  note?: string | null;
+}
+
 export interface ChatSession {
   id: string;
   visitorName?: string;
@@ -21,6 +44,9 @@ export interface ChatSession {
   updatedAt: string;
   unreadByAdmin: boolean;
   messages: ChatMessageItem[];
+  /** Tom/udefinert = utildelt. Alle nye samtaler starter utildelt. */
+  assignment?: ChatAssignment | null;
+  assignmentHistory?: ChatAssignmentEvent[];
 }
 
 // In-memory cache for ultra-fast response.
@@ -264,4 +290,187 @@ export async function markSessionAsRead(sessionId: string): Promise<void> {
 export async function getUnreadChatCount(): Promise<number> {
   await ensureSessionsLoaded();
   return Object.values(inMemorySessions).filter((s) => s.unreadByAdmin).length;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TILDELING AV SAMTALER
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Kollegene en samtale kan tildeles til.
+ *
+ * Bevisste valg:
+ *  - den innloggede selv er alltid utelatt: du tildeler en samtale til noen
+ *    andre, aldri til deg selv. Er du den eneste brukeren, er listen tom.
+ *  - «Innsyn» (VIEWER) er utelatt: de kan ikke svare, og skal derfor ikke få
+ *    samtaler tildelt.
+ *  - inaktive kontoer er utelatt.
+ */
+export async function listAssignableColleagues(current: {
+  id?: string | null;
+  email?: string | null;
+}): Promise<Array<{ id: string; name: string | null; email: string; role: string; title: string | null }>> {
+  const currentEmail = String(current.email || '').toLowerCase();
+  const users = await prisma.user.findMany({
+    where: {
+      active: true,
+      role: { in: ['SUPERADMIN', 'ADMIN', 'EDITOR'] as any },
+    },
+    orderBy: [{ name: 'asc' }, { email: 'asc' }],
+    select: { id: true, name: true, email: true, role: true, title: true },
+  });
+
+  return users.filter(
+    (user) => user.id !== current.id && user.email.toLowerCase() !== currentEmail
+  );
+}
+
+/**
+ * Slår opp mottakeren av en tildeling. Reglene håndheves på serveren – ikke i
+ * grensesnittet – slik at en manipulert forespørsel ikke kan tildele en samtale
+ * til en inaktiv konto, til en «innsyn»-bruker eller til seg selv.
+ */
+export async function findAssignableColleague(
+  assigneeId: string,
+  current: { id?: string | null; email?: string | null }
+): Promise<
+  | { ok: true; user: { id: string; name: string | null; email: string; role: string; title: string | null } }
+  | { ok: false; error: string }
+> {
+  const id = String(assigneeId || '').trim();
+  if (!id) return { ok: false, error: 'Mangler hvem samtalen skal tildeles til.' };
+
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, name: true, email: true, role: true, title: true, active: true },
+  });
+
+  if (!user) return { ok: false, error: 'Fant ikke brukeren du prøver å tildele til.' };
+  if (!user.active) return { ok: false, error: `${user.name || user.email} er deaktivert og kan ikke tildeles samtaler.` };
+  if (user.role === 'VIEWER') {
+    return { ok: false, error: `${user.name || user.email} har nivået «Innsyn» og kan ikke svare på samtaler.` };
+  }
+
+  const currentEmail = String(current.email || '').toLowerCase();
+  if (user.id === current.id || (currentEmail !== '' && user.email.toLowerCase() === currentEmail)) {
+    return { ok: false, error: 'Du kan ikke tildele en samtale til deg selv – velg en kollega.' };
+  }
+
+  const { active, ...rest } = user;
+  return { ok: true, user: rest };
+}
+
+/** Antall samtaler som venter på nettopp denne brukeren. */export async function getAssignedToMeCount(current: {
+  id?: string | null;
+  email?: string | null;
+}): Promise<number> {
+  await ensureSessionsLoaded();
+  const currentEmail = String(current.email || '').toLowerCase();
+  return Object.values(inMemorySessions).filter((session) => {
+    const assignment = session.assignment;
+    if (!assignment) return false;
+    return (
+      (current.id && assignment.userId === current.id) ||
+      (currentEmail !== '' && assignment.userEmail.toLowerCase() === currentEmail)
+    );
+  }).length;
+}
+
+/** Intern logg over hvem som har hatt samtalen – maks 50 linjer per samtale. */
+function pushAssignmentEvent(
+  session: ChatSession,
+  event: ChatAssignmentEvent
+): void {
+  const history = [...(session.assignmentHistory || []), event];
+  session.assignmentHistory = history.slice(-50);
+}
+
+/**
+ * Tildeler samtalen til en kollega. Tildeles den til noen andre enn den som
+ * allerede har den, logges det som «sendt videre» – det er slik Cecilie kan
+ * sende en henvendelse hun ikke kan svare på til en kollega.
+ */
+export async function assignSession(params: {
+  sessionId: string;
+  assignee: { id: string; name: string | null; email: string; role?: string | null };
+  actor: { id?: string | null; name?: string | null; email: string };
+  note?: string | null;
+}): Promise<ChatSession> {
+  const session = await getOrCreateChatSession(params.sessionId);
+  const previous = session.assignment || null;
+  const now = new Date().toISOString();
+  const note = params.note?.trim() ? params.note.trim().slice(0, 600) : undefined;
+  const assigneeName = params.assignee.name || params.assignee.email;
+  const actorName = params.actor.name || params.actor.email;
+
+  session.assignment = {
+    userId: params.assignee.id,
+    userName: assigneeName,
+    userEmail: params.assignee.email,
+    assignedAt: now,
+    assignedByName: actorName,
+    note,
+  };
+
+  pushAssignmentEvent(session, {
+    at: now,
+    action: previous && previous.userId !== params.assignee.id ? 'reassigned' : 'assigned',
+    fromUserName: previous?.userName || null,
+    toUserName: assigneeName,
+    toUserId: params.assignee.id,
+    byName: actorName,
+    note: note || null,
+  });
+
+  session.updatedAt = now;
+  await persistSessions();
+  return session;
+}
+
+/** Frigjør samtalen – den blir liggende utildelt i køen igjen. */
+export async function unassignSession(params: {
+  sessionId: string;
+  actor: { id?: string | null; name?: string | null; email: string };
+  note?: string | null;
+}): Promise<ChatSession> {
+  const session = await getOrCreateChatSession(params.sessionId);
+  const previous = session.assignment || null;
+  const now = new Date().toISOString();
+  const actorName = params.actor.name || params.actor.email;
+  const note = params.note?.trim() ? params.note.trim().slice(0, 600) : undefined;
+
+  session.assignment = null;
+  pushAssignmentEvent(session, {
+    at: now,
+    action: 'released',
+    fromUserName: previous?.userName || null,
+    toUserName: null,
+    toUserId: null,
+    byName: actorName,
+    note: note || null,
+  });
+
+  session.updatedAt = now;
+  await persistSessions();
+  return session;
+}
+
+/**
+ * Versjonen av samtalen som den besøkende kan se.
+ *
+ * Den offentlige chatten poller sin egen samtale. Tildeling, tildelingslogg og
+ * ulest-status er interne arbeidsflater, og navnene på kollegene skal ikke
+ * havne i nettleseren til en besøkende.
+ */
+export function toPublicSession(session: ChatSession) {
+  return {
+    id: session.id,
+    visitorName: session.visitorName,
+    aiEnabled: session.aiEnabled,
+    status: session.status,
+    topic: session.topic,
+    createdAt: session.createdAt,
+    updatedAt: session.updatedAt,
+    messages: session.messages,
+  };
 }

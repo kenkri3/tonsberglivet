@@ -33,6 +33,7 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { TonsbergAgentChat } from '@/components/admin/TonsbergAgentChat';
+import { roleLabel } from '@/lib/roles';
 
 const adminNav = [
   { label: 'Dashboard',           href: '/admin',                   icon: LayoutDashboard },
@@ -63,6 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showSystemModal, setShowSystemModal] = useState(false);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [assignedToMeCount, setAssignedToMeCount] = useState(0);
   const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [recentNotifText, setRecentNotifText] = useState<string | null>(null);
@@ -126,6 +128,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           }
           prevCountRef.current = data.unreadCount;
           setUnreadChatCount(data.unreadCount);
+        }
+        if (data.success && typeof data.assignedToMeCount === 'number') {
+          setAssignedToMeCount(data.assignedToMeCount);
         }
       } catch {
         // Ignorer
@@ -387,17 +392,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   className={`relative p-2 rounded-xl border transition-colors ${
                     unreadChatCount > 0
                       ? 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                      : assignedToMeCount > 0
+                      ? 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
                       : 'border-border text-foreground-muted hover:text-foreground hover:bg-surface-muted'
                   }`}
                   title="Systemvarsler og chathenvendelser"
                   aria-label="Systemvarsler"
                 >
                   <Bell className="w-4 h-4" />
-                  {unreadChatCount > 0 && (
+                  {unreadChatCount > 0 ? (
                     <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse shadow-xs">
                       {unreadChatCount}
                     </span>
-                  )}
+                  ) : assignedToMeCount > 0 ? (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-xs">
+                      {assignedToMeCount}
+                    </span>
+                  ) : null}
                 </button>
 
                 {showNotifDropdown && (
@@ -435,6 +446,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <div className="p-3 text-center text-xs text-foreground-muted">
                           Ingen nye varsler akkurat nå.
                         </div>
+                      )}
+
+                      {/* Samtaler en kollega har sendt over til deg */}
+                      {assignedToMeCount > 0 && (
+                        <Link
+                          href="/admin/meldinger"
+                          onClick={() => setShowNotifDropdown(false)}
+                          className="w-full text-left p-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-foreground flex items-start gap-2.5 transition-colors border border-primary/20"
+                        >
+                          <span className="w-2 h-2 rounded-full bg-primary mt-1 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-foreground">
+                              {assignedToMeCount} {assignedToMeCount === 1 ? 'samtale er' : 'samtaler er'} tildelt deg
+                            </p>
+                            <p className="text-[11px] text-foreground-muted truncate">
+                              En kollega har sendt over en henvendelse du skal følge opp.
+                            </p>
+                          </div>
+                        </Link>
                       )}
 
                       <Link
@@ -549,7 +579,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       {currentUser?.name || (currentUser?.email ? currentUser.email.split('@')[0] : 'Tønsberglivet Admin')}
                     </span>
                     <span className="text-[10px] text-foreground-muted font-medium capitalize">
-                      {currentUser?.role === 'ADMIN' ? 'Administrator' : (currentUser?.role === 'EDITOR' ? 'Redaktør' : 'Bruker')}
+                      {roleLabel(currentUser?.role)}
                     </span>
                   </div>
                 </Link>

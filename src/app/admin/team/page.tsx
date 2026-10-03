@@ -32,6 +32,8 @@ import {
   Check,
   ChevronRight,
   Sparkles,
+  Send,
+  Copy,
 } from 'lucide-react';
 
 interface UserItem {
@@ -80,10 +82,43 @@ interface NoteItem {
   createdAt: string;
 }
 
+/** En invitasjon til en ny medarbeider. */
+interface InvitationItem {
+  id: string;
+  email: string;
+  name: string | null;
+  title: string | null;
+  role: 'SUPERADMIN' | 'ADMIN' | 'EDITOR' | 'VIEWER';
+  roleLabel: string;
+  note: string | null;
+  invitedByName: string | null;
+  status: 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+  expiresAt: string;
+  acceptedAt: string | null;
+  createdAt: string;
+}
+
 const ROLE_BADGES: Record<string, { label: string; bg: string; icon: any }> = {
+  SUPERADMIN: { label: 'Superbruker', bg: 'bg-violet-500/10 border-violet-500/20 text-violet-700 dark:text-violet-300', icon: Shield },
   ADMIN: { label: 'Administrator', bg: 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400', icon: ShieldAlert },
   EDITOR: { label: 'Redaktør', bg: 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400', icon: ShieldCheck },
   VIEWER: { label: 'Innsyn / Leser', bg: 'bg-slate-500/10 border-slate-500/20 text-slate-600 dark:text-slate-400', icon: Eye },
+};
+
+/** Tilgangsnivåene en invitasjon kan gi, i synkende rekkefølge. */
+const INVITE_ROLE_OPTIONS: Array<{ value: InvitationItem['role']; label: string; description: string }> = [
+  { value: 'SUPERADMIN', label: 'Superbruker', description: 'Eiernivå: invitere brukere og dele ut alle tilgangsnivåer.' },
+  { value: 'ADMIN', label: 'Administrator', description: 'Full tilgang til drift, innhold og meldinger. Kan invitere nye brukere.' },
+  { value: 'EDITOR', label: 'Redaktør', description: 'Kan svare på henvendelser, tildele samtaler og jobbe med innhold.' },
+  { value: 'VIEWER', label: 'Innsyn', description: 'Kan se innhold og statistikk, men ikke svare eller endre noe.' },
+];
+
+/** Hvilke nivåer den innloggede kan dele ut. Administratornivå kan dele ut alt. */
+const GRANTABLE_ROLES: Record<string, InvitationItem['role'][]> = {
+  SUPERADMIN: ['SUPERADMIN', 'ADMIN', 'EDITOR', 'VIEWER'],
+  ADMIN: ['SUPERADMIN', 'ADMIN', 'EDITOR', 'VIEWER'],
+  EDITOR: [],
+  VIEWER: [],
 };
 
 export default function TeamManagementPage() {
@@ -135,6 +170,26 @@ export default function TeamManagementPage() {
   // Notifications
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Invitasjoner
+  const [invitations, setInvitations] = useState<InvitationItem[]>([]);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    email: '',
+    name: '',
+    title: '',
+    role: 'EDITOR' as InvitationItem['role'],
+    note: '',
+  });
+  const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteResult, setInviteResult] = useState<{
+    email: string;
+    inviteUrl: string;
+    delivered: boolean;
+    message: string;
+  } | null>(null);
+  const [copiedInvite, setCopiedInvite] = useState(false);
+
   const showAlert = (type: 'success' | 'error', text: string) => {
     setAlertMessage({ type, text });
     setTimeout(() => setAlertMessage(null), 5000);
@@ -169,6 +224,13 @@ export default function TeamManagementPage() {
       const notesRes = await fetch('/api/admin/notes');
       const notesJson = await notesRes.json();
       if (notesJson.success) setNotes(notesJson.notes || []);
+
+      // 6. Invitasjoner (kun synlig for administratornivå – API-et svarer 403 ellers)
+      const inviteRes = await fetch('/api/admin/invitations');
+      if (inviteRes.ok) {
+        const inviteJson = await inviteRes.json();
+        if (inviteJson.success) setInvitations(inviteJson.invitations || []);
+      }
     } catch (err) {
       console.error('Failed to load team data:', err);
       showAlert('error', 'Kunne ikke laste all team-data.');
@@ -180,6 +242,94 @@ export default function TeamManagementPage() {
   useEffect(() => {
     loadAllData();
   }, []);
+
+  // ── Invitasjoner ─────────────────────────────────────────────────────────
+  // Bare administratornivå kan invitere. Hvilke nivåer man kan dele ut følger
+  // av ens egen rolle – en administrator kan ikke gjøre noen til superbruker.
+  const canInvite = !!currentUser && GRANTABLE_ROLES[currentUser.role as string]?.length > 0;
+  const grantableRoles = (currentUser && GRANTABLE_ROLES[currentUser.role as string]) || [];
+
+  const openInviteModal = () => {
+    setInviteForm({
+      email: '',
+      name: '',
+      title: '',
+      role: (grantableRoles.includes('EDITOR') ? 'EDITOR' : grantableRoles[0]) || 'EDITOR',
+      note: '',
+    });
+    setInviteError(null);
+    setInviteResult(null);
+    setCopiedInvite(false);
+    setInviteModalOpen(true);
+  };
+
+  const handleCreateInvitation = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (inviteBusy) return;
+
+    if (!inviteForm.email.trim()) {
+      setInviteError('Fyll inn e-postadressen til den du vil invitere.');
+      return;
+    }
+
+    setInviteBusy(true);
+    setInviteError(null);
+    try {
+      const res = await fetch('/api/admin/invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inviteForm),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        setInviteError(json?.error || `Kunne ikke opprette invitasjonen (HTTP ${res.status}).`);
+        return;
+      }
+
+      setInviteResult({
+        email: json.invitation?.email || inviteForm.email,
+        inviteUrl: json.inviteUrl,
+        delivered: !!json.email?.delivered,
+        message: json.message || '',
+      });
+      setInvitations((prev) => [json.invitation, ...prev]);
+      showAlert('success', json.message || 'Invitasjonen er opprettet.');
+    } catch {
+      setInviteError('Nettverksfeil: invitasjonen ble ikke opprettet.');
+    } finally {
+      setInviteBusy(false);
+    }
+  };
+
+  const handleCopyInviteLink = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedInvite(true);
+      setTimeout(() => setCopiedInvite(false), 3000);
+    } catch {
+      setInviteError('Kunne ikke kopiere automatisk – merk teksten og kopier manuelt.');
+    }
+  };
+
+  const handleRevokeInvitation = async (invitation: InvitationItem) => {
+    const previous = invitations;
+    setInvitations((prev) =>
+      prev.map((i) => (i.id === invitation.id ? { ...i, status: 'REVOKED' as const } : i))
+    );
+    try {
+      const res = await fetch(`/api/admin/invitations/${invitation.id}`, { method: 'DELETE' });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        setInvitations(previous);
+        showAlert('error', json?.error || 'Kunne ikke trekke tilbake invitasjonen.');
+        return;
+      }
+      showAlert('success', `Invitasjonen til ${invitation.email} er trukket tilbake.`);
+    } catch {
+      setInvitations(previous);
+      showAlert('error', 'Nettverksfeil: invitasjonen ble ikke trukket tilbake.');
+    }
+  };
 
   // Handlers for User Modal
   const openCreateUserModal = () => {
@@ -432,14 +582,25 @@ export default function TeamManagementPage() {
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          {currentUser?.role === "ADMIN" && (
-            <button
-              onClick={openCreateUserModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm shadow-sm transition"
-            >
-              <UserPlus className="w-4 h-4" />
-              Ny bruker
-            </button>
+          {canInvite && (
+            <>
+              <button
+                onClick={openInviteModal}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm shadow-sm transition"
+                title="Send en invitasjon med valgt tilgangsnivå"
+              >
+                <UserPlus className="w-4 h-4" />
+                Inviter bruker
+              </button>
+              <button
+                onClick={openCreateUserModal}
+                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-sm transition"
+                title="Opprett en konto direkte med passord du setter selv"
+              >
+                <Plus className="w-4 h-4" />
+                Ny bruker
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -582,6 +743,99 @@ export default function TeamManagementPage() {
       {/* TAB 1: USERS & PERMISSIONS */}
       {activeTab === 'users' && (
         <div className="space-y-4">
+          {/* Invitasjoner: ventende, godtatte og tilbaketrukne */}
+          {canInvite && invitations.length > 0 && (
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-indigo-500" />
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Invitasjoner</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
+                    {invitations.filter((i) => i.status === 'PENDING').length} venter
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-400">
+                  Lenken vises bare én gang – er den tapt, send en ny.
+                </span>
+              </div>
+
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                {invitations.slice(0, 8).map((invitation) => {
+                  const badge = ROLE_BADGES[invitation.role] || ROLE_BADGES.EDITOR;
+                  const statusText =
+                    invitation.status === 'PENDING'
+                      ? `Venter – gyldig til ${new Date(invitation.expiresAt).toLocaleDateString('nb-NO')}`
+                      : invitation.status === 'ACCEPTED'
+                      ? `Godtatt ${invitation.acceptedAt ? new Date(invitation.acceptedAt).toLocaleDateString('nb-NO') : ''}`
+                      : invitation.status === 'REVOKED'
+                      ? 'Trukket tilbake'
+                      : 'Utløpt';
+                  const statusTone =
+                    invitation.status === 'PENDING'
+                      ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900'
+                      : invitation.status === 'ACCEPTED'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700';
+
+                  return (
+                    <li key={invitation.id} className="px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                            {invitation.name || invitation.email}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${badge.bg}`}>
+                            {badge.label}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusTone}`}>
+                            {statusText}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5 truncate">
+                          {invitation.email}
+                          {invitation.title ? ` • ${invitation.title}` : ''}
+                          {invitation.invitedByName ? ` • invitert av ${invitation.invitedByName}` : ''}
+                        </p>
+                      </div>
+
+                      {invitation.status === 'PENDING' && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInviteForm({
+                                email: invitation.email,
+                                name: invitation.name || '',
+                                title: invitation.title || '',
+                                role: invitation.role,
+                                note: invitation.note || '',
+                              });
+                              setInviteError(null);
+                              setInviteResult(null);
+                              setInviteModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Ny lenke
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeInvitation(invitation)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Trekk tilbake
+                          </button>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           {/* Search & Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="relative w-full sm:w-80">
@@ -603,6 +857,7 @@ export default function TeamManagementPage() {
                 className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="ALL">Alle roller</option>
+                <option value="SUPERADMIN">Superbrukere</option>
                 <option value="ADMIN">Administratorer</option>
                 <option value="EDITOR">Redaktører</option>
                 <option value="VIEWER">Lesere</option>
@@ -986,6 +1241,204 @@ export default function TeamManagementPage() {
         </div>
       )}
 
+      {/* INVITASJONSMODAL — velg tilgangsnivå og send en personlig lenke */}
+      {inviteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-indigo-500" />
+                Inviter bruker
+              </h3>
+              <button
+                onClick={() => setInviteModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                aria-label="Lukk"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {inviteResult ? (
+              <div className="p-5 space-y-4">
+                <div
+                  className={`p-4 rounded-xl border text-sm flex items-start gap-2.5 ${
+                    inviteResult.delivered
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+                      : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200'
+                  }`}
+                >
+                  {inviteResult.delivered ? (
+                    <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <p className="font-semibold">
+                      {inviteResult.delivered
+                        ? `Invitasjonen er sendt til ${inviteResult.email}`
+                        : 'E-posten ble ikke sendt automatisk'}
+                    </p>
+                    <p className="text-xs mt-0.5 opacity-90">{inviteResult.message}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Personlig invitasjonslenke
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={inviteResult.inviteUrl}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs font-mono text-slate-700 dark:text-slate-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCopyInviteLink(inviteResult.inviteUrl)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shrink-0"
+                    >
+                      {copiedInvite ? <Check className="w-3.5 h-3.5" /> : <Key className="w-3.5 h-3.5" />}
+                      {copiedInvite ? 'Kopiert' : 'Kopier'}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Lenken vises bare nå. Er den tapt, kan du lage en ny under «Ny lenke» i invitasjonslisten.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInviteResult(null);
+                      setInviteForm({ email: '', name: '', title: '', role: inviteForm.role, note: '' });
+                    }}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                  >
+                    Inviter en til
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInviteModalOpen(false)}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition"
+                  >
+                    Ferdig
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateInvitation} className="p-5 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">E-post *</label>
+                    <input
+                      type="email"
+                      required
+                      value={inviteForm.email}
+                      onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                      placeholder="kollega@tonsberglivet.no"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Navn</label>
+                    <input
+                      type="text"
+                      value={inviteForm.name}
+                      onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
+                      placeholder="Fornavn Etternavn"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tittel</label>
+                  <input
+                    type="text"
+                    value={inviteForm.title}
+                    onChange={(e) => setInviteForm({ ...inviteForm, title: e.target.value })}
+                    placeholder="f.eks. Kommunikasjonsansvarlig"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tilgangsnivå</label>
+                  <div className="space-y-1.5">
+                    {INVITE_ROLE_OPTIONS.filter((option) => grantableRoles.includes(option.value)).map((option) => (
+                      <button
+                        type="button"
+                        key={option.value}
+                        onClick={() => setInviteForm({ ...inviteForm, role: option.value })}
+                        className={`w-full text-left px-3.5 py-2.5 rounded-xl border transition ${
+                          inviteForm.role === option.value
+                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40'
+                            : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-slate-900 dark:text-white">{option.label}</span>
+                          {inviteForm.role === option.value && <Check className="w-3.5 h-3.5 text-indigo-500" />}
+                        </span>
+                        <span className="block text-xs text-slate-500 mt-0.5">{option.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {grantableRoles.length === 0 && (
+                    <p className="text-xs text-rose-600 dark:text-rose-400">
+                      Du har ikke rettighet til å invitere brukere.
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Personlig melding (valgfritt)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={inviteForm.note}
+                    onChange={(e) => setInviteForm({ ...inviteForm, note: e.target.value })}
+                    placeholder="Kort hilsen som følger invitasjonen."
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  />
+                </div>
+
+                {inviteError && (
+                  <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl px-3.5 py-2.5">
+                    {inviteError}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <span className="text-[11px] text-slate-400">Lenken er gyldig i 7 dager.</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setInviteModalOpen(false)}
+                      className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                    >
+                      Avbryt
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={inviteBusy || grantableRoles.length === 0}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition disabled:opacity-50"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      {inviteBusy ? 'Sender …' : 'Send invitasjon'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* USER MODAL (Opprett / Rediger) */}
       {userModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
@@ -1092,6 +1545,9 @@ export default function TeamManagementPage() {
                   <option value="ADMIN">Administrator (Full tilgang, økonomi, innstillinger og brukere)</option>
                   <option value="EDITOR">Redaktør (Opprette, redigere og publisere innhold & torvleie)</option>
                   <option value="VIEWER">Innsyn / Leser (Skrivebeskyttet tilgang)</option>
+                  {grantableRoles.includes('SUPERADMIN') && (
+                    <option value="SUPERADMIN">Superbruker (Eiernivå: invitere brukere og dele ut tilgang)</option>
+                  )}
                 </select>
               </div>
 

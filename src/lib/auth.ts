@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from './prisma';
+import { isAtLeast, isRoleName, type RoleName } from './roles';
 
 const SESSION_COOKIE_NAME = 'tonsberg_admin_session';
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7 dager
@@ -10,7 +11,7 @@ export interface SessionUser {
   id: string;
   name: string | null;
   email: string;
-  role: 'ADMIN' | 'EDITOR' | 'VIEWER';
+  role: RoleName;
 }
 
 /**
@@ -43,28 +44,11 @@ function getAuthSecret(): string {
 }
 
 /**
- * Genererer sikker saltet passord-hash
+ * Passord-hashing er flyttet til `@/lib/password` slik at biblioteker som
+ * oppretter brukere kan brukes utenfor en HTTP-forespørsel. Re-eksporteres her
+ * fordi eksisterende kode importerer dem fra `@/lib/auth`.
  */
-export function hashPassword(password: string): string {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
-  return `${salt}:${hash}`;
-}
-
-/**
- * Verifiserer passord mot lagret hash
- */
-export function verifyPassword(password: string, storedHash: string): boolean {
-  if (!storedHash || !storedHash.includes(':')) return false;
-  const [salt, key] = storedHash.split(':');
-  if (!salt || !key || !/^[0-9a-f]+$/i.test(key)) return false;
-
-  const keyBuffer = Buffer.from(key, 'hex');
-  const derivedKey = crypto.scryptSync(password, salt, 64);
-  // timingSafeEqual kaster RangeError ved ulik lengde — sjekk først.
-  if (keyBuffer.length !== derivedKey.length) return false;
-  return crypto.timingSafeEqual(keyBuffer, derivedKey);
-}
+export { hashPassword, verifyPassword } from './password';
 
 /**
  * Oppretter en signert sesjons-token (HMAC SHA-256)
@@ -120,7 +104,7 @@ export function verifySessionToken(token: string): SessionUser | null {
       id: payload.sub,
       name: payload.name || null,
       email: payload.email,
-      role: payload.role || 'EDITOR',
+      role: isRoleName(payload.role) ? payload.role : 'EDITOR',
     };
   } catch {
     return null;
@@ -165,10 +149,7 @@ export function getSessionFromRequest(request: NextRequest | Request): SessionUs
 }
 
 /**
- * Verifiserer at forespørselen har gyldig admin-rettighet
- */
-/**
- * Verifiserer at forespørselen har gyldig innlogging (ADMIN, EDITOR eller VIEWER)
+ * Verifiserer at forespørselen har gyldig innlogging (SUPERADMIN, ADMIN, EDITOR eller VIEWER)
  */
 export function requireAuth(request: Request): { authorized: boolean; user?: SessionUser; error?: string } {
   const user = getSessionFromRequest(request);
@@ -178,26 +159,45 @@ export function requireAuth(request: Request): { authorized: boolean; user?: Ses
   return { authorized: true, user };
 }
 
+/**
+ * Krever administratornivå. Superbruker er eiernivået over administrator og
+ * slipper naturligvis inn der en administrator slipper inn.
+ */
 export function requireAdmin(request: Request): { authorized: boolean; user?: SessionUser; error?: string } {
   const user = getSessionFromRequest(request);
   if (!user) {
     return { authorized: false, error: 'Uautorisert: Krever innlogging som administrator.' };
   }
-  if (user.role !== 'ADMIN') {
+  if (!isAtLeast(user.role, 'ADMIN')) {
     return { authorized: false, error: 'Forbudt: Handlingen krever ADMIN-rettigheter.' };
   }
   return { authorized: true, user };
 }
 
 /**
- * Verifiserer at forespørselen har gyldig redaktør- eller admin-rettighet
+ * Krever eiernivået. Brukes til handlinger som rører superbrukere – å endre
+ * eller fjerne en superbruker skal ikke kunne gjøres av en administrator.
+ */
+export function requireSuperAdmin(request: Request): { authorized: boolean; user?: SessionUser; error?: string } {
+  const user = getSessionFromRequest(request);
+  if (!user) {
+    return { authorized: false, error: 'Uautorisert: Krever innlogging som superbruker.' };
+  }
+  if (!isAtLeast(user.role, 'SUPERADMIN')) {
+    return { authorized: false, error: 'Forbudt: Handlingen krever superbruker-rettigheter.' };
+  }
+  return { authorized: true, user };
+}
+
+/**
+ * Verifiserer at forespørselen har gyldig redaktør- eller adminrettighet
  */
 export function requireEditorOrAdmin(request: Request): { authorized: boolean; user?: SessionUser; error?: string } {
   const user = getSessionFromRequest(request);
   if (!user) {
     return { authorized: false, error: 'Uautorisert: Krever innlogging.' };
   }
-  if (user.role !== 'ADMIN' && user.role !== 'EDITOR') {
+  if (!isAtLeast(user.role, 'EDITOR')) {
     return { authorized: false, error: 'Forbudt: Handlingen krever redaktørtilgang.' };
   }
   return { authorized: true, user };

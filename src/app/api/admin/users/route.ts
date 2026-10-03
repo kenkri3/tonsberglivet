@@ -4,6 +4,7 @@ import { requireAdmin, requireAuth, hashPassword } from '@/lib/auth';
 import { sanitizeInput } from '@/lib/validations';
 import { logActivity } from '@/lib/activity';
 import { Role } from '@prisma/client';
+import { canManageAccess } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,8 +90,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const validRoles: Role[] = [Role.ADMIN, Role.EDITOR, Role.VIEWER];
+    const validRoles: Role[] = [Role.SUPERADMIN, Role.ADMIN, Role.EDITOR, Role.VIEWER];
     const userRole: Role = validRoles.includes(role) ? role : Role.EDITOR;
+
+    // Ingen kan opprette en bruker på et nivå over sitt eget.
+    if (!canManageAccess(auth.user?.role)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Bare administratorer og superbrukere kan opprette brukere.',
+        },
+        { status: 403 }
+      );
+    }
 
     // Sjekk om bruker allerede finnes
     const existing = await prisma.user.findUnique({

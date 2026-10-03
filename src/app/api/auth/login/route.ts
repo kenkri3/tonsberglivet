@@ -94,11 +94,14 @@ export async function POST(request: Request) {
         );
       }
 
+      // Kontoen som er konfigurert i miljøet (ADMIN_EMAIL) er eieren av
+      // systemet og får derfor superbruker-nivået: bare superbrukere kan
+      // invitere nye brukere og dele ut tilgangsnivåer.
       user = {
         id: 'admin-env-id',
         name: cleanEmail === 'cecilie@tonsberglivet.no' ? 'Cecilie Bækken Dahl' : 'Tønsberglivet Admin',
         email: cleanEmail,
-        role: 'ADMIN',
+        role: 'SUPERADMIN',
       };
 
       // Synkroniser/oppdater i databasen hvis tilgjengelig
@@ -112,7 +115,7 @@ export async function POST(request: Request) {
             data: {
               email: cleanEmail,
               name: user.name,
-              role: 'ADMIN',
+              role: 'SUPERADMIN',
               password: hashPassword(password),
             },
           });
@@ -120,9 +123,11 @@ export async function POST(request: Request) {
         } else {
           user.id = dbUser.id;
           if (dbUser.name) user.name = dbUser.name;
+          // Passordet holdes i synk med miljøvariabelen. Kontoen er eieren av
+          // systemet og settes derfor til superbruker.
           await prisma.user.update({
             where: { id: dbUser.id },
-            data: { password: hashPassword(password), role: 'ADMIN' },
+            data: { password: hashPassword(password), role: 'SUPERADMIN' },
           });
         }
       } catch (syncErr) {
@@ -166,12 +171,13 @@ export async function POST(request: Request) {
           const isFirstRun = (await prisma.user.count()) === 0;
 
           if (isFirstRun && !dbUser && BOOTSTRAP_EMAILS.includes(cleanEmail)) {
-            // Tom database: opprett den første administratoren.
+            // Tom database: opprett den første administratoren. Den første
+            // kontoen i et tomt system er eieren og får superbruker-nivå.
             const newAdmin = await prisma.user.create({
               data: {
                 email: cleanEmail,
                 name: cleanEmail === 'cecilie@tonsberglivet.no' ? 'Cecilie Bækken Dahl' : 'Tønsberglivet Admin',
-                role: 'ADMIN',
+                role: 'SUPERADMIN',
                 password: hashPassword(password),
               },
             });
@@ -179,7 +185,7 @@ export async function POST(request: Request) {
               id: newAdmin.id,
               name: newAdmin.name,
               email: newAdmin.email,
-              role: 'ADMIN',
+              role: 'SUPERADMIN',
             };
           } else if (isFirstRun && dbUser && !dbUser.password) {
             // Tom database og kontoen finnes uten passord: sett passordet nå.

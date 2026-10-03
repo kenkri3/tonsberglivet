@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import {
   Mail,
   RefreshCw,
@@ -19,6 +20,12 @@ import {
   ToggleLeft,
   ToggleRight,
   Layers,
+  Users,
+  UserPlus,
+  ArrowRightLeft,
+  Undo2,
+  Inbox,
+  X,
 } from 'lucide-react';
 
 interface ContactMessageItem {
@@ -51,7 +58,43 @@ interface ChatSessionItem {
   updatedAt: string;
   unreadByAdmin: boolean;
   messages: ChatMessageItem[];
+  /** Udelt = udefinert. Alle nye samtaler starter utildelt. */
+  assignment?: ChatAssignment | null;
+  assignmentHistory?: ChatAssignmentEvent[];
 }
+
+/** Hvem samtalen er tildelt nå. */
+interface ChatAssignment {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  assignedAt: string;
+  assignedByName?: string;
+  note?: string;
+}
+
+/** Én linje i tildelingsloggen – vises kun internt i adminpanelet. */
+interface ChatAssignmentEvent {
+  at: string;
+  action: 'assigned' | 'reassigned' | 'released';
+  fromUserName?: string | null;
+  toUserName?: string | null;
+  toUserId?: string | null;
+  byName?: string | null;
+  note?: string | null;
+}
+
+/** En kollega samtalen kan tildeles til. */
+interface AssigneeItem {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+  roleLabel: string;
+  title: string | null;
+}
+
+type AssignFilter = 'all' | 'mine' | 'unassigned';
 
 export default function AdminMeldingerPage() {
   const [activeTab, setActiveTab] = useState<'livechat' | 'contact'>('livechat');
@@ -74,10 +117,39 @@ export default function AdminMeldingerPage() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Tildeling av samtaler
+  const [assignees, setAssignees] = useState<AssigneeItem[]>([]);
+  const [assigneeHint, setAssigneeHint] = useState<string | null>(null);
+  const [assignFilter, setAssignFilter] = useState<AssignFilter>('all');
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignNote, setAssignNote] = useState('');
+  const [assignBusy, setAssignBusy] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; email: string } | null>(null);
+
   // Hent data
   const fetchData = async () => {
     setLoading(true);
     try {
+      // 0. Hvem er jeg – brukes til «Mine» og til å holde meg selv ute av listen
+      fetch('/api/auth/me')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.authenticated && d.user) setCurrentUser(d.user);
+        })
+        .catch(() => {});
+
+      // 0b. Kolleger en samtale kan tildeles til (aldri meg selv)
+      fetch('/api/admin/assignees')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success) {
+            setAssignees(d.assignees || []);
+            setAssigneeHint(d.hint || null);
+          }
+        })
+        .catch(() => {});
+
       // 1. Kontaktskjema
       const contactRes = await fetch('/api/contact');
       const contactData = await contactRes.json();
@@ -138,6 +210,11 @@ export default function AdminMeldingerPage() {
   // Marker som lest når en samtale åpnes
   const handleSelectSession = async (id: string) => {
     setSelectedSessionId(id);
+    // Lukk tildelingspanelet når man bytter samtale, så notatet ikke følger med
+    // over til en annen kunde.
+    setAssignOpen(false);
+    setAssignNote('');
+    setAssignError(null);
     try {
       await fetch('/api/agent/live-chat', {
         method: 'POST',
@@ -191,6 +268,61 @@ export default function AdminMeldingerPage() {
       // Ignorer
     }
   };
+
+  // ── Tildeling av samtaler ────────────────────────────────────────────────
+  // Hver nye samtale starter utildelt. En kollega kan tildeles samtalen, og en
+  // som ikke kan svare kan sende den videre til en annen. Den innloggede selv
+  // er aldri et valg – du tildeler til noen andre.
+  const assignmentBelongsToMe = (session: ChatSessionItem): boolean => {
+    const assignment = session.assignment;
+    if (!assignment || !currentUser) return false;
+    return (
+      assignment.userId === currentUser.id ||
+      assignment.userEmail.toLowerCase() === (currentUser.email || '').toLowerCase()
+    );
+  };
+
+  const mineCount = chatSessions.filter(assignmentBelongsToMe).length;
+  const unassignedCount = chatSessions.filter((s) => !s.assignment).length;
+
+  const visibleSessions = chatSessions.filter((session) => {
+    if (assignFilter === 'mine') return assignmentBelongsToMe(session);
+    if (assignFilter === 'unassigned') return !session.assignment;
+    return true;
+  });
+
+  const postAssignment = async (payload: Record<string, unknown>) => {
+    if (!selectedSessionId || assignBusy) return;
+    setAssignBusy(true);
+    setAssignError(null);
+    try {
+      const res = await fetch('/api/agent/live-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: selectedSessionId, ...payload }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        setAssignError(data?.error || `Kunne ikke oppdatere tildelingen (HTTP ${res.status}).`);
+        return;
+      }
+      if (data.session) {
+        setChatSessions((prev) => prev.map((s) => (s.id === data.session.id ? data.session : s)));
+      }
+      setAssignOpen(false);
+      setAssignNote('');
+    } catch {
+      setAssignError('Nettverksfeil: tildelingen ble ikke lagret.');
+    } finally {
+      setAssignBusy(false);
+    }
+  };
+
+  const handleAssign = (assigneeId: string) =>
+    postAssignment({ action: 'assign_session', assigneeId, note: assignNote.trim() || null });
+
+  const handleUnassign = () =>
+    postAssignment({ action: 'unassign_session', note: assignNote.trim() || null });
 
   // Send admin-svar
   const handleSendAdminReply = async (e?: React.FormEvent) => {
@@ -381,22 +513,59 @@ export default function AdminMeldingerPage() {
           <div className="lg:col-span-4 bg-surface rounded-2xl border border-border overflow-hidden flex flex-col shadow-xs">
             <div className="p-3.5 border-b border-border bg-surface-muted/50 flex items-center justify-between">
               <span className="text-xs font-bold text-foreground-muted uppercase tracking-wider">
-                Aktive Samtaler ({chatSessions.length})
+                {assignFilter === 'all'
+                  ? `Aktive samtaler (${chatSessions.length})`
+                  : assignFilter === 'mine'
+                  ? `Tildelt meg (${mineCount})`
+                  : `Utildelte (${unassignedCount})`}
               </span>
               <span className="text-[11px] text-foreground-subtle">
                 Auto-oppdateres
               </span>
             </div>
 
+            {/* Filter: alle, mine og de som fortsatt ikke er tildelt noen */}
+            <div className="px-2.5 py-2 border-b border-border flex items-center gap-1.5">
+              {([
+                { key: 'all' as AssignFilter, label: 'Alle', count: chatSessions.length, icon: Inbox },
+                { key: 'mine' as AssignFilter, label: 'Mine', count: mineCount, icon: User },
+                { key: 'unassigned' as AssignFilter, label: 'Utildelte', count: unassignedCount, icon: Users },
+              ]).map((filter) => (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => setAssignFilter(filter.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
+                    assignFilter === filter.key
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-surface-muted text-foreground-muted hover:bg-border'
+                  }`}
+                >
+                  <filter.icon className="w-3 h-3" />
+                  <span>{filter.label}</span>
+                  <span className={`px-1.5 rounded-full text-[10px] font-bold ${
+                    assignFilter === filter.key ? 'bg-white/25 text-white' : 'bg-surface text-foreground-subtle'
+                  }`}>
+                    {filter.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
             <div className="flex-1 overflow-y-auto divide-y divide-border">
-              {chatSessions.length === 0 ? (
+              {visibleSessions.length === 0 ? (
                 <div className="p-8 text-center text-xs text-foreground-muted">
-                  Ingen samtaler registrert ennå.
+                  {chatSessions.length === 0
+                    ? 'Ingen samtaler registrert ennå.'
+                    : assignFilter === 'mine'
+                    ? 'Ingen samtaler er tildelt deg. En kollega må sende en over til deg.'
+                    : 'Ingen utildelte samtaler – alle er fordelt.'}
                 </div>
               ) : (
-                chatSessions.map((session) => {
+                visibleSessions.map((session) => {
                   const isSelected = selectedSessionId === session.id;
                   const lastMsg = session.messages[session.messages.length - 1];
+                  const mine = assignmentBelongsToMe(session);
 
                   return (
                     <div
@@ -427,10 +596,27 @@ export default function AdminMeldingerPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-surface-muted text-foreground-muted border border-border">
                           {session.topic}
                         </span>
+                        {session.assignment ? (
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-1 ${
+                              mine
+                                ? 'bg-primary/15 text-primary border border-primary/25'
+                                : 'bg-surface-muted text-foreground-muted border border-border'
+                            }`}
+                            title={`Tildelt ${session.assignment.userName} av ${session.assignment.assignedByName || 'kollega'}`}
+                          >
+                            <User className="w-2.5 h-2.5" />
+                            {mine ? 'Deg' : session.assignment.userName.split(' ')[0]}
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25">
+                            Utildelt
+                          </span>
+                        )}
                         <span
                           className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
                             session.status === 'waiting_admin'
@@ -514,6 +700,164 @@ export default function AdminMeldingerPage() {
                   </div>
                 </div>
 
+                {/* ── Tildeling: hvem følger opp denne samtalen? ── */}
+                <div className="px-4 py-3 border-b border-border bg-surface space-y-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <ArrowRightLeft className="w-3.5 h-3.5 text-primary shrink-0" />
+                      {selectedSession.assignment ? (
+                        <span className="text-xs text-foreground min-w-0">
+                          Tildelt{' '}
+                          <strong className="text-foreground">{selectedSession.assignment.userName}</strong>
+                          <span className="text-foreground-muted">
+                            {' '}
+                            av {selectedSession.assignment.assignedByName || 'kollega'} kl.{' '}
+                            {new Date(selectedSession.assignment.assignedAt).toLocaleTimeString('nb-NO', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-xs text-foreground-muted">
+                          Ikke tildelt noen ennå – velg en kollega som følger opp.
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {selectedSession.assignment && (
+                        <button
+                          type="button"
+                          onClick={handleUnassign}
+                          disabled={assignBusy}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold border border-border bg-surface-muted hover:bg-border text-foreground-muted transition-colors disabled:opacity-50"
+                          title="Frigjør samtalen slik at den blir liggende utildelt i køen"
+                        >
+                          <Undo2 className="w-3 h-3" />
+                          <span>Frigjør</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAssignOpen((v) => !v);
+                          setAssignError(null);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold bg-primary text-primary-foreground hover:bg-primary-hover transition-colors"
+                      >
+                        {selectedSession.assignment ? (
+                          <>
+                            <ArrowRightLeft className="w-3 h-3" />
+                            <span>Send videre</span>
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-3 h-3" />
+                            <span>Tildel</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {selectedSession.assignment?.note && (
+                    <p className="text-[11px] text-foreground-muted bg-surface-muted border border-border rounded-xl px-3 py-2 whitespace-pre-line">
+                      <strong className="text-foreground">Melding fra {selectedSession.assignment.assignedByName || 'kollega'}:</strong>{' '}
+                      {selectedSession.assignment.note}
+                    </p>
+                  )}
+
+                  {assignError && (
+                    <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl px-3 py-2">
+                      {assignError}
+                    </p>
+                  )}
+
+                  {assignOpen && (
+                    <div className="rounded-2xl border border-border bg-surface-muted/60 p-3 space-y-2.5">
+                      {assignees.length === 0 ? (
+                        <div className="text-xs text-foreground-muted space-y-2">
+                          <p>
+                            {assigneeHint ||
+                              'Ingen andre brukere å tildele til ennå. Du kan ikke tildele en samtale til deg selv.'}
+                          </p>
+                          <Link
+                            href="/admin/team"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+                          >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            Inviter en kollega under Team &amp; Samhandling
+                          </Link>
+                        </div>
+                      ) : (
+                        <>
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-foreground-subtle">
+                            Send til kollega
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                            {assignees.map((colleague) => (
+                              <button
+                                key={colleague.id}
+                                type="button"
+                                onClick={() => handleAssign(colleague.id)}
+                                disabled={assignBusy}
+                                className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-surface border border-border hover:border-primary/40 hover:bg-primary/5 text-left transition-colors disabled:opacity-50"
+                              >
+                                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center shrink-0">
+                                  {(colleague.name || colleague.email)
+                                    .split(' ')
+                                    .map((p) => p[0])
+                                    .join('')
+                                    .toUpperCase()
+                                    .slice(0, 2)}
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-xs font-semibold text-foreground truncate">
+                                    {colleague.name || colleague.email}
+                                  </span>
+                                  <span className="block text-[10px] text-foreground-muted truncate">
+                                    {colleague.roleLabel}
+                                    {colleague.title ? ` • ${colleague.title}` : ''}
+                                  </span>
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      <div className="space-y-1.5">
+                        <label htmlFor="assign-note" className="text-[10px] font-bold uppercase tracking-wider text-foreground-subtle">
+                          Valgfri melding til kollegaen
+                        </label>
+                        <textarea
+                          id="assign-note"
+                          rows={2}
+                          value={assignNote}
+                          onChange={(e) => setAssignNote(e.target.value)}
+                          placeholder="F.eks. «Kan du overta denne? Jeg er usikker på torvleie-prisen.»"
+                          className="w-full px-3 py-2 rounded-xl bg-background border border-border text-xs text-foreground outline-none focus:ring-2 focus:ring-primary resize-none"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] text-foreground-subtle">
+                          Meldingen følger samtalen og vises for mottakeren.
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setAssignOpen(false)}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground-muted hover:text-foreground"
+                        >
+                          <X className="w-3 h-3" />
+                          Lukk
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Meldingstråd */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-background/50 max-h-[420px]">
                   {selectedSession.messages.map((m) => (
@@ -556,6 +900,39 @@ export default function AdminMeldingerPage() {
                       </div>
                     </div>
                   ))}
+
+                  {/* Intern tildelingslogg – vises aldri for den besøkende */}
+                  {(selectedSession.assignmentHistory?.length ?? 0) > 0 && (
+                    <div className="pt-2 mt-2 border-t border-dashed border-border space-y-1.5">
+                      <span className="block text-[10px] font-bold uppercase tracking-wide text-foreground-subtle">
+                        Tildelingslogg (kun internt)
+                      </span>
+                      {selectedSession.assignmentHistory!.slice(-6).map((entry, idx) => (
+                        <p key={idx} className="text-[11px] text-foreground-muted text-center">
+                          {new Date(entry.at).toLocaleString('nb-NO', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}{' '}
+                          •{' '}
+                          {entry.action === 'released'
+                            ? `${entry.byName || 'En kollega'} frigjorde samtalen${
+                                entry.fromUserName ? ` fra ${entry.fromUserName}` : ''
+                              }`
+                            : entry.action === 'reassigned'
+                            ? `${entry.byName || 'En kollega'} sendte samtalen videre fra ${
+                                entry.fromUserName || 'kollega'
+                              } til ${entry.toUserName || 'kollega'}`
+                            : `${entry.byName || 'En kollega'} tildelte samtalen til ${
+                                entry.toUserName || 'kollega'
+                              }`}
+                          {entry.note ? ` – «${entry.note}»` : ''}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
                   <div ref={chatEndRef} />
                 </div>
 

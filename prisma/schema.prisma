@@ -32,6 +32,7 @@ model User {
   assignedTasks TeamTask[]    @relation("AssignedTasks")
   createdTasks  TeamTask[]    @relation("CreatedTasks")
   internalNotes InternalNote[]
+  sentInvitations Invitation[] @relation("SentInvitations")
 }
 
 model Account {
@@ -63,9 +64,38 @@ model Session {
 }
 
 enum Role {
+  SUPERADMIN
   ADMIN
   EDITOR
   VIEWER
+}
+
+/**
+ * Invitasjon til en ny medarbeider.
+ *
+ * Passordet settes av den inviterte selv, på /invitasjon/<token>. Vi lagrer
+ * aldri selve tokenen – bare et SHA-256-fingeravtrykk – slik at en leser av
+ * databasen ikke kan bruke en utestående invitasjon til å ta over kontoen.
+ */
+model Invitation {
+  id          String    @id @default(cuid())
+  email       String
+  name        String?
+  title       String?
+  role        Role      @default(EDITOR)
+  tokenHash   String    @unique
+  note        String?   @db.Text
+  invitedById String?
+  invitedBy   User?     @relation("SentInvitations", fields: [invitedById], references: [id], onDelete: SetNull)
+  invitedByName String?
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email])
+  @@index([expiresAt])
 }
 
 // ═══════════════════════════════

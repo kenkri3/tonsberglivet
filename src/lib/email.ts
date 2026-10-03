@@ -299,3 +299,137 @@ export async function approveAndConfirmBooking(bookingId: string): Promise<{
     message: `Booking #${bookingId} (${bookingData.name}) er godkjent. ${emailMessage}`,
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INVITASJON TIL NY MEDARBEIDER
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface InvitationEmailData {
+  email: string;
+  name?: string | null;
+  roleLabel: string;
+  invitedByName: string;
+  inviteUrl: string;
+  note?: string | null;
+  expiresAt: string;
+}
+
+export function generateInvitationEmailHtml(data: InvitationEmailData): string {
+  const greeting = data.name ? `Hei ${data.name}!` : 'Hei!';
+  const expires = new Date(data.expiresAt).toLocaleDateString('nb-NO', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  return `<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invitasjon til Tønsberglivet OS</title>
+</head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;">
+  <div style="max-width:560px;margin:24px auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+    <div style="background:#0f172a;padding:28px 24px;text-align:center;color:#ffffff;">
+      <h1 style="margin:0;font-size:22px;font-weight:800;letter-spacing:-0.4px;">tønsberglivet</h1>
+      <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Administrasjonspanel</p>
+    </div>
+    <div style="padding:28px 24px;">
+      <p style="font-size:16px;line-height:1.6;color:#334155;margin:0 0 16px;">${greeting}</p>
+      <p style="font-size:15px;line-height:1.6;color:#334155;margin:0 0 20px;">
+        ${data.invitedByName} har invitert deg til Tønsberglivet OS med tilgangsnivået
+        <strong>${data.roleLabel}</strong>.
+      </p>
+      ${data.note ? `<div style="background:#f1f5f9;border-left:3px solid #1d4ed8;border-radius:8px;padding:14px 16px;margin:0 0 20px;font-size:14px;line-height:1.6;color:#334155;white-space:pre-line;">${data.note.replace(/</g, '&lt;')}</div>` : ''}
+      <p style="font-size:15px;line-height:1.6;color:#334155;margin:0 0 24px;">
+        Klikk på knappen for å velge ditt eget passord. Lenken er personlig og gyldig til <strong>${expires}</strong>.
+      </p>
+      <div style="text-align:center;margin:0 0 24px;">
+        <a href="${data.inviteUrl}" style="display:inline-block;background:#1d4ed8;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:9999px;">Velg passord og aktiver kontoen</a>
+      </div>
+      <p style="font-size:12px;line-height:1.6;color:#64748b;margin:0;">
+        Virker ikke knappen? Kopier denne adressen inn i nettleseren:<br>
+        <span style="word-break:break-all;color:#1d4ed8;">${data.inviteUrl}</span>
+      </p>
+    </div>
+    <div style="background:#f1f5f9;padding:18px 24px;text-align:center;font-size:12px;color:#64748b;border-top:1px solid #e2e8f0;">
+      Denne invitasjonen er sendt til ${data.email}. Har du ikke bedt om den, kan du se bort fra e-posten.
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+export interface InvitationEmailResult {
+  /** true kun når e-posten faktisk er levert til en e-posttransport. */
+  delivered: boolean;
+  mode: 'resend' | 'smtp' | 'mock_logged' | 'failed';
+  message: string;
+}
+
+/**
+ * Sender invitasjons-e-post. Uten konfigurert e-posttjeneste logges innholdet på
+ * serveren, og API-et returnerer lenken slik at den kan deles manuelt. Vi later
+ * aldri som om e-posten er sendt.
+ */
+export async function sendInvitationEmail(data: InvitationEmailData): Promise<InvitationEmailResult> {
+  const resendApiKey = (await getSetting('resend_api_key')) || process.env.RESEND_API_KEY;
+  const smtpUrl = (await getSetting('smtp_url')) || process.env.SMTP_URL;
+  const subject = `Invitasjon til Tønsberglivet OS (${data.roleLabel})`;
+  const html = generateInvitationEmailHtml(data);
+
+  let resendFailure: string | null = null;
+
+  if (resendApiKey && resendApiKey.trim() !== '') {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from: 'Tønsberglivet <post@tonsberglivet.no>',
+          to: [data.email],
+          subject,
+          html,
+        }),
+      });
+
+      if (res.ok) {
+        return {
+          delivered: true,
+          mode: 'resend',
+          message: `Invitasjonen er sendt til ${data.email}.`,
+        };
+      }
+      resendFailure = `Resend API svarte med status ${res.status}`;
+      console.warn(`[Email] Resend avviste invitasjonen til ${data.email} (${res.status}).`);
+    } catch (error: any) {
+      resendFailure = `Nettverksfeil mot Resend: ${error?.message || 'ukjent feil'}`;
+      console.error('[Email] Feil ved utsending av invitasjon:', error);
+    }
+  }
+
+  if (smtpUrl && smtpUrl.trim() !== '') {
+    console.log(`[Email] SMTP er konfigurert, men utsending er ikke implementert. Invitasjonslenke til ${data.email}: ${data.inviteUrl}`);
+    return {
+      delivered: false,
+      mode: 'smtp',
+      message: `SMTP-utsending er ikke implementert. Kopier invitasjonslenken og send den til ${data.email} selv.`,
+    };
+  }
+
+  console.log(`\n📧 [INVITASJON] Ingen e-posttjeneste er konfigurert – lenken logges her:`);
+  console.log(`Til: ${data.email} (${data.roleLabel})`);
+  console.log(`Lenke: ${data.inviteUrl}\n`);
+
+  return {
+    delivered: false,
+    mode: resendFailure ? 'failed' : 'mock_logged',
+    message: resendFailure
+      ? `${resendFailure}. Kopier invitasjonslenken og send den til ${data.email} selv.`
+      : `Ingen e-posttjeneste er konfigurert. Kopier invitasjonslenken og send den til ${data.email} selv.`,
+  };
+}

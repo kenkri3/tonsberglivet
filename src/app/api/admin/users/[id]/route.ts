@@ -4,8 +4,16 @@ import { requireAdmin, hashPassword } from '@/lib/auth';
 import { sanitizeInput } from '@/lib/validations';
 import { logActivity } from '@/lib/activity';
 import { Role } from '@prisma/client';
+import { ADMIN_LEVEL_ROLES, canManageAccess, isAtLeast, roleLabel, type RoleName } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
+
+/** Antall aktive brukere på administratornivå (superbruker + administrator). */
+async function countActiveAdmins(): Promise<number> {
+  return prisma.user.count({
+    where: { active: true, role: { in: ADMIN_LEVEL_ROLES as any } },
+  });
+}
 
 export async function PATCH(
   request: Request,
@@ -39,14 +47,41 @@ export async function PATCH(
 
     const { name, role, title, phone, active, password } = body ?? {};
 
+    // En superbruker kan bare endres av en superbruker. Uten dette kunne en
+    // administrator degradert eller låst ute eiernivået.
+    if (existing.role === 'SUPERADMIN' && !isAtLeast(auth.user?.role, 'SUPERADMIN')) {
+      return NextResponse.json(
+        { success: false, error: 'Bare en superbruker kan endre en annen superbruker.' },
+        { status: 403 }
+      );
+    }
+
+    const validRoles: Role[] = [Role.SUPERADMIN, Role.ADMIN, Role.EDITOR, Role.VIEWER];
+    const requestedRole: Role | null = role && validRoles.includes(role) ? role : null;
+
+    // Ingen kan dele ut nivåer uten å være administrator selv.
+    if (requestedRole && !canManageAccess(auth.user?.role)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Bare administratorer og superbrukere kan endre tilgangsnivåer.',
+        },
+        { status: 403 }
+      );
+    }
+
     // Sjekk beskyttelse mot å deaktivere eller nedgradere siste administrator
-    if (existing.role === 'ADMIN' && (role && role !== 'ADMIN' || active === false)) {
-      const adminCount = await prisma.user.count({
-        where: { role: 'ADMIN', active: true },
-      });
+    const demotesAdmin =
+      ADMIN_LEVEL_ROLES.includes(existing.role as RoleName) &&
+      ((requestedRole !== null && !ADMIN_LEVEL_ROLES.includes(requestedRole as RoleName)) || active === false);
+    if (demotesAdmin) {
+      const adminCount = await countActiveAdmins();
       if (adminCount <= 1) {
         return NextResponse.json(
-          { success: false, error: 'Kan ikke nedgradere eller deaktivere den eneste aktive administratoren.' },
+          {
+            success: false,
+            error: `Kan ikke nedgradere eller deaktivere den eneste aktive administratoren (${roleLabel(existing.role)}).`,
+          },
           { status: 400 }
         );
       }
@@ -58,9 +93,8 @@ export async function PATCH(
     if (phone !== undefined) updateData.phone = phone ? sanitizeInput(String(phone).trim()) : null;
     if (typeof active === 'boolean') updateData.active = active;
 
-    const validRoles: Role[] = [Role.ADMIN, Role.EDITOR, Role.VIEWER];
-    if (role && validRoles.includes(role)) {
-      updateData.role = role;
+    if (requestedRole) {
+      updateData.role = requestedRole;
     }
 
     if (password && String(password).trim().length >= 6) {
@@ -134,10 +168,15 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: 'Bruker ikke funnet' }, { status: 404 });
     }
 
-    if (existing.role === 'ADMIN') {
-      const adminCount = await prisma.user.count({
-        where: { role: 'ADMIN', active: true },
-      });
+    if (existing.role === 'SUPERADMIN' && !isAtLeast(auth.user?.role, 'SUPERADMIN')) {
+      return NextResponse.json(
+        { success: false, error: 'Bare en superbruker kan slette en annen superbruker.' },
+        { status: 403 }
+      );
+    }
+
+    if (ADMIN_LEVEL_ROLES.includes(existing.role as RoleName)) {
+      const adminCount = await countActiveAdmins();
       if (adminCount <= 1) {
         return NextResponse.json(
           { success: false, error: 'Kan ikke slette den eneste administratoren i systemet.' },

@@ -9,6 +9,11 @@ import {
   getUnreadChatCount,
   getGlobalAiChatbotStatus,
   setGlobalAiChatbotStatus,
+  assignSession,
+  unassignSession,
+  findAssignableColleague,
+  getAssignedToMeCount,
+  toPublicSession,
 } from '@/lib/live-chat';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +23,7 @@ export const dynamic = 'force-dynamic';
  *
  * ?sessionId=<id>  — ÅPEN. Den offentlige Tønsberg-Guiden poller sin egen samtale
  *                    for å se svar fra admin. Id-er er tilfeldige (`sess-<ts>-<rand>`).
+ *                    Svaret er sanert: tildeling og interne navn følger ikke med.
  * Alt annet (innboks-listen og ulest-telleren) er adminflater og krever
  * innlogging som redaktør eller administrator.
  */
@@ -34,7 +40,7 @@ export async function GET(request: NextRequest) {
       const session = await getOrCreateChatSession(sessionId);
       return NextResponse.json({
         success: true,
-        session,
+        session: toPublicSession(session),
         globalAiEnabled,
       });
     }
@@ -46,11 +52,16 @@ export async function GET(request: NextRequest) {
     }
 
     const unreadCount = await getUnreadChatCount();
+    const assignedToMeCount = await getAssignedToMeCount({
+      id: auth.user?.id,
+      email: auth.user?.email,
+    });
 
     if (countOnly === 'true') {
       return NextResponse.json({
         success: true,
         unreadCount,
+        assignedToMeCount,
         globalAiEnabled,
       });
     }
@@ -60,6 +71,7 @@ export async function GET(request: NextRequest) {
       success: true,
       sessions,
       unreadCount,
+      assignedToMeCount,
       globalAiEnabled,
     });
   } catch (error: any) {
@@ -73,7 +85,8 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/agent/live-chat — alle handlinger er administratorhandlinger
- * (svare som admin, skru AI av/på, markere lest) og krever innlogging.
+ * (svare som admin, skru AI av/på, markere lest, tildele samtaler) og krever
+ * innlogging som redaktør eller administrator.
  */
 export async function POST(request: NextRequest) {
   const auth = requireEditorOrAdmin(request);
@@ -121,6 +134,46 @@ export async function POST(request: NextRequest) {
         await markSessionAsRead(sessionId);
       }
       return NextResponse.json({ success: true });
+    }
+
+    // ── Tildeling ────────────────────────────────────────────────────────
+    // En samtale kan tildeles en kollega, og sendes videre til en annen når
+    // den første ikke kan svare. Mottakeren slås opp i databasen her, slik at
+    // navn og e-post i tildelingen alltid er ekte.
+    if (action === 'assign_session') {
+      const { sessionId, assigneeId, note } = body;
+      if (!sessionId) {
+        return NextResponse.json({ success: false, error: 'Mangler sessionId' }, { status: 400 });
+      }
+
+      const target = await findAssignableColleague(String(assigneeId || ''), {
+        id: auth.user?.id,
+        email: auth.user?.email,
+      });
+      if (!target.ok) {
+        return NextResponse.json({ success: false, error: target.error }, { status: 400 });
+      }
+
+      const updated = await assignSession({
+        sessionId,
+        assignee: target.user,
+        actor: { id: auth.user?.id, name: auth.user?.name, email: auth.user!.email },
+        note: typeof note === 'string' ? note : null,
+      });
+      return NextResponse.json({ success: true, session: updated });
+    }
+
+    if (action === 'unassign_session') {
+      const { sessionId, note } = body;
+      if (!sessionId) {
+        return NextResponse.json({ success: false, error: 'Mangler sessionId' }, { status: 400 });
+      }
+      const updated = await unassignSession({
+        sessionId,
+        actor: { id: auth.user?.id, name: auth.user?.name, email: auth.user!.email },
+        note: typeof note === 'string' ? note : null,
+      });
+      return NextResponse.json({ success: true, session: updated });
     }
 
     return NextResponse.json(
