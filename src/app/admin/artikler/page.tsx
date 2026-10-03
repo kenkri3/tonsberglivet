@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Eye, Pencil, Sparkles, RefreshCw, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Sparkles, RefreshCw, FileText, CheckCircle2, Clock, AlertCircle, Trash2, EyeOff } from 'lucide-react';
 import { SoMeModal } from '@/components/admin/SoMeModal';
 
 interface ArticleItem {
@@ -32,6 +32,50 @@ export default function ArtiklerPage() {
   const [selectedCategory, setSelectedCategory] = useState('Alle');
   const [aiAlert, setAiAlert] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [varsel, setVarsel] = useState<{ tekst: string; feil: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!varsel) return;
+    const t = setTimeout(() => setVarsel(null), 6000);
+    return () => clearTimeout(t);
+  }, [varsel]);
+
+  /** Sletter en artikkel. Bekrefter først – dette kan ikke angres. */
+  const handleDelete = async (art: ArticleItem) => {
+    if (!confirm(`Slette artikkelen «${art.title}»? Dette kan ikke angres.`)) return;
+    try {
+      const res = await fetch(`/api/articles?id=${encodeURIComponent(art.id)}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setVarsel({ tekst: json.error ?? 'Sletting feilet.', feil: true });
+        return;
+      }
+      setVarsel({ tekst: json.message ?? 'Artikkelen er slettet.', feil: false });
+      await fetchArticles();
+    } catch {
+      setVarsel({ tekst: 'Kunne ikke kontakte serveren.', feil: true });
+    }
+  };
+
+  /** Publiserer eller avpubliserer uten å gå veien om redigering. */
+  const handleTogglePublish = async (art: ArticleItem) => {
+    try {
+      const res = await fetch('/api/articles', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: art.id, published: !art.published }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setVarsel({ tekst: json.error ?? 'Kunne ikke endre status.', feil: true });
+        return;
+      }
+      setVarsel({ tekst: json.message ?? 'Status endret.', feil: false });
+      await fetchArticles();
+    } catch {
+      setVarsel({ tekst: 'Kunne ikke kontakte serveren.', feil: true });
+    }
+  };
 
   const fetchArticles = async () => {
     try {
@@ -128,6 +172,19 @@ export default function ArtiklerPage() {
         <div className="p-3.5 rounded-2xl bg-error-light text-error border border-error/30 flex items-center gap-2.5 text-xs font-semibold">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{loadError}</span>
+        </div>
+      )}
+
+      {varsel && (
+        <div
+          className={`p-3.5 rounded-2xl border flex items-center gap-2.5 text-xs font-semibold ${
+            varsel.feil
+              ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+              : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+          }`}
+        >
+          {varsel.feil ? <AlertCircle className="w-4 h-4 shrink-0" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
+          <span>{varsel.tekst}</span>
         </div>
       )}
 
@@ -263,6 +320,22 @@ export default function ArtiklerPage() {
                       >
                         <Eye className="w-4 h-4" />
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePublish(art)}
+                        className="p-1.5 rounded-lg text-foreground-muted hover:text-foreground hover:bg-surface-muted transition-colors"
+                        title={art.published ? 'Avpubliser' : 'Publiser'}
+                      >
+                        {art.published ? <EyeOff className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(art)}
+                        className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                        title="Slett artikkel"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>

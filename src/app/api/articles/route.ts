@@ -156,3 +156,132 @@ export async function POST(request: Request) {
     );
   }
 }
+
+/**
+ * Redigering av en publisert artikkel.
+ *
+ * Uten denne kunne panelet opprette artikler, men aldri rette en skrivefeil –
+ * «Pencil»-ikonet var importert i admin-siden og aldri tatt i bruk. Vi bygger
+ * bare opp feltene som faktisk er sendt inn, så en delvis oppdatering (f.eks.
+ * bare «upubliser») ikke nullstiller innholdet.
+ */
+export async function PATCH(request: Request) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ success: false, error: 'Ugyldig JSON i forespørselen' }, { status: 400 });
+  }
+
+  const id = String(body?.id ?? '').trim();
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Mangler artikkel-ID' }, { status: 400 });
+  }
+
+  const data: Record<string, unknown> = {};
+
+  if (body?.title !== undefined) {
+    const t = String(body.title).trim();
+    if (!t) return NextResponse.json({ success: false, error: 'Tittel kan ikke være tom' }, { status: 400 });
+    data.title = sanitizeInput(t);
+  }
+
+  if (body?.content !== undefined) {
+    const c = String(body.content).trim();
+    if (!c) return NextResponse.json({ success: false, error: 'Innhold kan ikke være tomt' }, { status: 400 });
+    data.content = c;
+  }
+
+  if (body?.excerpt !== undefined) {
+    const e = String(body.excerpt).trim();
+    data.excerpt = e ? sanitizeInput(e) : null;
+  }
+
+  if (body?.category !== undefined) {
+    const kategori = normalizeCategory(body.category);
+    if (!kategori) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Ugyldig kategori «${String(body.category)}». Gyldige kategorier: ${Object.values(CATEGORY_LABELS).join(', ')}.`,
+        },
+        { status: 400 },
+      );
+    }
+    data.category = kategori;
+  }
+
+  if (body?.published !== undefined) {
+    data.published = body.published === true;
+    // Første gang en artikkel publiseres, sett publiseringstidspunktet.
+    if (body.published === true) data.publishedAt = new Date();
+  }
+
+  if (body?.imageId !== undefined) {
+    const raa = body.imageId === null ? '' : String(body.imageId).trim();
+    if (!raa) {
+      data.imageId = null;
+    } else {
+      const bilde = await prisma.image.findUnique({ where: { id: raa } });
+      if (!bilde) {
+        return NextResponse.json(
+          { success: false, error: 'Bildet finnes ikke i bildebanken. Velg et bilde på nytt.' },
+          { status: 400 },
+        );
+      }
+      data.imageId = bilde.id;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ success: false, error: 'Ingen felt å oppdatere' }, { status: 400 });
+  }
+
+  try {
+    const artikkel = await prisma.article.update({ where: { id }, data });
+    return NextResponse.json({
+      success: true,
+      message: `Artikkelen «${artikkel.title}» er oppdatert.`,
+      data: artikkel,
+    });
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return NextResponse.json({ success: false, error: 'Fant ikke artikkelen i databasen.' }, { status: 404 });
+    }
+    return NextResponse.json(
+      { success: false, error: 'Kunne ikke oppdatere artikkelen: databasen svarte ikke. Ingen endring er gjort.' },
+      { status: 503 },
+    );
+  }
+}
+
+/** Sletting av en artikkel. Krever redaktør eller admin. */
+export async function DELETE(request: Request) {
+  const auth = requireEditorOrAdmin(request);
+  if (!auth.authorized) {
+    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
+  }
+
+  const id = new URL(request.url).searchParams.get('id');
+  if (!id) {
+    return NextResponse.json({ success: false, error: 'Mangler artikkel-ID' }, { status: 400 });
+  }
+
+  try {
+    const artikkel = await prisma.article.delete({ where: { id } });
+    return NextResponse.json({ success: true, message: `Artikkelen «${artikkel.title}» er slettet.` });
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return NextResponse.json({ success: false, error: 'Fant ikke artikkelen i databasen.' }, { status: 404 });
+    }
+    return NextResponse.json(
+      { success: false, error: 'Kunne ikke slette artikkelen: databasen svarte ikke.' },
+      { status: 503 },
+    );
+  }
+}
