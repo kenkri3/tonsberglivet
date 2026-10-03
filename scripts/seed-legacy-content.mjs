@@ -142,6 +142,35 @@ async function main() {
   const data = JSON.parse(readFileSync(INNHOLD, 'utf8'));
   const arkiv = existsSync(ARKIV) ? JSON.parse(readFileSync(ARKIV, 'utf8')) : [];
 
+  // ── Bytte eksterne bildelenker til lokale når filen finnes ────────────────
+  // Bildene ble først registrert med kildens URL fordi de 78 MB store filene
+  // ikke lå i repoet. Nå gjør de det, og da skal nettstedet ikke være avhengig
+  // av at det gamle WordPress-anlegget fortsatt står oppe.
+  //
+  // Steget er billig når det ikke er noe å gjøre (én spørring), og kjøres før
+  // hopp-over-sjekken under, ellers ville lenkene aldri blitt oppdatert.
+  if (existsSync(LEGACY_BILDER)) {
+    try {
+      const eksterne = await prisma.image.findMany({
+        where: { url: { startsWith: 'http' } },
+        select: { id: true, url: true },
+      });
+      let byttet = 0;
+      for (const bilde of eksterne) {
+        const fil = bildeFilnavn(bilde.url);
+        if (existsSync(path.join(LEGACY_BILDER, fil))) {
+          await prisma.image.update({ where: { id: bilde.id }, data: { url: `/images/legacy/${fil}` } });
+          byttet++;
+        }
+      }
+      if (byttet > 0) {
+        console.log(`[seed-legacy] Byttet ${byttet} bildelenker fra kildens URL til lokale filer.`);
+      }
+    } catch (err) {
+      console.warn('[seed-legacy] Kunne ikke oppdatere bildelenker:', err.message);
+    }
+  }
+
   // ── Hopp over hvis innholdet allerede er på plass ─────────────────────────
   const [antallArtikler, antallEvents] = await Promise.all([
     prisma.article.count(),
