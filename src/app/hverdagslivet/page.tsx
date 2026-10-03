@@ -167,10 +167,10 @@ export default async function HverdagslivetPage() {
           photos={[
             {
               src: '/images/legacy/barnas-bylordag.jpg',
-              alt: 'Boligområde med bekk og lekende barn i Tønsberg',
-              caption: 'Nabolag & Nærmiljø',
-              location: 'Tønsberg',
-              category: 'Bo & Oppvekst',
+              alt: 'Folkeliv på Tønsberg Torv med Domkirkens tårn i bakgrunnen',
+              caption: 'Barnas bylordag på Torvet',
+              location: 'Tønsberg Torv',
+              category: 'By & Møteplass',
               photographer: 'Tønsberglivet Arkiv',
             },
             {
