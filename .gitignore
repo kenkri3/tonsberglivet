@@ -36,6 +36,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Midlertidig fil fra `npm run db:baseline` (rå SQL før den gjøres idempotent)
+prisma/.baseline.raw.sql
+
 # vercel
 .vercel
 
